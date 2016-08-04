@@ -1,0 +1,33 @@
+version: '2'
+services:
+  db:
+    image: postgres:9.5
+    ports:
+     - "127.0.0.1:5432:5432"
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      - "DJANGO_SETTINGS_MODULE=instances.local_docker"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+# testing with docker not supported yet:
+#  selenium-firefox:
+#    image: selenium/standalone-firefox
+#    ports:
+#      - '6555:4444'
+#  test:
+#    build: .
+#    command: python manage.py test
+#    environment:
+#      - "SELENIUM_DRIVER=remote"
+#      - "SELENIUM_DRIVER_URL=http://selenium-firefox:6555/wb/hub"
+#    volumes:
+#      - .:/app
+#    depends_on:
+#      - web
+#      - selenium-firefox
