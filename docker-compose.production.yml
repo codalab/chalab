@@ -4,16 +4,16 @@ services:
     extends:
       file: docker-compose.base.yml
       service: db
+    restart: always
   web:
     extends:
       file: docker-compose.base.yml
       service: web
-    command: /usr/local/bin/gunicorn chalab.wsgi:application -w 2 -b :8000 --reload
+    env_file: .env
+    restart: always
     environment:
-      - "DJANGO_SETTINGS_MODULE=instances.local_docker"
-    volumes:
-      - .:/app
+      - "DJANGO_SETTINGS_MODULE=instances.production"
     depends_on:
       - db
     ports:
-      - "8000:8000"
+      - "8742:8000"

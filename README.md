@@ -28,41 +28,36 @@ The most straightforward way to run chalab is to use docker and docker-compose. 
 start the system (database, server, etc) automatically.
 
 Then you can run the tests on your local machine (non-dockerized) to get assistance from your IDE.
-It's also possible to run the tests from inside docker, you wont need any other dependencies
-than docker.
+As of now it's not possible to run the tests inside Docker (Pull-Requests are welcome!).
 
-### Fully dockerized:
+### Start the server:
 
 In the chalab folder,
 
-- `docker-compose up web`: It downloads all the containers & dependencies then start the containers.
-    Access the app at [http://localhost:8000/](http://localhost:8000/).
-- `docker-compose build`: re-build the image (when requirements.txt changed for example).
+`make dev` 
 
-*db management*
-
-- `docker-compose run web python manage.py migrate`: Apply the database migrations.
-
-*test*
-
-Testing in docker is not supported yet, don't hesitate to take a look and send a Pull Request.
+It downloads all the containers & dependencies then start the containers.
+Access the app at [http://localhost:8000/](http://localhost:8000/).
+Kill it (ctrl-c) then re-run `make dev` to rebuild the container and apply db migrations.
 
 
-#### Running on local:
+### Testing: setup
 
-With the database running from `docker-compose up`,
-`export DJANGO_SETTINGS_MODULE='instances.local'` sets the django configuration in your shell
+Install django, selenium & other dependencies locally.
 
-- `python manage.py runserver 0.0.0.0:8002`: run the server,
-   it'll be accessible at [http://localhost:8002](http://localhost:8002).
-    
-*db management*
+```
+# in your venv:
+pip install -r requirements.txt
+```
 
-- `python manage.py migrate`: Apply the database migrations.
 
-*tests*
+### Run the tests
 
-- `python manage.py test`: Run the tests
+```
+# while the server is running with `make dev':
+make test
+```
+
 - You can override the selenium ENVs used by `tests/selen.py` to use different drivers,
   by default, you need `phantomjs` installed.
 - `chrome` requires the [`chromedriver`](https://sites.google.com/a/chromium.org/chromedriver/)
@@ -71,3 +66,11 @@ With the database running from `docker-compose up`,
 - `phantomjs` (default) is a safe choice but you won't see the interactions live.
 
 
+Deployment
+----------
+
+Pull the repo, copy the `example.env` to `.env`, then adapt it to your system.
+Then run `make prod`
+
+Your production server will be available on `127.0.0.1:8742` ready to be accessed behind a
+proxy such as nginx (standard gunicorn setup).
