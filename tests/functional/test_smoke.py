@@ -2,8 +2,6 @@ from django.test import LiveServerTestCase
 
 import tests.selen as selen
 
-SELECTOR_HERO = '.hero'
-
 
 class BasicTest(LiveServerTestCase):
     def setUp(self):
@@ -14,8 +12,8 @@ class BasicTest(LiveServerTestCase):
         self._driver.close()
         super(BasicTest, self).tearDown()
 
-    def test_register(self):
+    def test_is_setup(self):
         self._driver.get(selen.LIVE_SERVER_URL)
 
         e = self._driver.find_element_by_css_selector('h1')
-        assert 'It worked!' in e.text
+        assert 'Welcome to' in e.text

@@ -18,8 +18,11 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 
+from landing import views as landing
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^$', landing.welcome, name='welcome')
 ]
 
 if settings.DEBUG:
