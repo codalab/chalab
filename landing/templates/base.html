@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Chalab{% endblock %}</title>
+</head>
+<body>
+<header>
+    <div id="logo">
+        <a href="/">ChaLab</a> <smal>Machine Learning Challenges Creator</smal>
+    </div>
+</header>
+<div class="nav">
+    <ul>
+        <li id="home"><a href="/">{% url 'home' %}</a></li>
+        <li id="about"><a href="/about">{% url 'about' %}</a></li>
+    </ul>
+</div>
+
+{% block content %}
+{% endblock %}
+</body>
+</html>

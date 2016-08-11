@@ -1,4 +1,5 @@
 static/*
+tests/chromedriver
 
 # Docker production
 .env

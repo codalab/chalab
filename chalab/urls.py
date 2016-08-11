@@ -22,7 +22,8 @@ from landing import views as landing
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^$', landing.welcome, name='welcome')
+    url(r'^$', landing.home, name='home'),
+    url(r'^about$', landing.about, name='about')
 ]
 
 if settings.DEBUG:
