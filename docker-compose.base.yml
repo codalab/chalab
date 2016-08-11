@@ -6,4 +6,3 @@ services:
      - "127.0.0.1:5432:5432"
   web:
     build: .
-    command: /usr/local/bin/gunicorn chalab.wsgi:application -w 2 -b :8000
