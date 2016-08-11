@@ -6,6 +6,9 @@ dev:
 	docker-compose run web python manage.py migrate
 	docker-compose up web
 
+superuser:
+	docker exec -t -i chalab_web_1 python manage.py createsuperuser
+
 prod:
 	docker-compose -f 'docker-compose.production.yml' build
 	docker-compose -f 'docker-compose.production.yml' run web python manage.py migrate
