@@ -1,18 +1,10 @@
-from bs4 import BeautifulSoup
-from django.core.urlresolvers import resolve, reverse
-from django.test import Client
+from django.core.urlresolvers import resolve
 from django.test import TestCase
 
 from landing.views import home, about
+from ..tools import q
 
 NAV_ANONYMOUS = ['home', 'about', 'signup', 'login']
-
-
-def r(f):
-    c = Client()
-    r = c.get(reverse(f))
-    html = BeautifulSoup(r.content, 'html.parser')
-    return html
 
 
 class HomePageTest(TestCase):
@@ -21,46 +13,46 @@ class HomePageTest(TestCase):
         self.assertEqual(found.func, home)
 
     def test_shows_header_logo(self):
-        html = r(home)
+        html = q(home)
         assert html.select('header #logo')[0] is not None
 
     def test_header_logo_points_to_root(self):
-        html = r(home)
+        html = q(home)
         l = html.select('header #logo a')[0]
         assert l['href'] == '/'
 
     def test_shows_register_form(self):
-        html = r(home)
+        html = q(home)
         f = html.select('.register form')
         assert f[0] is not None
 
     def test_is_polite(self):
-        html = r(home)
+        html = q(home)
         assert 'Welcome to' in html.select('h1')[0].string
 
     def test_shows_hero(self):
-        html = r(home)
+        html = q(home)
         assert html.select('.hero .details')[0] is not None
 
     def test_shows_nav(self):
-        html = r(home)
+        html = q(home)
 
         assert html.select('.nav')[0] is not None
 
     def test_nav_contains_links(self):
-        html = r(home)
+        html = q(home)
 
         ids = [x['id'] for x in html.select('.nav li')]
 
         self.assertEqual(NAV_ANONYMOUS, ids)
 
     def test_nav_about_points_to_about_page(self):
-        html = r(home)
+        html = q(home)
         about = html.select('.nav li#about a')[0]
         assert about['href'] == '/about'
 
     def test_nav_home_points_to_home_page(self):
-        html = r(home)
+        html = q(home)
         about = html.select('.nav li#home a')[0]
         assert about['href'] == '/'
 
@@ -71,13 +63,13 @@ class AboutPageTest(TestCase):
         self.assertEqual(found.func, about)
 
     def test_about_contains_nav(self):
-        html = r(about)
+        html = q(about)
 
         n = html.select('.nav li a')
         self.assertEqual(len(n), len(NAV_ANONYMOUS))
 
     def test_about_shows_infos(self):
-        html = r(about)
+        html = q(about)
 
         t = html.select('.content h1')[0]
         assert t.text == 'About'

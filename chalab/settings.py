@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 
     'debug_toolbar',
     'landing',
+    'wizard',
 ]
 
 MIDDLEWARE_CLASSES = [

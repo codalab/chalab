@@ -8,9 +8,5 @@ def home(request):
     return render(request, 'landing/home.html')
 
 
-def wizard_home(request):
-    return render(request, 'landing/home.html')
-
-
 def about(request):
     return render(request, 'landing/about.html')
