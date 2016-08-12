@@ -13,6 +13,7 @@ services:
       - "DJANGO_SETTINGS_MODULE=instances.local_docker"
     volumes:
       - .:/app
+      - ./static:/app/static
     depends_on:
       - db
     ports:
