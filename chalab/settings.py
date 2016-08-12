@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     # 'allauth.socialaccount.providers.linkedin',
     # 'allauth.socialaccount.providers.facebook',
 
+    'bootstrap3',
     'debug_toolbar',
+
     'landing',
     'wizard',
 ]
@@ -137,13 +139,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # ====================
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 # Static files

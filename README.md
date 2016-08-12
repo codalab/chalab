@@ -15,10 +15,12 @@ Structure
 ---------
 
 - `chalab`: core of the project,
-- `landing`: the home page,
+- `landing`: the home page app,
+- `wizard`: the wizard app,
 - `instances`: the module containing the settings per environment:
     - `local`: the settings to run django on your local machine,
     - `local_docker`: the settings to run django in docker on your local machine (preferred way),
+- `templates`: global templates.
     
 
 Local Dev

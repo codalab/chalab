@@ -3,19 +3,42 @@
 {% block title %}Welcome{% endblock %}
 
 {% block content %}
-    <div class="hero">
+    <div class="hero jumbotron text-center">
         <h1>Welcome to Chalab</h1>
-        <div class="details">
+        <p class="lead">
+            Here you can create new Machine Learning Challenges.
+        </p>
+        <p>
+            <a class="btn btn-lg btn-success" href="{% url 'account_signup' %}" role="button">Register</a>
+        </p>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <h2>Feature1</h2>
             <p>
-                Here you can create new Machine Learning Challenges.
+                Praesent at sem vel dui efficitur vehicula. Integer tincidunt augue a purus
+                sagittis, eu vehicula nisl porta. Quisque posuere massa felis, et pulvinar dui
+                pellentesque sit amet. Nam hendrerit dui ut nisl posuere egestas. Pellentesque at
+                risus id lectus dignissim luctus.
             </p>
         </div>
-    </div>
-    <div class="auth">
-        <div class="register">
-            <form>
-                <h3>Register: TODO.</h3>
-            </form>
+        <div class="col-md-4">
+            <h2>Feature2</h2>
+            <p>
+                Integer pretium id velit dictum viverra. Aliquam vehicula augue a sem convallis, at
+                porttitor justo auctor. Sed pulvinar elit arcu. Maecenas sodales sed tortor sit amet
+                bibendum. Vivamus vel interdum arcu, non interdum risus. Duis mattis enim odio,
+                vitae ullamcorper nisl rhoncus nec.
+            </p>
+        </div>
+        <div class="col-md-4">
+            <h2>Feature3</h2>
+            <p>
+                Aenean fringilla massa eu aliquam semper. Cras
+                blandit elit odio, vel ornare dui euismod sit amet. Sed malesuada mattis efficitur.
+                Phasellus eu quam libero. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Donec auctor nec magna eu eleifend. Ut volutpat porta justo.
+            </p>
         </div>
     </div>
 {% endblock %}

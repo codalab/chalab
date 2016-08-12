@@ -23,11 +23,11 @@ class BasicTest(LiveServerTestCase):
         assert 'Welcome to Chalab' in t.text
 
         # And some explanations
-        d = self.by_css('.hero .details')
+        d = self.by_css('.hero .lead')
         assert len(d.text) > 10
 
         # I can click on the About page
-        self.by_css('.nav #about a').click()
+        self.by_css('nav #about a').click()
 
         # It shows more information
         c = self.by_css('.content')
@@ -37,7 +37,7 @@ class BasicTest(LiveServerTestCase):
         self.by_css('header #logo a').click()
 
         # I can open the registration
-        self.by_css('.nav #signup a').click()
+        self.by_css('nav #signup a').click()
 
         # It shows a registration form
         f = self.by_css('form.signup')
@@ -49,5 +49,5 @@ class BasicTest(LiveServerTestCase):
     def test_is_setup(self):
         self._driver.get(selen.LIVE_SERVER_URL)
 
-        e = self._driver.find_element_by_css_selector('h1')
+        e = self._driver.find_element_by_css_selector('.hero h1')
         assert 'Welcome to' in e.text

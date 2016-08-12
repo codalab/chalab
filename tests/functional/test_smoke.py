@@ -15,5 +15,5 @@ class BasicTest(LiveServerTestCase):
     def test_is_setup(self):
         self._driver.get(selen.LIVE_SERVER_URL)
 
-        e = self._driver.find_element_by_css_selector('h1')
+        e = self._driver.find_element_by_css_selector('.hero h1')
         assert 'Welcome to' in e.text

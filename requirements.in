@@ -1,4 +1,5 @@
 Django
+django-bootstrap3
 psycopg2
 django-allauth
 

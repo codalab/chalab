@@ -21,39 +21,34 @@ class HomePageTest(TestCase):
         l = html.select('header #logo a')[0]
         assert l['href'] == '/'
 
-    def test_shows_register_form(self):
-        html = q(home)
-        f = html.select('.register form')
-        assert f[0] is not None
-
     def test_is_polite(self):
         html = q(home)
-        assert 'Welcome to' in html.select('h1')[0].string
+        assert 'Welcome to' in html.select('.hero h1')[0].string
 
     def test_shows_hero(self):
         html = q(home)
-        assert html.select('.hero .details')[0] is not None
+        assert html.select('.hero .lead')[0] is not None
 
     def test_shows_nav(self):
         html = q(home)
 
-        assert html.select('.nav')[0] is not None
+        assert html.select('nav')[0] is not None
 
     def test_nav_contains_links(self):
         html = q(home)
 
-        ids = [x['id'] for x in html.select('.nav li')]
+        ids = [x['id'] for x in html.select('nav li')]
 
         self.assertEqual(NAV_ANONYMOUS, ids)
 
     def test_nav_about_points_to_about_page(self):
         html = q(home)
-        about = html.select('.nav li#about a')[0]
+        about = html.select('nav li#about a')[0]
         assert about['href'] == '/about'
 
     def test_nav_home_points_to_home_page(self):
         html = q(home)
-        about = html.select('.nav li#home a')[0]
+        about = html.select('nav li#home a')[0]
         assert about['href'] == '/'
 
 
@@ -65,7 +60,7 @@ class AboutPageTest(TestCase):
     def test_about_contains_nav(self):
         html = q(about)
 
-        n = html.select('.nav li a')
+        n = html.select('nav li a')
         self.assertEqual(len(n), len(NAV_ANONYMOUS))
 
     def test_about_shows_infos(self):

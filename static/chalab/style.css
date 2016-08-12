@@ -1,0 +1,50 @@
+.top10 {
+    margin-top: 10px;
+}
+
+.bottom20 {
+    margin-bottom: 20px;
+}
+
+header #logo h1 {
+    font-family: 'Raleway', sans-serif;
+    margin-bottom: 4px;
+    font-size: 3.8em;
+}
+
+header #logo h4 {
+    font-family: 'Cabin', sans-serif;
+    margin-top: 3px;
+    font-size: 1em;
+    color: #a9a9a9;
+}
+
+header #logo a {
+    text-decoration: none;
+}
+
+header #logo a:hover {
+    text-decoration: none;
+}
+
+.nav {
+    background-color: #D9E8F5;
+    border-radius: 0.2em;
+}
+
+.nav > li > a, .nav > li > a:visited {
+    color: #304269;
+    border-radius: 0.2em;
+}
+
+.nav > li > a:focus, .nav > li > a:hover {
+    color: #FFFFFF;
+    background-color: rgb(235, 138, 82);
+}
+
+footer {
+    padding-top: 40px;
+    padding-bottom: 40px;
+    margin-top: 40px;
+    border-top: 1px solid #eee;
+}
