@@ -17,7 +17,7 @@ superuser:
 prod:
 	docker-compose -f 'docker-compose.production.yml' build
 	docker-compose -f 'docker-compose.production.yml' up -d db
-	docker-compose -f 'docker-compose.production.yml' run web python manage.py migrate
+	docker-compose -f 'docker-compose.production.yml' run --rm web python manage.py migrate
 	docker-compose -f 'docker-compose.production.yml' up -d web static
 
 always:
