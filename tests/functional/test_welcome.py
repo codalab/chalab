@@ -33,14 +33,18 @@ class BasicTest(LiveServerTestCase):
         c = self.by_css('.content')
         assert len(c.text) > 100
 
-        # I can go back home and see the register
+        # I can go back home with the logo in header
         self.by_css('header #logo a').click()
 
+        # I can open the registration
+        self.by_css('.nav #signup a').click()
+
         # It shows a registration form
-        f = self.by_css('.register form')
-        assert f.find_element_by_css_selector('.email input') is not None
-        assert f.find_element_by_css_selector('.password input') is not None
-        assert f.find_element_by_css_selector('.password_bis input') is not None
+        f = self.by_css('form.signup')
+        assert f.find_element_by_css_selector('input#id_username') is not None
+        assert f.find_element_by_css_selector('input#id_email') is not None
+        assert f.find_element_by_css_selector('input#id_password1') is not None
+        assert f.find_element_by_css_selector('input#id_password2') is not None
 
     def test_is_setup(self):
         self._driver.get(selen.LIVE_SERVER_URL)

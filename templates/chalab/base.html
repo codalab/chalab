@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block head_title %}Chalab{% endblock %}</title>
+
+    {% block extra_head %}
+    {% endblock %}
+</head>
+<body>
+{% block body %}
+    <header>
+        <div id="logo">
+            <a href="/">ChaLab</a>
+            <smal>Machine Learning Challenges Creator</smal>
+        </div>
+    </header>
+    <div class="nav">
+        {% if user.is_authenticated %}
+            <ul>
+                <li id="home"><a href="{% url 'home' %}">Home</a></li>
+                <li id="logout"><a href="{% url 'account_logout' %}">Logout</a></li>
+            </ul>
+        {% else %}
+            <ul>
+                <li id="home"><a href="{% url 'home' %}">Home</a></li>
+                <li id="about"><a href="{% url 'about' %}">About</a></li>
+                <li id="signup"><a href="{% url 'account_signup' %}">Register</a></li>
+                <li id="login"><a href="{% url 'account_login' %}">Login</a></li>
+            </ul>
+        {% endif %}
+    </div>
+
+    {% if messages %}
+        <div class="messages">
+            <strong>Messages:</strong>
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+{% endblock %}
+</body>
+</html>

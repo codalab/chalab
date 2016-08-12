@@ -21,13 +21,28 @@ ALLOWED_HOSTS = []
 # Application definition
 # ======================
 
+SITE_ID = 1
+
 INSTALLED_APPS = [
     'django.contrib.admin',
-    'django.contrib.auth',
+    'django.contrib.sites',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.auth',
+
+    # django allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    # TODO(laurent): take a look at social accounts to make register/login simpler,
+    #                requires to generate some db items
+    #                https://django-allauth.readthedocs.io/en/latest/installation.html#post-installation
+    # 'allauth.socialaccount.providers.google',
+    # 'allauth.socialaccount.providers.linkedin',
+    # 'allauth.socialaccount.providers.facebook',
+
     'debug_toolbar',
     'landing',
 ]
@@ -46,10 +61,15 @@ MIDDLEWARE_CLASSES = [
 
 ROOT_URLCONF = 'chalab.urls'
 
+# Templates
+# =========
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, "templates")
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -122,3 +142,15 @@ STATICFILES_DIRS = [
 
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
 INTERNAL_IPS = ['127.0.0.1']
+
+# Django Allauth
+# ==============
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+ACCOUNT_EMAIL_REQUIRED = True
+
+LOGIN_REDIRECT_URL = '/home'

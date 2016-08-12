@@ -5,6 +5,8 @@ from django.test import TestCase
 
 from landing.views import home, about
 
+NAV_ANONYMOUS = ['home', 'about', 'signup', 'login']
+
 
 def r(f):
     request = HttpRequest()
@@ -32,33 +34,32 @@ class HomePageTest(TestCase):
         f = html.select('.register form')
         assert f[0] is not None
 
-    def test_home_is_polite(self):
+    def test_is_polite(self):
         html = r(home)
         assert 'Welcome to' in html.select('h1')[0].string
 
-    def test_home_shows_hero(self):
+    def test_shows_hero(self):
         html = r(home)
         assert html.select('.hero .details')[0] is not None
 
-    def test_home_shows_nav(self):
+    def test_shows_nav(self):
         html = r(home)
 
         assert html.select('.nav')[0] is not None
 
-    def test_home_nav_contains_about_and_home(self):
+    def test_nav_contains_links(self):
         html = r(home)
 
         ids = [x['id'] for x in html.select('.nav li')]
 
-        self.assertIn('about', ids)
-        self.assertIn('home', ids)
+        self.assertEqual(NAV_ANONYMOUS, ids)
 
-    def test_home_nav_about_points_to_about_page(self):
+    def test_nav_about_points_to_about_page(self):
         html = r(home)
         about = html.select('.nav li#about a')[0]
         assert about['href'] == '/about'
 
-    def test_home_nav_home_points_to_home_page(self):
+    def test_nav_home_points_to_home_page(self):
         html = r(home)
         about = html.select('.nav li#home a')[0]
         assert about['href'] == '/'
@@ -73,7 +74,7 @@ class AboutPageTest(TestCase):
         html = r(about)
 
         n = html.select('.nav li a')
-        assert len(n) >= 2
+        self.assertEqual(len(n), len(NAV_ANONYMOUS))
 
     def test_about_shows_infos(self):
         html = r(about)

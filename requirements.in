@@ -1,5 +1,8 @@
 Django
 psycopg2
+django-allauth
 
 # Testing
+bs4
 selenium
+django-debug-toolbar

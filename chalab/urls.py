@@ -23,7 +23,8 @@ from landing import views as landing
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', landing.home, name='home'),
-    url(r'^about$', landing.about, name='about')
+    url(r'^about$', landing.about, name='about'),
+    url(r'^account/', include('allauth.urls')),
 ]
 
 if settings.DEBUG:
