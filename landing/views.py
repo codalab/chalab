@@ -1,11 +1,16 @@
-from django.shortcuts import render
-
-render = render
+from django.conf import settings
+from django.shortcuts import render, redirect
 
 
 def home(request):
-    return render(request, 'home.html')
+    if request.user.is_authenticated:
+        return redirect(settings.LOGIN_REDIRECT_URL)
+    return render(request, 'landing/home.html')
+
+
+def wizard_home(request):
+    return render(request, 'landing/home.html')
 
 
 def about(request):
-    return render(request, 'about.html')
+    return render(request, 'landing/about.html')

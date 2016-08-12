@@ -97,6 +97,23 @@ DATABASES = {
     }
 }
 
+# SMTP
+# ====
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp'
+EMAIL_PORT = 25
+# TODO(laurent): Use ssl with emails
+# EMAIL_HOST_USER
+# EMAIL_HOST_PASSWORD
+# EMAIL_USE_TLS
+# EMAIL_USE_SSL
+# EMAIL_TIMEOUT
+# EMAIL_SSL_KEYFILE
+# EMAIL_SSL_CERTFILE
+
+
 # Password validation
 # ===================
 

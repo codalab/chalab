@@ -5,6 +5,8 @@ services:
       file: docker-compose.base.yml
       service: db
     restart: always
+  smtp:
+    image: namshi/smtp
   web:
     extends:
       file: docker-compose.base.yml
@@ -15,6 +17,7 @@ services:
       - "DJANGO_SETTINGS_MODULE=instances.production"
     depends_on:
       - db
+      - smtp
     ports:
       - "8742:8000"
   static:

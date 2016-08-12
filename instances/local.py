@@ -8,3 +8,6 @@ host, port = _db_ip.decode('utf-8').strip().split(':')
 
 DATABASES['default']['HOST'] = host
 DATABASES['default']['PORT'] = port
+
+EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+

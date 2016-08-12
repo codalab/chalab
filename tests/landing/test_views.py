@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
-from django.core.urlresolvers import resolve
-from django.http import HttpRequest
+from django.core.urlresolvers import resolve, reverse
+from django.test import Client
 from django.test import TestCase
 
 from landing.views import home, about
@@ -9,9 +9,9 @@ NAV_ANONYMOUS = ['home', 'about', 'signup', 'login']
 
 
 def r(f):
-    request = HttpRequest()
-    response = f(request)
-    html = BeautifulSoup(response.content, 'html.parser')
+    c = Client()
+    r = c.get(reverse(f))
+    html = BeautifulSoup(r.content, 'html.parser')
     return html
 
 
