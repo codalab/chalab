@@ -20,7 +20,8 @@ Structure
 - `instances`: the module containing the settings per environment:
     - `local`: the settings to run django on your local machine,
     - `local_docker`: the settings to run django in docker on your local machine (preferred way),
-- `templates`: global templates.
+- `templates`: global templates,
+- `datasets`: default datasets from [automl](http://automl.chalearn.org/data).
     
 
 Local Dev
@@ -47,7 +48,14 @@ Kill it (ctrl-c) then re-run `make dev` to rebuild the container and apply db mi
 
 - `make superuser`: when you started the database (`make dev` does it for you)
 - `make static`: to re-generate the static resources
+- `make migrations`: to generate the django migrations
 
+
+### Datasets
+
+Chalab comes with a few datasets by defaults, we don't store them in the git repository.
+
+- `make dataset`: Download the datasets in the local folder.
 
 ### Testing: setup
 

@@ -1,6 +1,8 @@
 static/*
 tests/chromedriver
 
+datasets/chalearn/*
+
 # Docker production
 .env
 

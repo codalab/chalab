@@ -4,6 +4,12 @@ test:
 static: always
 	DJANGO_SETTINGS_MODULE='instances.local' python manage.py collectstatic --noinput
 
+migrations:
+	DJANGO_SETTINGS_MODULE='instances.local' python manage.py makemigrations
+
+dataset:
+	cd ./datasets/chalearn/ && ./download.sh
+
 dev:
 	docker-compose build
 	docker-compose up -d db
