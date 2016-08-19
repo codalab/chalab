@@ -1,19 +1,10 @@
 import logging
-import random
-from collections import namedtuple
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 log = logging.getLogger('pages')
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
-
-UserTuple = namedtuple('UserTuple', ['name', 'email', 'password'])
-
-
-def random_user(name):
-    name = '%s.%010d' % (name, random.randint(0, 1000000000))
-    return UserTuple(name=name, email='%s@chalab.test' % name, password='sadhasdjasdqwdnasdbkj')
 
 
 class SelectableMixin(object):

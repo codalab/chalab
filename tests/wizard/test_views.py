@@ -3,19 +3,23 @@ from django.test import TestCase
 from django.urls import reverse
 
 from wizard import models
-from ..tools import register, q, q2
+from ..tools import register, q, q2, random_user
 
 NAV_LOGGED = ['home', 'about', 'login']
 
 
 class HomePageTest(TestCase):
     def test_home_after_login_returns_200(self):
-        c, _ = register('richard_f')
+        c = Client()
+        register(c, random_user('richard_f'))
+
         r = c.get(reverse('wizard:home'))
+
         self.assertEqual(r.status_code, 200)
 
     def test_home_after_login_is_app_wizard(self):
-        c, _ = register('nikola_t')
+        c = Client()
+        register(c, random_user('nikola_t'))
 
         home = q('wizard:home', c)
         app = home.select('.app')
@@ -24,7 +28,8 @@ class HomePageTest(TestCase):
         self.assertEqual(app[0]['id'], 'wizard')
 
     def test_home_after_login_shows_empty_list_of_challenges(self):
-        c, _ = register('gauss_c')
+        c = Client()
+        register(c, random_user('richard_f'))
 
         home = q('wizard:home', c)
 
@@ -34,7 +39,8 @@ class HomePageTest(TestCase):
         self.assertEqual(len(challenges), 0)
 
     def test_home_shows_create_challenge_button(self):
-        c, _ = register('nietzsche_f')
+        c = Client()
+        register(c, random_user('richard_f'))
 
         home = q('wizard:home', c)
 
@@ -51,7 +57,8 @@ class HomePageTest(TestCase):
         #     r = c.get(reverse('wizard:home'))
 
     def test_shows_challenges(self):
-        c, r = register('edison_t')
+        c = Client()
+        r = register(c, random_user('richard_f'))
         u = r.context['user']
 
         models.ChallengeModel.objects.create(title='a challenge',
@@ -64,7 +71,8 @@ class HomePageTest(TestCase):
         self.assertEqual(len(r.context['object_list']), 1)
 
     def test_shows_challenges_bis(self):
-        c, r = register('edison_t')
+        c = Client()
+        r = register(c, random_user('richard_f'))
         u = r.context['user']
 
         models.ChallengeModel.objects.create(title='a challenge',
@@ -80,17 +88,23 @@ class HomePageTest(TestCase):
 
 class WizardFlowCreation(TestCase):
     def test_create_challenge_shows_challenge_form(self):
-        c, _ = register('curie_m')
+        c = Client()
+        r = register(c, random_user('richard_f'))
+
         r, html = q2('wizard:create', c)
         self.assertTrue('form' in r.context)
 
     def test_create_challenges_shows_panel_1create(self):
-        c, _ = register('curie_p')
+        c = Client()
+        r = register(c, random_user('richard_f'))
+
         r, html = q2('wizard:create', c)
         self.assertEqual(html.select('.panel')[0]['id'], 'create-challenge')
 
     def test_create_challenges_redirect_to_challenge(self):
-        c, r = register('darwin_c')
+        c = Client()
+        r = register(c, random_user('richard_f'))
+
         u = r.context['user']
 
         r = c.post(reverse('wizard:create'),

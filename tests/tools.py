@@ -1,22 +1,28 @@
+import random
+from collections import namedtuple
+
 from bs4 import BeautifulSoup
 from django.core import mail
 from django.test import Client
 from django.urls import reverse
+
+UserTuple = namedtuple('UserTuple', ['name', 'email', 'password'])
 
 
 def last_mail():
     return mail.outbox[-1]
 
 
-def register(username, email=None, password='1q2w3e4r5t6y7u8i9o0'):
-    if email is None:
-        email = '%s@test.test' % username
+def random_user(name):
+    name = '%s.%010d' % (name, random.randint(0, 1000000000))
+    return UserTuple(name=name, email='%s@chalab.test' % name, password='sadhasdjasdqwdnasdbkj')
 
-    c = Client()
+
+def register(c, u):
     r = c.post(reverse('account_signup'),
-               {'username': username, 'email': email,
-                'password1': password, 'password2': password})
-    return c, r
+               {'username': u.name, 'email': u.email,
+                'password1': u.password, 'password2': u.password})
+    return r
 
 
 def q2(f, c=None):
