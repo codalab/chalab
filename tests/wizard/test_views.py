@@ -2,8 +2,8 @@ from django.test import Client
 from django.test import TestCase
 from django.urls import reverse
 
-from wizard import models
-from ..tools import register, q, q2, random_user
+from wizard import models, views
+from ..tools import register, q, q2, random_user, make_request, html
 
 NAV_LOGGED = ['home', 'about', 'login']
 
@@ -86,6 +86,26 @@ class HomePageTest(TestCase):
         self.assertEqual(len(challenges), 1)
 
 
+def random_text(name, length):
+    return '%s_%s' % (name, 'x' * (length - len(name) - 1))
+
+
+def make_challenge(user, title=None, description=None, organization_name=None):
+    title = title or random_text('title', 30)
+    description = description or random_text('description', 120)
+    organization_name = organization_name or random_text('organization_name', 30)
+
+    return models.ChallengeModel.objects.create(created_by=user, title=title,
+                                                description=description,
+                                                organization_name=organization_name)
+
+
+class WizardDataDefinition(TestCase):
+    def test_url_exists(self):
+        r = reverse('wizard:data', kwargs=dict(pk=1))
+        assert r is not None
+
+
 class WizardFlowCreation(TestCase):
     def test_create_challenge_shows_challenge_form(self):
         c = Client()
@@ -94,7 +114,7 @@ class WizardFlowCreation(TestCase):
         r, html = q2('wizard:create', c)
         self.assertTrue('form' in r.context)
 
-    def test_create_challenges_shows_panel_1create(self):
+    def test_create_challenges_shows_panel_create(self):
         c = Client()
         r = register(c, random_user('richard_f'))
 
@@ -115,3 +135,13 @@ class WizardFlowCreation(TestCase):
         last_challenge = models.ChallengeModel.objects.filter(created_by=u).last()
 
         self.assertRedirects(r, reverse('wizard:challenge', kwargs={'pk': last_challenge.pk}))
+
+    def test_challenge_page_shows_links_to_data(self):
+        request = make_request('/', user=random_user('john_doe'))
+        c = make_challenge(user=request.user)
+
+        r = views.ChallengeDescriptionDetail.as_view()(request, pk=c.pk)
+        r = html(r)
+
+        self.assertEqual(r.select('.flow .data a')[0]['href'],
+                         reverse('wizard:data', kwargs=dict(pk=c.pk)))

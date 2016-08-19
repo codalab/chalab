@@ -13,7 +13,7 @@
     <p>{{ object.description }}</p>
 
     <ol class="flow">
-        <li class="data"><a href="{% url 'wizard:data' object.id %}">Data</a></li>
+        <li><a href="{% url 'wizard:data' object.id %}">Data</a></li>
         {% comment %}
         <li><a href="{% url 'wizard:task' object.id %}">Task</a></li>
         <li><a href="{% url 'wizard:metric' object.id %}">Metric</a></li>

@@ -12,3 +12,10 @@ class ChallengeModel(models.Model):
 
     def get_absolute_url(self):
         return reverse('wizard:challenge', kwargs={'pk': self.pk})
+
+
+class ChallengeDataModel(models.Model):
+    challenge = models.ForeignKey(ChallengeModel, on_delete=models.CASCADE, related_name='data')
+
+    def get_absolute_url(self):
+        return reverse('wizard:data', kwargs={'cpk': self.challenge.pk, 'pk': self.pk})
