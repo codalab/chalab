@@ -14,14 +14,13 @@
 
     <ol class="flow">
         <li class="data"><a href="{% url 'wizard:data' object.id %}">Data</a></li>
-        {% comment %}
-        <li><a href="{% url 'wizard:task' object.id %}">Task</a></li>
-        <li><a href="{% url 'wizard:metric' object.id %}">Metric</a></li>
-        <li><a href="{% url 'wizard:protocol' object.id %}">Protocol</a></li>
-        <li><a href="{% url 'wizard:baseline' object.id %}">Baseline</a></li>
-        <li><a href="{% url 'wizard:documentation' object.id %}">Documentation</a></li>
-        <li><a href="{% url 'wizard:rules' object.id %}">Rules</a></li>
-        {% endcomment %}
+        <li class="task"><a href="{% url 'wizard:task' object.id %}">Task</a></li>
+        <li class="metric"><a href="{% url 'wizard:metric' object.id %}">Metric</a></li>
+        <li class="protocol"><a href="{% url 'wizard:protocol' object.id %}">Protocol</a></li>
+        <li class="baseline"><a href="{% url 'wizard:baseline' object.id %}">Baseline</a></li>
+        <li class="documentation">
+            <a href="{% url 'wizard:documentation' object.id %}">Documentation</a></li>
+        <li class="rules"><a href="{% url 'wizard:rules' object.id %}">Rules</a></li>
     </ol>
 
     {% comment %}
