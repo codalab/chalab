@@ -46,8 +46,12 @@
         {# Display django.contrib.messages as Bootstrap alerts #}
         {% bootstrap_messages %}
 
-        {% block content %}
-        {% endblock %}
+        <div id="{% block app_name %}{% endblock %}" class="app">
+            <div id="{% block panel_name %}{% endblock %}" class="panel">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
     {% endblock %}
     <footer class="footer">
         <p>2016, Work In Progress - V0.0.1</p>

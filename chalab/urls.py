@@ -19,14 +19,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 
 from landing import views as landing
-from wizard import views as wizard
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', landing.home, name='home'),
-    url(r'^home$', wizard.home, name='wizard.home'),
     url(r'^about$', landing.about, name='about'),
     url(r'^accounts/', include('allauth.urls')),
+    url(r'^wizard/', include('wizard.urls', namespace='wizard')),
 ]
 
 if settings.DEBUG:

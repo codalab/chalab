@@ -2,6 +2,8 @@
 
 {% block title %}Welcome{% endblock %}
 
+{% block app_name %}wizard{% endblock %}
+
 {% block content %}
     <div class="hero">
         <h1>Welcome to Chalab</h1>
@@ -12,6 +14,27 @@
         </div>
     </div>
     <div class="challenges">
-        <h3>Here you'll see you challenges.</h3>
+        {% for challenge in object_list %}
+            <div class="challenge">
+                <h3 class="title">{{ challenge.title }}</h3>
+                <a class="details btn btn-block btn-primary"
+                   href="{% url 'wizard:challenge' pk=challenge.pk %}">
+                    Details
+                </a>
+            </div>
+        {% empty %}
+            <h3>Here you'll see you challenges.</h3>
+        {% endfor %}
     </div>
+    <div class="row">
+        <div class="col-md-2">
+            <a class="create-challenge btn btn-block btn-primary"
+               href="{% url 'wizard:create' %}">
+                <i class="fa fa-plus" aria-hidden="true"></i>
+                Create a New Challenge
+            </a>
+        </div>
+    </div>
+
+
 {% endblock %}

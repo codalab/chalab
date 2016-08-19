@@ -1,0 +1,19 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Create a new competition{% endblock %}
+
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}create-challenge{% endblock %}
+
+{% block content %}
+    <form class='challenge' action="#" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% buttons %}
+            <button type="submit" class="btn btn-primary">
+                {% bootstrap_icon "star" %} Submit
+            </button>
+        {% endbuttons %}
+    </form>
+{% endblock %}

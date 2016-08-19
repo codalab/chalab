@@ -19,8 +19,13 @@ def register(username, email=None, password='1q2w3e4r5t6y7u8i9o0'):
     return c, r
 
 
-def q(f, c=None):
+def q2(f, c=None):
     c = c or Client()
     r = c.get(reverse(f))
     html = BeautifulSoup(r.content, 'html.parser')
+    return r, html
+
+
+def q(f, c=None):
+    _, html = q2(f, c=c)
     return html
