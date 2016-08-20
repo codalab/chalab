@@ -1,0 +1,13 @@
+<ol class="breadcrumb">
+    {% for f in flow %}
+        <li {% if f.active %}class="active"{% endif %}>
+            {% if f.active %}
+                {{ forloop.counter }}. {{ f.name }}
+            {% else %}
+                <a href="{% url f.url pk=object.challenge.id %}">
+                    {{ forloop.counter }}. {{ f.name }}
+                </a>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ol>

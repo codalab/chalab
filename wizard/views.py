@@ -1,4 +1,5 @@
 import logging
+from collections import namedtuple
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,6 +13,35 @@ log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
 
 from .models import ChallengeModel, ChallengeDataModel
+
+
+class Flow(object):
+    Data = 'Data'
+    Task = 'Task'
+    Metric = 'Metric'
+    Protocol = 'Protocol'
+    Baseline = 'Baseline'
+    Documentation = 'Documentation'
+    Rules = 'Rules'
+
+    FlowItem = namedtuple('FlowItem', ['name', 'active', 'url', 'descr_template'])
+
+    FLOW = [Data, Task, Metric, Protocol, Baseline, Documentation, Rules]
+
+    @classmethod
+    def list(cls, current):
+        return [cls.FlowItem(name=x, active=current == x, url='wizard:' + x.lower(),
+                             descr_template='wizard/flow/descr/_%s.html' % x.lower())
+                for x in cls.FLOW]
+
+
+class FlowOperationMixin(object):
+    current = None
+
+    def get_context_data(self, **kwargs):
+        context = super(FlowOperationMixin, self).get_context_data(**kwargs)
+        context['flow'] = Flow.list(self.current)
+        return context
 
 
 @login_required
@@ -30,17 +60,18 @@ class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
         return super(ChallengeDescriptionCreate, self).form_valid(form)
 
 
-class ChallengeDescriptionDetail(DetailView, LoginRequiredMixin):
+class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMixin):
     template_name = 'wizard/detail.html'
     model = ChallengeModel
     fields = ['title', 'organization_name', 'description']
 
 
-class ChallengeDataUpdate(UpdateView, LoginRequiredMixin):
+class ChallengeDataUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     template_name = 'wizard/data/detail.html'
     model = ChallengeDataModel
 
-    fields = []
+    fields = ['name', 'kind']
+    current = Flow.Data
 
     def get_object(self, **kwargs):
         pk = self.kwargs['pk']

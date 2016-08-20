@@ -1,3 +1,63 @@
+/**
+ * Vertical Stepper
+ * http://stackoverflow.com/a/33367557/843194
+**/
+.vertical-stepper *,
+.vertical-stepper *:before,
+.vertical-stepper *:after {
+    box-sizing: border-box;
+}
+
+.vertical-stepper .step {
+    position: relative;
+    min-height: 100px /* circle-size + space */;
+}
+
+.vertical-stepper .step > div:first-child {
+    position: static;
+    height: 0;
+}
+
+.vertical-stepper .step > div:last-child {
+    margin-left: 32px;
+    padding-left: 16px;
+}
+
+.vertical-stepper .circle {
+    background: #4285f4;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    border-radius: 16px;
+    position: relative;
+    color: white;
+    text-align: center;
+}
+
+.vertical-stepper .line {
+    position: absolute;
+    border-left: 1px solid gainsboro;
+    left: 16px;
+    bottom: 10px;
+    top: 42px;
+}
+
+.vertical-stepper .step:last-child .line {
+    display: none;
+}
+
+.vertical-stepper .title > h3 {
+    margin-top: 0;
+
+}
+
+/**
+**/
+
+.fa {
+    margin-right: 6px;
+}
+
 .top10 {
     margin-top: 10px;
 }

@@ -16,6 +16,29 @@ class ChallengeModel(models.Model):
 
 class ChallengeDataModel(models.Model):
     challenge = models.ForeignKey(ChallengeModel, on_delete=models.CASCADE, related_name='data')
+    name = models.CharField(max_length=80, default="")
+
+    K_CHALEARN_ADULT = 'chalearn/adult'
+    K_CHALEARN_ALEXIS = 'chalearn/alexis'
+    K_CHALEARN_CHRISTINE = 'chalearn/christine'
+    K_CHALEARN_DILBERT = 'chalearn/dilbert'
+    K_CHALEARN_DOROTHEA = 'chalearn/dorothea'
+    K_CHALEARN_FABERT = 'chalearn/fabert'
+    K_CHALEARN_JANNIS = 'chalearn/jannis'
+    K_CHALEARN_MADELINE = 'chalearn/madeline'
+
+    DATA_SET_KIND = [
+        (K_CHALEARN_ADULT, 'Chalearn: Adult'),
+        (K_CHALEARN_ALEXIS, 'Chalearn: Alexis'),
+        (K_CHALEARN_CHRISTINE, 'Chalearn: Christine'),
+        (K_CHALEARN_DILBERT, 'Chalearn: Dilbert'),
+        (K_CHALEARN_DOROTHEA, 'Chalearn: Dorothea'),
+        (K_CHALEARN_FABERT, 'Chalearn: Fabert'),
+        (K_CHALEARN_JANNIS, 'Chalearn: Jannis'),
+        (K_CHALEARN_MADELINE, 'Chalearn: Madeline'),
+    ]
+
+    kind = models.CharField(choices=DATA_SET_KIND, max_length=30, default=K_CHALEARN_ADULT)
 
     def get_absolute_url(self):
-        return reverse('wizard:data', kwargs={'cpk': self.challenge.pk, 'pk': self.pk})
+        return reverse('wizard:data', kwargs={'pk': self.challenge.pk})

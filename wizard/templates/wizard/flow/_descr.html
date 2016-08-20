@@ -1,0 +1,20 @@
+<div class="flow-full vertical-stepper">
+    {% for f in flow %}
+        <div class="step">
+            <div>
+                <div class="circle">{{ forloop.counter }}</div>
+                <div class="line"></div>
+            </div>
+            <div>
+                <div class="title">
+                    <h3>
+                        <a href="{% url f.url object.id %}">
+                            {{ f.name }}
+                        </a>
+                    </h3>
+                </div>
+                <div class="body">{% include f.descr_template %}</div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
