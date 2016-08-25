@@ -155,6 +155,11 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'chalab', 'static')
 ]
 
+# Uploads / Media files
+# =====================
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Django Debug Toolbar
 # ====================
 

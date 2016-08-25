@@ -1,3 +1,4 @@
+import os
 import random
 from collections import namedtuple
 
@@ -12,6 +13,16 @@ from django.urls import reverse
 UserTuple = namedtuple('UserTuple', ['name', 'email', 'password'])
 
 _FACTORY = RequestFactory()
+
+
+def file_dir(__file__, *suffix):
+    """
+    Return the directory for the passed `__file__' constant.
+    Append an optional suffix to it.
+
+    Used to load resources relative to the current file for example.
+    """
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), *suffix)
 
 
 def last_mail():

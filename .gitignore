@@ -1,10 +1,16 @@
+# Django "runtime"
 static/*
-tests/chromedriver
+media/*
 
+# Chalab Datasources & Tests
 datasets/chalearn/*
+tests/chromedriver
 
 # Docker production
 .env
+
+
+# Github Default:
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
