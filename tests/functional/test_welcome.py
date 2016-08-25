@@ -1,8 +1,8 @@
 from django.test import LiveServerTestCase
 
-import tests.selen as selen
-from functional.pages import Page
-from tools import random_user
+from .. import selen
+from .pages import Page
+from ..tools import random_user
 
 
 class BasicTest(LiveServerTestCase):

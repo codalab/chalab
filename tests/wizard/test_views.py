@@ -147,41 +147,41 @@ class WizardFlowCreation(TestCase):
     def test_challenge_page_shows_link_to_data(self):
         c, r = self.challenge_description()
 
-        self.assertEqual(r.select('.flow .data a')[0]['href'],
+        self.assertEqual(r.select('.flow-full .step.data a')[0]['href'],
                          reverse('wizard:data', kwargs=dict(pk=c.pk)))
 
     def test_challenge_page_shows_link_to_task(self):
         c, r = self.challenge_description()
 
-        self.assertEqual(r.select('.flow .task a')[0]['href'],
+        self.assertEqual(r.select('.flow-full .step.task a')[0]['href'],
                          reverse('wizard:task', kwargs=dict(pk=c.pk)))
 
     def test_challenge_page_shows_link_to_metric(self):
         c, r = self.challenge_description()
 
-        self.assertEqual(r.select('.flow .metric a')[0]['href'],
+        self.assertEqual(r.select('.flow-full .step.metric a')[0]['href'],
                          reverse('wizard:metric', kwargs=dict(pk=c.pk)))
 
     def test_challenge_page_shows_link_to_protocol(self):
         c, r = self.challenge_description()
 
-        self.assertEqual(r.select('.flow .protocol a')[0]['href'],
+        self.assertEqual(r.select('.flow-full .step.protocol a')[0]['href'],
                          reverse('wizard:protocol', kwargs=dict(pk=c.pk)))
 
     def test_challenge_page_shows_link_to_baseline(self):
         c, r = self.challenge_description()
 
-        self.assertEqual(r.select('.flow .baseline a')[0]['href'],
+        self.assertEqual(r.select('.flow-full .step.baseline a')[0]['href'],
                          reverse('wizard:baseline', kwargs=dict(pk=c.pk)))
 
     def test_challenge_page_shows_link_to_documentation(self):
         c, r = self.challenge_description()
 
-        self.assertEqual(r.select('.flow .documentation a')[0]['href'],
+        self.assertEqual(r.select('.flow-full .step.documentation a')[0]['href'],
                          reverse('wizard:documentation', kwargs=dict(pk=c.pk)))
 
     def test_challenge_page_shows_link_to_rules(self):
         c, r = self.challenge_description()
 
-        self.assertEqual(r.select('.flow .rules a')[0]['href'],
+        self.assertEqual(r.select('.flow-full .step.rules a')[0]['href'],
                          reverse('wizard:rules', kwargs=dict(pk=c.pk)))

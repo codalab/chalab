@@ -24,13 +24,14 @@ class Flow(object):
     Documentation = 'Documentation'
     Rules = 'Rules'
 
-    FlowItem = namedtuple('FlowItem', ['name', 'active', 'url', 'descr_template'])
+    FlowItem = namedtuple('FlowItem', ['slug', 'name', 'active', 'url', 'descr_template'])
 
     FLOW = [Data, Task, Metric, Protocol, Baseline, Documentation, Rules]
 
     @classmethod
     def list(cls, current):
-        return [cls.FlowItem(name=x, active=current == x, url='wizard:' + x.lower(),
+        return [cls.FlowItem(slug=x.lower(),
+                             name=x, active=current == x, url='wizard:' + x.lower(),
                              descr_template='wizard/flow/descr/_%s.html' % x.lower())
                 for x in cls.FLOW]
 

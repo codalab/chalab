@@ -1,6 +1,6 @@
 <div class="flow-full vertical-stepper">
     {% for f in flow %}
-        <div class="step">
+        <div class="step {{ f.slug }}">
             <div>
                 <div class="circle">{{ forloop.counter }}</div>
                 <div class="line"></div>
