@@ -1,0 +1,16 @@
+usage = 'AutoML challenge 2014'
+name = 'dilbert'
+task = 'multiclass.classification'
+target_type = 'Categorical'
+feat_type = 'Numerical'
+metric = 'pac_metric'
+time_budget =  1200
+feat_num =  2000
+target_num =     5
+label_num =     5
+train_num = 10
+valid_num =  3
+test_num =  5
+has_categorical =     0
+has_missing =     0
+is_sparse =     0

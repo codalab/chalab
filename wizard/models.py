@@ -1,4 +1,6 @@
+import logging
 import os
+from glob import glob
 from time import gmtime, strftime
 
 from django.contrib.auth.models import User
@@ -8,6 +10,8 @@ from django.db import models
 from django.db.models import OneToOneField
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
+
+log = logging.getLogger('wizard/models')
 
 storage = DefaultStorage()
 
@@ -192,6 +196,79 @@ class MatrixModel(models.Model):
 
         self.cols.save()
         self.rows.save()
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Force clean on save.
+        super().save(*args, **kwargs)
+
+
+class DatasetModel(models.Model):
+    owner = models.ForeignKey(User, null=True)
+    is_public = models.BooleanField(default=False, null=False)
+    is_ready = models.BooleanField(default=False, null=False)
+    name = models.CharField(max_length=256, null=False)
+
+
+def create_with_file(clss, file_path, **kwargs):
+    """
+    Helper class to test ColumXXXX and MatrixXXX classes,
+    the one that stores files in their x.raw_content field.
+
+    Handles the file storage.
+    """
+    try:
+        c = clss(**kwargs)
+        base_name = os.path.basename(file_path)
+        with open(file_path, 'r') as f:
+            c.raw_content.save(base_name, f)
+            c.save()
+        return c
+    except Exception as e:
+        log.error("Problem creating from file: clss=%r, path=%s\n%e", clss, file_path, e)
+        raise e
+
+
+def load_chalearn(path, suffix):
+    p = glob(os.path.join(path, '*' + suffix))
+    assert len(p) == 1, "Invalid chalearn: path=%s, suffix=%s, found=%s" % (path, suffix, p)
+
+    return create_with_file(MatrixModel, p[0])
+
+
+class TaskModel(models.Model):
+    owner = models.ForeignKey(User, null=True)
+    is_public = models.BooleanField(default=False, null=False)
+    is_ready = models.BooleanField(default=False, null=False)
+    name = models.CharField(max_length=256, null=False)
+
+    # TODO(laurent): This pattern of having a sinble model reference by many fields
+    # is not viable. We should define a model instance per use case (training, etc).
+    # Similar to what we do for the columnar storage model.
+    input_train = OneToOneField(MatrixModel, null=True, related_name='model_trained')
+    target_train = OneToOneField(MatrixModel, null=True, related_name='model_trained_target')
+    input_test = OneToOneField(MatrixModel, null=True, related_name='model_tested')
+    input_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated')
+
+    @classmethod
+    def from_chalearn(cls, path, name, owner=None, is_public=True):
+        return cls.objects.create(
+            owner=owner, is_public=is_public, name=name,
+            input_train=load_chalearn(path, 'train.data'),
+            target_train=load_chalearn(path, 'train.solution'),
+            input_test=load_chalearn(path, 'test.data'),
+            input_valid=load_chalearn(path, 'valid.data')
+        )
+
+    def clean(self):
+        super().clean()
+
+        # TODO(laurent): there are some subtleties on the validation
+        # regarding nested fields. We also do not need to duplicate
+        # the metadata for the columns between each input.
+        self.is_ready = (self.input_test is not None and
+                         self.target_train is not None and
+                         self.input_test is not None and
+                         self.input_valid is not None)
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
