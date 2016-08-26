@@ -28,8 +28,8 @@ def assert_redirects(response, expected_url, status_code=302, target_status_code
 
     https://docs.djangoproject.com/en/1.10/_modules/django/test/testcases/#SimpleTestCase.assertRedirects
     """
-    assert (response.status_code == status_code,
-            "got status=%s instead of %s" % (response.status_code, status_code))
+    assert response.status_code == status_code, \
+        "got status=%s instead of %s" % (response.status_code, status_code)
 
     url = response.url
     scheme, netloc, path, query, fragment = urlsplit(url)
@@ -38,10 +38,10 @@ def assert_redirects(response, expected_url, status_code=302, target_status_code
     path = urljoin(response.request['PATH_INFO'], path)
 
     redirect_response = response.client.get(path, QueryDict(query), secure=(scheme == 'https'))
-    assert (redirect_response.status_code == target_status_code,
-            "got status=%s instead of %s" % (redirect_response.status_code, target_status_code))
-    assert (url == expected_url,
-            "got url=%s instead of %s" % (url, expected_url))
+    assert redirect_response.status_code == target_status_code, \
+        "got status=%s instead of %s" % (redirect_response.status_code, target_status_code)
+    assert url == expected_url, \
+        "got url=%s instead of %s" % (url, expected_url)
 
 
 # File & Dirs manipulation
