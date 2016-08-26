@@ -1,5 +1,5 @@
 test:
-	DJANGO_SETTINGS_MODULE='instances.local' python manage.py test
+	DJANGO_SETTINGS_MODULE='instances.local' pytest
 
 static: always
 	DJANGO_SETTINGS_MODULE='instances.local' python manage.py collectstatic --noinput

@@ -5,14 +5,39 @@ from collections import namedtuple
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
 from django.core import mail
+from django.http import QueryDict
 from django.template.response import ContentNotRenderedError
 from django.test import Client
 from django.test import RequestFactory
 from django.urls import reverse
+from django.utils.six.moves.urllib.parse import (urljoin, urlsplit)
 
 UserTuple = namedtuple('UserTuple', ['name', 'email', 'password'])
 
 _FACTORY = RequestFactory()
+
+
+def assert_redirects(response, expected_url, status_code=302, target_status_code=200):
+    """
+    Naive reimplementation of Django's assertRedirects.
+    Compatible with pytest and should preserve its better error reporting.
+
+    https://docs.djangoproject.com/en/1.10/_modules/django/test/testcases/#SimpleTestCase.assertRedirects
+    """
+    assert (response.status_code == status_code,
+            "got status=%s instead of %s" % (response.status_code, status_code))
+
+    url = response.url
+    scheme, netloc, path, query, fragment = urlsplit(url)
+
+    url = urljoin(response.request['PATH_INFO'], url)
+    path = urljoin(response.request['PATH_INFO'], path)
+
+    redirect_response = response.client.get(path, QueryDict(query), secure=(scheme == 'https'))
+    assert (redirect_response.status_code == target_status_code,
+            "got status=%s instead of %s" % (redirect_response.status_code, target_status_code))
+    assert (url == expected_url,
+            "got url=%s instead of %s" % (url, expected_url))
 
 
 def file_dir(__file__, *suffix):

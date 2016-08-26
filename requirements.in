@@ -7,3 +7,5 @@ django-allauth
 bs4
 selenium
 django-debug-toolbar
+pytest-django
+

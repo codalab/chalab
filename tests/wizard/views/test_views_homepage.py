@@ -1,26 +1,27 @@
+import pytest
 from django.test import Client
-from django.test import TestCase
 from django.urls import reverse
 
-from tests.tools import register, q, random_user
+from tests.tools import register, q, random_user, assert_redirects
 from wizard import models
 
+pytestmark = pytest.mark.django_db
 NAV_LOGGED = ['home', 'about', 'login']
 
 
-class HomePageTest(TestCase):
+class TestHomePage:
     def test_after_login_returns_200(self):
         c = Client()
         register(c, random_user('richard_f'))
 
         r = c.get(reverse('wizard:home'))
 
-        self.assertEqual(r.status_code, 200)
+        assert r.status_code == 200
 
     def test_without_login_returns_403(self):
         r = Client().get(reverse('wizard:home'))
 
-        self.assertRedirects(r, '/accounts/login/?next=/wizard/')
+        assert_redirects(r, '/accounts/login/?next=/wizard/')
 
     def test_after_login_is_app_wizard(self):
         c = Client()
@@ -29,8 +30,8 @@ class HomePageTest(TestCase):
         home = q('wizard:home', c)
         app = home.select('.app')
 
-        self.assertEqual(len(app), 1)
-        self.assertEqual(app[0]['id'], 'wizard')
+        assert len(app) == 1
+        assert app[0]['id'] == 'wizard'
 
     def test_after_login_shows_empty_list_of_challenges(self):
         c = Client()
@@ -40,8 +41,8 @@ class HomePageTest(TestCase):
 
         challenges_block = home.select('.challenges')
         challenges = home.select('.challenges .challenge')
-        self.assertEqual(len(challenges_block), 1)
-        self.assertEqual(len(challenges), 0)
+        assert len(challenges_block) == 1
+        assert len(challenges) == 0
 
     def test_shows_create_challenge_button(self):
         c = Client()
@@ -50,7 +51,7 @@ class HomePageTest(TestCase):
         home = q('wizard:home', c)
 
         create_btn = home.select('a.create-challenge')[0]
-        self.assertEqual(create_btn['href'], reverse('wizard:create'))
+        assert create_btn['href'] == reverse('wizard:create')
 
     def test_challenge_is_in_context(self):
         c = Client()
@@ -64,8 +65,8 @@ class HomePageTest(TestCase):
 
         r = c.get(reverse('wizard:home'))
 
-        self.assertEqual(r.context['object_list'].count(), 1)
-        self.assertEqual(r.context['object_list'].first(), m)
+        assert r.context['object_list'].count() == 1
+        assert r.context['object_list'].first() == m
 
     def test_challenge_is_in_html(self):
         c = Client()
@@ -80,4 +81,4 @@ class HomePageTest(TestCase):
         html = q('wizard:home', c)
         challenges = html.select('.challenges .challenge')
 
-        self.assertEqual(len(challenges), 1)
+        assert len(challenges) == 1

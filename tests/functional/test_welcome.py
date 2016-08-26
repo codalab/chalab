@@ -1,7 +1,7 @@
 from django.test import LiveServerTestCase
 
-from .. import selen
 from .pages import Page
+from .. import selen
 from ..tools import random_user
 
 

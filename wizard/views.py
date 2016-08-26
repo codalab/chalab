@@ -36,7 +36,7 @@ class Flow(object):
                 for x in cls.FLOW]
 
 
-class FlowOperationMixin(object):
+class FlowOperationMixin:
     current = None
 
     def get_context_data(self, **kwargs):

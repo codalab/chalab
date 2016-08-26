@@ -1,16 +1,17 @@
+import pytest
 from django.core.urlresolvers import resolve
-from django.test import TestCase
 
 from landing.views import home, about
 from ..tools import q
 
+pytestmark = pytest.mark.django_db
 NAV_ANONYMOUS = ['home', 'about', 'signup', 'login']
 
 
-class HomePageTest(TestCase):
+class TestHomePage:
     def test_root_url_resolves_to_home_view(self):
         found = resolve('/')
-        self.assertEqual(found.func, home)
+        assert found.func == home
 
     def test_shows_header_logo(self):
         html = q(home)
@@ -39,7 +40,7 @@ class HomePageTest(TestCase):
 
         ids = [x['id'] for x in html.select('nav li')]
 
-        self.assertEqual(NAV_ANONYMOUS, ids)
+        assert NAV_ANONYMOUS == ids
 
     def test_nav_about_points_to_about_page(self):
         html = q(home)
@@ -52,16 +53,16 @@ class HomePageTest(TestCase):
         assert about['href'] == '/'
 
 
-class AboutPageTest(TestCase):
+class TestAboutPage:
     def test_about_url_resolves_to_about_view(self):
         found = resolve('/about')
-        self.assertEqual(found.func, about)
+        assert found.func == about
 
     def test_about_contains_nav(self):
         html = q(about)
 
         n = html.select('nav li a')
-        self.assertEqual(len(n), len(NAV_ANONYMOUS))
+        assert len(n) == len(NAV_ANONYMOUS)
 
     def test_about_shows_infos(self):
         html = q(about)
