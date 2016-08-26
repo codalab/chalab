@@ -2,7 +2,7 @@ from django.test import LiveServerTestCase
 
 from .pages import Page
 from .. import selen
-from ..tools import random_user
+from ..tools import random_user_descr
 
 
 class BasicTest(LiveServerTestCase):
@@ -41,7 +41,7 @@ class BasicTest(LiveServerTestCase):
         assert f.has_fields(inputs=['username', 'email', 'password1', 'password2'])
 
     def test_register_and_create_first_competition(self):
-        u = random_user('napier_j')
+        u = random_user_descr('napier_j')
         p = Page(self._driver).get(selen.LIVE_SERVER_URL)
 
         # There's a register button in the navigation

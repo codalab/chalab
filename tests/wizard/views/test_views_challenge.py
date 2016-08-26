@@ -1,91 +1,41 @@
 import pytest
-from django.test import Client
 from django.urls import reverse
 
-from tests.tools import register, q2, random_user, make_request, html, assert_redirects
-from tests.wizard.tools import make_challenge
-from wizard import models, views
+from tests.tools import q2, assert_redirects
+from wizard import models
 
 pytestmark = pytest.mark.django_db
 
 
-def get_random_challenge_description():
-    request = make_request('/', user=random_user('john_doe'))
-    c = make_challenge(user=request.user)
-    r = views.ChallengeDescriptionDetail.as_view()(request, pk=c.pk)
-    r = html(r)
-
-    return c, r
+def test_create_challenge_shows_challenge_form(random_user):
+    r, html = q2('wizard:create', random_user.client)
+    assert 'form' in r.context
 
 
-class TestWizardFlowCreation:
-    def test_create_challenge_shows_challenge_form(self):
-        c = Client()
-        r = register(c, random_user('richard_f'))
+def test_create_challenges_shows_panel_create(random_user):
+    r, html = q2('wizard:create', random_user.client)
+    assert html.select('.panel')[0]['id'], 'create-challenge'
 
-        r, html = q2('wizard:create', c)
-        assert 'form' in r.context
 
-    def test_create_challenges_shows_panel_create(self):
-        c = Client()
-        r = register(c, random_user('richard_f'))
+def test_create_challenges_redirect_to_challenge(random_user):
+    client, user = random_user.client, random_user.user
 
-        r, html = q2('wizard:create', c)
-        assert html.select('.panel')[0]['id'], 'create-challenge'
+    r = client.post(reverse('wizard:create'),
+                    {'title': 'A challenge',
+                     'organization_name': 'an organization',
+                     'description': 'the description'})
 
-    def test_create_challenges_redirect_to_challenge(self):
-        c = Client()
-        r = register(c, random_user('richard_f'))
+    last_challenge = models.ChallengeModel.objects.filter(created_by=user).last()
+    assert_redirects(r, reverse('wizard:challenge', kwargs={'pk': last_challenge.pk}))
 
-        u = r.context['user']
 
-        r = c.post(reverse('wizard:create'),
-                   {'title': 'A challenge',
-                    'organization_name': 'an organization',
-                    'description': 'the description'})
+@pytest.mark.parametrize("flow_name", [
+    'data', 'task', 'metric', 'protocol', 'baseline', 'documentation', 'rules'
+])
+def test_challenge_page_shows_flow_links(flow_name, random_challenge):
+    c, h = random_challenge.challenge, random_challenge.html
 
-        last_challenge = models.ChallengeModel.objects.filter(created_by=u).last()
+    flow_selector = '.flow-full .step.%s a' % flow_name
+    page_name = 'wizard:%s' % flow_name
 
-        assert_redirects(r, reverse('wizard:challenge', kwargs={'pk': last_challenge.pk}))
-
-    def test_challenge_page_shows_link_to_data(self):
-        c, r = get_random_challenge_description()
-
-        assert (r.select('.flow-full .step.data a')[0]['href']
-                == reverse('wizard:data', kwargs=dict(pk=c.pk)))
-
-    def test_challenge_page_shows_link_to_task(self):
-        c, r = get_random_challenge_description()
-
-        assert (r.select('.flow-full .step.task a')[0]['href']
-                == reverse('wizard:task', kwargs=dict(pk=c.pk)))
-
-    def test_challenge_page_shows_link_to_metric(self):
-        c, r = get_random_challenge_description()
-
-        assert (r.select('.flow-full .step.metric a')[0]['href']
-                == reverse('wizard:metric', kwargs=dict(pk=c.pk)))
-
-    def test_challenge_page_shows_link_to_protocol(self):
-        c, r = get_random_challenge_description()
-
-        assert (r.select('.flow-full .step.protocol a')[0]['href']
-                == reverse('wizard:protocol', kwargs=dict(pk=c.pk)))
-
-    def test_challenge_page_shows_link_to_baseline(self):
-        c, r = get_random_challenge_description()
-
-        assert (r.select('.flow-full .step.baseline a')[0]['href']
-                == reverse('wizard:baseline', kwargs=dict(pk=c.pk)))
-
-    def test_challenge_page_shows_link_to_documentation(self):
-        c, r = get_random_challenge_description()
-
-        assert (r.select('.flow-full .step.documentation a')[0]['href']
-                == reverse('wizard:documentation', kwargs=dict(pk=c.pk)))
-
-    def test_challenge_page_shows_link_to_rules(self):
-        c, r = get_random_challenge_description()
-
-        assert (r.select('.flow-full .step.rules a')[0]['href']
-                == reverse('wizard:rules', kwargs=dict(pk=c.pk)))
+    assert (h.select(flow_selector)[0]['href'] == reverse(page_name, kwargs=dict(pk=c.pk)))

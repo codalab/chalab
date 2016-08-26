@@ -61,7 +61,7 @@ def last_mail():
     return mail.outbox[-1]
 
 
-def random_user(name):
+def random_user_descr(name):
     name = '%s.%010d' % (name, random.randint(0, 1000000000))
     return UserTuple(name=name, email='%s@chalab.test' % name, password='sadhasdjasdqwdnasdbkj')
 
