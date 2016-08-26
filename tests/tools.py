@@ -25,6 +25,13 @@ def file_dir(__file__, *suffix):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), *suffix)
 
 
+def test_dir(*suffix):
+    """
+    Return the directory relative to the root of the test directory.
+    """
+    return file_dir(__file__, *suffix)
+
+
 def last_mail():
     return mail.outbox[-1]
 
