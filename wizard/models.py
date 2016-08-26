@@ -1,6 +1,5 @@
 import logging
 import os
-from glob import glob
 from time import gmtime, strftime
 
 from django.contrib.auth.models import User
@@ -103,7 +102,7 @@ def columns_count_first_line(file_field):
     try:
         file_field.open('r')
         line = file_field.readline()
-        return len(line.split(' '))
+        return len(line.split())
     finally:
         file_field.close()
 
@@ -169,10 +168,73 @@ class AxisDescriptionModel(models.Model):
         super().save(*args, **kwargs)
 
 
+import re
+
+FIELD_PARSER = re.compile('(\S+)\s*=\s*(\S.*\S?)\s*')
+
+
+class InfoFile(object):
+    """
+    A simple key = value file representation.
+    Deals with info files such as:
+    ```
+    my_field = 'my string value'
+    my_second_field = 42
+    ```
+
+    mimick the config parser format as close as possible.
+    """
+
+    def __init__(self, lines):
+        self._fields = dict([self.parse_field(line) for line in lines if line.strip()])
+
+    def getint(self, name):
+        return int(self._fields[name])
+
+    def getboolean(self, name):
+        try:
+            return bool(self.getint(name))
+        except ValueError:
+            return bool(self.get(name))
+
+    def get(self, name):
+        return self._fields[name]
+
+    @staticmethod
+    def parse_field(line):
+        m = re.match(FIELD_PARSER, line)
+
+        if m is None:
+            raise Exception("Line couldn't be parsed: %s" % (line,))
+
+        x, y = m.groups()
+
+        if y.startswith('\''):
+            assert y.endswith('\''), "Field %s = %s is weirdly formatted (quotes)" % (x, y)
+            y = y[1:-1]
+
+        return x, y
+
+
+def load_info_file(file):
+    """
+    Load a Chalearn config file using a custom format.
+
+    Note the format used looks like an ini file, with no headers.
+    However the quoting around string values makes configparser useless.
+    """
+    with open(file, 'r') as f:
+        try:
+            return InfoFile(f.readlines())
+        except Exception as e:
+            raise Exception("Problem loading: %s" % file) from e
+
+
 class MatrixModel(models.Model):
     name = 'matrix'
 
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'matrix'))
+    is_sparse = models.BooleanField(default=False, null=False)
 
     cols = OneToOneField(AxisDescriptionModel, null=True,
                          on_delete=models.PROTECT, related_name='matrix_cols')
@@ -191,7 +253,9 @@ class MatrixModel(models.Model):
         if self.rows is None:
             self.rows = AxisDescriptionModel()
 
-        self.cols.count = cols
+        if not self.is_sparse:
+            self.cols.count = cols
+
         self.rows.count = rows
 
         self.cols.save()
@@ -207,6 +271,50 @@ class DatasetModel(models.Model):
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
+
+    input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
+    target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
+
+    @classmethod
+    def from_chalearn(cls, path, name, owner=None, is_public=True):
+        try:
+            i = load_info_file(chalearn_path(path, '_public.info'))
+            is_sparse = i.getboolean('is_sparse')
+        except FileNotFoundError:
+            is_sparse = False
+
+        input = load_chalearn(path, '.data', is_sparse=is_sparse)
+
+        try:
+            cols_type = load_chalearn(path, '_feat.type', clss=ColumnarTypesDefinition)
+            input.cols.types = cols_type
+            input.save()
+        except FileNotFoundError:
+            pass  # It's fine, feat specs are not mandatory.
+
+        return cls.objects.create(
+            owner=owner, is_public=is_public, name=name,
+            input=input,
+            target=load_chalearn(path, '.solution')
+        )
+
+    def clean(self):
+        super().clean()
+
+        might_be_ready = self.input is not None and self.target is not None
+
+        if might_be_ready:
+            if self.input.rows.count != self.target.rows.count:
+                raise ValidationError('The number of rows in the input and target do not match')
+
+            self.is_ready = True
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Force clean on save.
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
 
 
 def create_with_file(clss, file_path, **kwargs):
@@ -228,11 +336,14 @@ def create_with_file(clss, file_path, **kwargs):
         raise e
 
 
-def load_chalearn(path, suffix):
-    p = glob(os.path.join(path, '*' + suffix))
-    assert len(p) == 1, "Invalid chalearn: path=%s, suffix=%s, found=%s" % (path, suffix, p)
+def chalearn_path(path, suffix):
+    name = path.split('/')[-1]
+    p = os.path.join(path, '%s%s' % (name, suffix))
+    return p
 
-    return create_with_file(MatrixModel, p[0])
+
+def load_chalearn(path, suffix, clss=MatrixModel, **kwargs):
+    return create_with_file(clss, chalearn_path(path, suffix), **kwargs)
 
 
 class TaskModel(models.Model):
@@ -248,16 +359,6 @@ class TaskModel(models.Model):
     target_train = OneToOneField(MatrixModel, null=True, related_name='model_trained_target')
     input_test = OneToOneField(MatrixModel, null=True, related_name='model_tested')
     input_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated')
-
-    @classmethod
-    def from_chalearn(cls, path, name, owner=None, is_public=True):
-        return cls.objects.create(
-            owner=owner, is_public=is_public, name=name,
-            input_train=load_chalearn(path, 'train.data'),
-            target_train=load_chalearn(path, 'train.solution'),
-            input_test=load_chalearn(path, 'test.data'),
-            input_valid=load_chalearn(path, 'valid.data')
-        )
 
     def clean(self):
         super().clean()

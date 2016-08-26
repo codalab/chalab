@@ -9,6 +9,7 @@ migrations:
 
 dataset:
 	cd ./datasets/chalearn/ && ./download.sh
+	docker-compose run web python manage.py load_chalearn_dataset
 
 dev:
 	docker-compose build

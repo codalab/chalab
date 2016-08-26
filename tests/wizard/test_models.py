@@ -13,7 +13,11 @@ FakeNamedObject = namedtuple('FakeNamedObject', ['name'])
 COLUMNS_5 = file_dir(__file__, 'resources', 'columns_5.csv')
 COLUMNS_12 = file_dir(__file__, 'resources', 'columns_12.csv')
 MATRIX_5_3 = file_dir(__file__, 'resources', 'matrix_5x3.csv')
-CHALEARN_DILBERT = file_dir(__file__, 'resources', 'chalearn_small_dilbert')
+CHALEARN_SAMPLE = file_dir(__file__, 'resources', 'adult')
+CHALEARN_SAMPLE_SPARSE = file_dir(__file__, 'resources', 'sparse')
+CHALEARN_SAMPLE_WRONG_ROWS = file_dir(__file__, 'resources', 'adult_wrong_rows')
+CHALEARN_SAMPLE_WRONG_FEAT_SPEC = file_dir(__file__, 'resources', 'adult_wrong_feat_spec')
+CHALEARN_SAMPLE_WITHOUT_FEAT_SPEC = file_dir(__file__, 'resources', 'adult_without_feat_spec')
 
 
 def create_with_file(clss, file_path, **kwargs):
@@ -29,6 +33,15 @@ def create_with_file(clss, file_path, **kwargs):
         c.raw_content.save(base_name, f)
     c.save()
     return c
+
+
+class TestTools(TestCase):
+    def test_load_info_file(self):
+        f = models.load_info_file(CHALEARN_SAMPLE_SPARSE + '/sparse_public.info')
+
+        self.assertTrue(f.getboolean('is_sparse'))
+        self.assertEqual(f.get('name'), 'sparse')
+        self.assertEqual(f.getint('target_num'), 20)
 
 
 class TestStorageTools(TestCase):
@@ -103,6 +116,17 @@ class TestMatrixStorage(TestCase):
         except ValidationError as e:
             self.assertTrue(True)
 
+    def test_sparse_matrix_doesnt_fail_when_columns_count_do_not_match(self):
+        c = create_with_file(models.ColumnarTypesDefinition,
+                             CHALEARN_SAMPLE_SPARSE + '/sparse_feat.type')
+        a = models.AxisDescriptionModel(types=c)
+
+        m = create_with_file(models.MatrixModel, CHALEARN_SAMPLE_SPARSE + '/sparse.data',
+                             cols=a, is_sparse=True)
+
+        self.assertEqual(m.rows.count, 15)
+        self.assertEqual(m.cols.count, 61188)
+
 
 class TestDatasetModel(TestCase):
     def test_create_a_public_empty_dataset(self):
@@ -110,6 +134,41 @@ class TestDatasetModel(TestCase):
 
         self.assertIsNotNone(d)
         self.assertFalse(d.is_ready)
+
+    def test_chalearn_dataset_creation(self):
+        t = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
+
+        self.assertIsNotNone(t)
+        self.assertTrue(t.is_ready)
+        self.assertEqual(t.input.rows.count, 15)
+        self.assertEqual(t.target.rows.count, 15)
+
+    def test_chalearn_wrong_rows_fails(self):
+        try:
+            models.DatasetModel.from_chalearn(CHALEARN_SAMPLE_WRONG_ROWS,
+                                              'chalearn - sample wrong rows')
+            self.fail("This should be invalid")
+        except ValidationError:
+            self.assertTrue(True)
+
+    def test_chalearn_wrong_feat_spec_fails(self):
+        try:
+            models.DatasetModel.from_chalearn(CHALEARN_SAMPLE_WRONG_FEAT_SPEC,
+                                              'chalearn - sample wrong feat spec')
+            self.fail("This should be invalid")
+        except ValidationError:
+            self.assertTrue(True)
+
+    def test_chalearn_without_feat_spec_fails(self):
+        t = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE_WITHOUT_FEAT_SPEC,
+                                              'chalearn - sample without feat spec')
+
+        self.assertTrue(t.is_ready)
+
+    def test_chalearn_with_sparse_doesnt_fail(self):
+        t = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE_SPARSE,
+                                              'chalearn - sample sparse')
+        self.assertTrue(t.is_ready)
 
 
 class TestTaskModel(TestCase):
@@ -120,7 +179,7 @@ class TestTaskModel(TestCase):
         self.assertFalse(t.is_ready)
 
     def test_feed_a_task_with_train(self):
-        m = create_with_file(models.MatrixModel, CHALEARN_DILBERT + '/dilbert_train.data')
+        m = create_with_file(models.MatrixModel, CHALEARN_SAMPLE + '/adult_train.data')
         t = models.TaskModel.objects.create(owner=None, is_public=True, name='A simple task',
                                             input_train=m)
 
@@ -128,25 +187,16 @@ class TestTaskModel(TestCase):
         self.assertFalse(t.is_ready)
 
     def test_feed_a_task_with_train_valid_test(self):
-        m_train = create_with_file(models.MatrixModel, CHALEARN_DILBERT + '/dilbert_train.data')
+        m_train = create_with_file(models.MatrixModel, CHALEARN_SAMPLE + '/adult_train.data')
         m_train_target = create_with_file(models.MatrixModel,
-                                          CHALEARN_DILBERT + '/dilbert_train.solution')
+                                          CHALEARN_SAMPLE + '/adult_train.solution')
 
-        m_test = create_with_file(models.MatrixModel, CHALEARN_DILBERT + '/dilbert_test.data')
+        m_test = create_with_file(models.MatrixModel, CHALEARN_SAMPLE + '/adult_test.data')
         m_valid = create_with_file(models.MatrixModel,
-                                   CHALEARN_DILBERT + '/dilbert_valid.data')
+                                   CHALEARN_SAMPLE + '/adult_valid.data')
 
         t = models.TaskModel.objects.create(owner=None, is_public=True, name='A simple task',
                                             input_train=m_train, target_train=m_train_target,
                                             input_test=m_test, input_valid=m_valid)
 
         self.assertTrue(t.is_ready)
-
-    def test_create_a_task_from_chalearn(self):
-        t = models.TaskModel.from_chalearn(CHALEARN_DILBERT, 'chalearn - dilbert')
-
-        self.assertIsNotNone(t)
-        self.assertTrue(t.is_ready)
-        self.assertEqual(t.input_train.rows.count, 10)
-        self.assertEqual(t.input_test.rows.count, 5)
-        self.assertEqual(t.input_valid.rows.count, 3)
