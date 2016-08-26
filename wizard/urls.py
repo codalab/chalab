@@ -19,5 +19,5 @@ urlpatterns = [
 
     url(r'^create$', views.ChallengeDescriptionCreate.as_view(), name='create'),
     url(r'^challenges/(?P<pk>\d+)$', views.ChallengeDescriptionDetail.as_view(), name='challenge'),
-    url(r'^challenges/(?P<pk>\d+)/', include(challenge_wizard))
+    url(r'^challenges/(?P<pk>\d+)/', include(challenge_wizard, namespace='challenge'))
 ]

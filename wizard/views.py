@@ -31,7 +31,7 @@ class Flow(object):
     @classmethod
     def list(cls, current):
         return [cls.FlowItem(slug=x.lower(),
-                             name=x, active=current == x, url='wizard:' + x.lower(),
+                             name=x, active=current == x, url='wizard:challenge:' + x.lower(),
                              descr_template='wizard/flow/descr/_%s.html' % x.lower())
                 for x in cls.FLOW]
 

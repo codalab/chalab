@@ -36,6 +36,6 @@ def test_challenge_page_shows_flow_links(flow_name, random_challenge):
     c, h = random_challenge.challenge, random_challenge.html
 
     flow_selector = '.flow-full .step.%s a' % flow_name
-    page_name = 'wizard:%s' % flow_name
+    page_name = 'wizard:challenge:%s' % flow_name
 
     assert (h.select(flow_selector)[0]['href'] == reverse(page_name, kwargs=dict(pk=c.pk)))
