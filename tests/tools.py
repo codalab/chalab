@@ -13,9 +13,13 @@ from django.urls import reverse
 from django.utils.six.moves.urllib.parse import (urljoin, urlsplit)
 
 UserTuple = namedtuple('UserTuple', ['name', 'email', 'password'])
+ClientQueryTuple = namedtuple('ClientQueryTuple', ['client', 'response', 'html'])
 
 _FACTORY = RequestFactory()
 
+
+# Asserting Tools
+# ===============
 
 def assert_redirects(response, expected_url, status_code=302, target_status_code=200):
     """
@@ -40,6 +44,9 @@ def assert_redirects(response, expected_url, status_code=302, target_status_code
             "got url=%s instead of %s" % (url, expected_url))
 
 
+# File & Dirs manipulation
+# ========================
+
 def file_dir(__file__, *suffix):
     """
     Return the directory for the passed `__file__' constant.
@@ -57,51 +64,57 @@ def test_dir(*suffix):
     return file_dir(__file__, *suffix)
 
 
+# Mail & Django related
+# =====================
+
 def last_mail():
     return mail.outbox[-1]
 
 
-def random_user_descr(name):
+# Making users and requests
+# =========================
+
+def random_user_desc(name):
     name = '%s.%010d' % (name, random.randint(0, 1000000000))
     return UserTuple(name=name, email='%s@chalab.test' % name, password='sadhasdjasdqwdnasdbkj')
 
 
-def make_user(u):
-    return User.objects.create(username=u.name, email=u.email, password=u.password)
+def make_user(desc):
+    return User.objects.create(username=desc.name, email=desc.email, password=desc.password)
 
 
 def make_request(url, user=None):
     r = _FACTORY.get(url)
 
     if user is not None:
-        r.user = make_user(user)
+        r.user = user
 
     return r
 
 
-def html(r):
+def html(response):
     try:
-        c = r.content
+        c = response.content
     except ContentNotRenderedError:
-        r.render()
-        c = r.content
+        response.render()
+        c = response.content
 
     return BeautifulSoup(c, 'html.parser')
 
 
-def register(c, u):
-    r = c.post(reverse('account_signup'),
-               {'username': u.name, 'email': u.email,
-                'password1': u.password, 'password2': u.password})
+def register(client, user_desc):
+    r = client.post(reverse('account_signup'),
+                    {'username': user_desc.name, 'email': user_desc.email,
+                     'password1': user_desc.password, 'password2': user_desc.password})
     return r
 
 
-def q2(f, c=None):
+def query(f, c=None):
+    """
+    Query the view function F, using the given client C (or create one).
+    Return a ClientQueryTuple(client, response, html)
+    """
     c = c or Client()
     r = c.get(reverse(f))
-    return r, html(r)
-
-
-def q(f, c=None):
-    _, html = q2(f, c=c)
-    return html
+    h = html(r)
+    return ClientQueryTuple(client=c, response=r, html=h)

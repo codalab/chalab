@@ -2,7 +2,7 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from tests.tools import q, assert_redirects
+from tests.tools import query, assert_redirects
 from wizard import models
 
 pytestmark = pytest.mark.django_db
@@ -21,7 +21,7 @@ def test_without_login_returns_403():
 
 
 def test_after_login_is_app_wizard(random_user):
-    home = q('wizard:home', random_user.client)
+    home = query('wizard:home', random_user.client).html
     app = home.select('.app')
 
     assert len(app) == 1
@@ -29,7 +29,7 @@ def test_after_login_is_app_wizard(random_user):
 
 
 def test_after_login_shows_empty_list_of_challenges(random_user):
-    home = q('wizard:home', random_user.client)
+    home = query('wizard:home', random_user.client).html
 
     challenges_block = home.select('.challenges')
     challenges = home.select('.challenges .challenge')
@@ -38,7 +38,7 @@ def test_after_login_shows_empty_list_of_challenges(random_user):
 
 
 def test_shows_create_challenge_button(random_user):
-    home = q('wizard:home', random_user.client)
+    home = query('wizard:home', random_user.client).html
 
     create_btn = home.select('a.create-challenge')[0]
     assert create_btn['href'] == reverse('wizard:create')
@@ -62,7 +62,7 @@ def test_challenge_is_in_html(random_user):
                                          description='the description',
                                          created_by=random_user.user)
 
-    html = q('wizard:home', random_user.client)
+    html = query('wizard:home', random_user.client).html
     challenges = html.select('.challenges .challenge')
 
     assert len(challenges) == 1

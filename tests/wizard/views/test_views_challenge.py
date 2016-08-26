@@ -1,20 +1,20 @@
 import pytest
 from django.urls import reverse
 
-from tests.tools import q2, assert_redirects
+from tests.tools import query, assert_redirects
 from wizard import models
 
 pytestmark = pytest.mark.django_db
 
 
 def test_create_challenge_shows_challenge_form(random_user):
-    r, html = q2('wizard:create', random_user.client)
-    assert 'form' in r.context
+    q = query('wizard:create', random_user.client)
+    assert 'form' in q.response.context
 
 
 def test_create_challenges_shows_panel_create(random_user):
-    r, html = q2('wizard:create', random_user.client)
-    assert html.select('.panel')[0]['id'], 'create-challenge'
+    q = query('wizard:create', random_user.client)
+    assert q.html.select('.panel')[0]['id'], 'create-challenge'
 
 
 def test_create_challenges_redirect_to_challenge(random_user):

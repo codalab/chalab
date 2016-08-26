@@ -2,7 +2,7 @@ import pytest
 from django.core.urlresolvers import resolve
 
 from landing.views import home, about
-from ..tools import q
+from ..tools import query
 
 pytestmark = pytest.mark.django_db
 NAV_ANONYMOUS = ['home', 'about', 'signup', 'login']
@@ -14,41 +14,41 @@ class TestHomePage:
         assert found.func == home
 
     def test_shows_header_logo(self):
-        html = q(home)
+        html = query(home).html
         assert html.select('header #logo')[0] is not None
 
     def test_header_logo_points_to_root(self):
-        html = q(home)
+        html = query(home).html
         l = html.select('header #logo a')[0]
         assert l['href'] == '/'
 
     def test_is_polite(self):
-        html = q(home)
+        html = query(home).html
         assert 'Welcome to' in html.select('.hero h1')[0].string
 
     def test_shows_hero(self):
-        html = q(home)
+        html = query(home).html
         assert html.select('.hero .lead')[0] is not None
 
     def test_shows_nav(self):
-        html = q(home)
+        html = query(home).html
 
         assert html.select('nav')[0] is not None
 
     def test_nav_contains_links(self):
-        html = q(home)
+        html = query(home).html
 
         ids = [x['id'] for x in html.select('nav li')]
 
         assert NAV_ANONYMOUS == ids
 
     def test_nav_about_points_to_about_page(self):
-        html = q(home)
+        html = query(home).html
         about = html.select('nav li#about a')[0]
         assert about['href'] == '/about'
 
     def test_nav_home_points_to_home_page(self):
-        html = q(home)
+        html = query(home).html
         about = html.select('nav li#home a')[0]
         assert about['href'] == '/'
 
@@ -59,13 +59,13 @@ class TestAboutPage:
         assert found.func == about
 
     def test_about_contains_nav(self):
-        html = q(about)
+        q = query(about)
 
-        n = html.select('nav li a')
+        n = q.html.select('nav li a')
         assert len(n) == len(NAV_ANONYMOUS)
 
     def test_about_shows_infos(self):
-        html = q(about)
+        html = query(about).html
 
         t = html.select('.content h1')[0]
         assert t.text == 'About'
