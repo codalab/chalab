@@ -43,3 +43,22 @@ def make_challenge(user, title=None, description=None, organization_name=None):
     return models.ChallengeModel.objects.create(created_by=user, title=title,
                                                 description=description,
                                                 organization_name=organization_name)
+
+
+def make_samples_metrics():
+    m1 = models.MetricModel.objects.create(
+        name='metric sample 1',
+        is_public=True,
+        is_ready=True,
+        classification=True,
+        regression=False,
+    )
+    m2 = models.MetricModel.objects.create(
+        name='metric sample 2',
+        is_public=True,
+        is_ready=True,
+        classification=False,
+        regression=True,
+    )
+
+    return m1, m2

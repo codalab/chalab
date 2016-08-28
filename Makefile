@@ -11,6 +11,9 @@ dataset:
 	cd ./datasets/chalearn/ && ./download.sh
 	docker-compose run web python manage.py load_chalearn_dataset
 
+metrics:
+	docker-compose run web python manage.py load_default_metrics
+
 dev:
 	docker-compose build
 	docker-compose up -d db

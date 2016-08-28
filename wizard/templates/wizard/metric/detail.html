@@ -1,0 +1,26 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}3. Define the metric{% endblock %}
+
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}set-metric{% endblock %}
+
+{% block content %}
+    <h2>{{ object.challenge.title }}</h2>
+    <p>{{ object.challenge.description }}</p>
+
+    <h1>Test: {{ object.qweqwe }}</h1>
+
+    <form class='set-data' action="#" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% buttons %}
+            <button type="submit" class="btn btn-primary">
+                {% bootstrap_icon "star" %} Update
+            </button>
+        {% endbuttons %}
+    </form>
+
+    {% include 'wizard/flow/_nav.html' %}
+{% endblock %}

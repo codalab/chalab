@@ -354,6 +354,20 @@ class TaskModel(models.Model):
         )
 
 
+class MetricModel(models.Model):
+    name = models.CharField(max_length=256, null=False)
+    owner = models.ForeignKey(User, null=True)
+
+    is_public = models.BooleanField(default=False, null=False)
+    is_ready = models.BooleanField(default=False, null=False)
+
+    classification = models.BooleanField(default=False, null=False)
+    regression = models.BooleanField(default=False, null=False)
+
+    def __str__(self):
+        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
+
+
 class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80)
@@ -363,6 +377,7 @@ class ChallengeModel(models.Model):
 
     dataset = models.ForeignKey(DatasetModel, null=True)
     task = models.ForeignKey(TaskModel, null=True)
+    metric = models.ForeignKey(MetricModel, null=True)
 
     def get_absolute_url(self):
         return reverse('wizard:challenge', kwargs={'pk': self.pk})

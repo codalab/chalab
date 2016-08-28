@@ -70,3 +70,15 @@ class TestTaskModel:
 
         assert task.is_ready
         assert task.dataset == dataset
+
+
+class TestMetricModel:
+    def test_create_a_metric_model(self):
+        t = models.MetricModel.objects.create(owner=None, is_public=True,
+                                              name='my first metric',
+                                              is_ready=True,
+                                              classification=True,
+                                              regression=True)
+
+        assert t is not None
+        assert t.is_ready

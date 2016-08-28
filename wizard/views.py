@@ -9,7 +9,7 @@ from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
 from . import models
-from .models import ChallengeModel, DatasetModel, TaskModel
+from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel
 
 log = logging.getLogger('wizard.views')
 log.setLevel(logging.INFO)
@@ -133,7 +133,7 @@ def data_picker(request, pk):
         k = request.POST['kind']
         assert k == 'public'
 
-        ds = request.POST['dataset']
+        ds = request.POST['metric']
 
         d = get_object_or_404(DatasetModel, is_public=True, id=ds)
         c.dataset = d
@@ -143,8 +143,57 @@ def data_picker(request, pk):
 
         c.save()
 
-        return redirect('wizard:challenge:data', pk=pk)
+        return redirect('wizard:challenge:metric', pk=pk)
     else:
         pds = models.DatasetModel.objects.all().filter(is_public=True)
         context = {'public_datasets': pds}
         return render(request, 'wizard/data/picker.html', context=context)
+
+
+def metric_picker(request, pk):
+    c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
+
+    if c.metric is not None:
+        return redirect('wizard:challenge:metric', pk=pk)
+
+    if request.method == 'POST':
+        k = request.POST['kind']
+        assert k == 'public'
+
+        mc = request.POST['metric']
+        m = get_object_or_404(MetricModel, is_public=True, id=mc)
+        c.metric = m
+        c.save()
+        return redirect('wizard:challenge:metric', pk=pk)
+    else:
+        public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
+        context = {'challenge': c, 'public_metrics': public_metrics}
+        return render(request, 'wizard/metric/picker.html', context=context)
+
+
+class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+    template_name = 'wizard/metric/detail.html'
+    model = MetricModel
+    context_object_name = 'metric'
+
+    fields = ['name']
+    current_flow = Flow.Metric
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        context = super().get_context_data(**kwargs)
+        context['challenge'] = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        return context
+
+    def get_object(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        return challenge.metric
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_object(**kwargs) is None:
+            return redirect('wizard:challenge:metric.pick', pk=kwargs['pk'])
+        else:
+            return super().dispatch(request, *args, **kwargs)
