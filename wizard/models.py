@@ -310,6 +310,7 @@ class TaskModel(models.Model):
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
+    dataset = models.ForeignKey(DatasetModel, null=True)
 
     # TODO(laurent): This pattern of having a sinble model reference by many fields
     # is not viable. We should define a model instance per use case (training, etc).
@@ -333,6 +334,24 @@ class TaskModel(models.Model):
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
+
+    @classmethod
+    def from_chalearn(cls, dataset, path, name):
+        train = load_chalearn(path, '_train.data')
+        train_target = load_chalearn(path, '_train.solution')
+
+        test = load_chalearn(path, '_test.data')
+        valid = load_chalearn(path, '_valid.data')
+
+        return cls.objects.create(
+            dataset=dataset,
+            owner=None, is_public=True, name=name,
+            input_train=train, target_train=train_target,
+            input_test=test, input_valid=valid
+        )
 
 
 class ChallengeModel(models.Model):

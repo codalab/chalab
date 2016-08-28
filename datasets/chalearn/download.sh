@@ -22,12 +22,9 @@ for f in `ls /tmp/valid-data/`; do
 done
 
 # Build original dataset
-rm -f ./*/*_test.data
-
 for f in $FILES; do
     name=`echo ${f} | sed -E 's;(.*)\.zip;\1;'`
-    cat ./${name}/${name}_*.data > ./${name}/${name}.data
-    cat ./${name}/${name}_*.solution > ./${name}/${name}.solution
+    cat ./${name}/${name}_train.data ./${name}/${name}_valid.data  > ./${name}/${name}.data
+    cat ./${name}/${name}_train.solution ./${name}/${name}_valid.solution > ./${name}/${name}.solution
 done
-
 
