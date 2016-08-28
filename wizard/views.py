@@ -9,7 +9,7 @@ from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
 from . import models
-from .models import ChallengeModel, DatasetModel
+from .models import ChallengeModel, DatasetModel, TaskModel
 
 log = logging.getLogger('wizard.views')
 log.setLevel(logging.INFO)
@@ -95,6 +95,34 @@ class ChallengeDataUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             return super().dispatch(request, *args, **kwargs)
 
 
+class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+    template_name = 'wizard/task.html'
+    model = TaskModel
+    context_object_name = 'task'
+
+    fields = ['name']
+    current_flow = Flow.Task
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        context = super().get_context_data(**kwargs)
+        context['challenge'] = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        return context
+
+    def get_object(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        return challenge.task
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_object(**kwargs) is None:
+            return redirect('wizard:challenge:data.pick', pk=kwargs['pk'])
+        else:
+            return super().dispatch(request, *args, **kwargs)
+
+
 def data_picker(request, pk):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
@@ -109,6 +137,10 @@ def data_picker(request, pk):
 
         d = get_object_or_404(DatasetModel, is_public=True, id=ds)
         c.dataset = d
+
+        t = get_object_or_404(TaskModel, dataset=d)
+        c.task = t
+
         c.save()
 
         return redirect('wizard:challenge:data', pk=pk)

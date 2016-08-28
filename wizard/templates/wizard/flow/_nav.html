@@ -1,0 +1,12 @@
+<div class="row text-center">
+    <div class="col-xs-3 col-xs-offset-4">
+        <a class=""
+           href="{% url 'wizard:challenge' challenge.id %}">
+            <i class="fa fa-arrow-up" aria-hidden="true"></i>
+            Challenge
+        </a>
+    </div>
+</div>
+<div class="row text-center">
+    {% include 'wizard/flow/_breadcrumb.html' %}
+</div>

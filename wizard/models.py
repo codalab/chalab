@@ -362,6 +362,7 @@ class ChallengeModel(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     dataset = models.ForeignKey(DatasetModel, null=True)
+    task = models.ForeignKey(TaskModel, null=True)
 
     def get_absolute_url(self):
         return reverse('wizard:challenge', kwargs={'pk': self.pk})
