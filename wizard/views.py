@@ -37,11 +37,11 @@ class Flow(object):
 
 
 class FlowOperationMixin:
-    current = None
+    current_flow = None
 
     def get_context_data(self, **kwargs):
         context = super(FlowOperationMixin, self).get_context_data(**kwargs)
-        context['flow'] = Flow.list(self.current)
+        context['flow'] = Flow.list(self.current_flow)
         return context
 
 
@@ -72,7 +72,7 @@ class ChallengeDataUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     model = ChallengeDataModel
 
     fields = ['name', 'kind']
-    current = Flow.Data
+    current_flow = Flow.Data
 
     def get_object(self, **kwargs):
         pk = self.kwargs['pk']
