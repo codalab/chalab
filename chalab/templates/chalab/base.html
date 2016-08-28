@@ -48,8 +48,10 @@
 
         <div id="{% block app_name %}{% endblock %}" class="app">
             <div id="{% block panel_name %}{% endblock %}" class="panel">
-                {% block content %}
-                {% endblock %}
+                <div id="{% block module_name %}{% endblock %}" class="module">
+                    {% block content %}
+                    {% endblock %}
+                </div>
             </div>
         </div>
     {% endblock %}

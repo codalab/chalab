@@ -4,7 +4,7 @@ import pytest
 from django.test import Client
 
 from tests.tools import make_request, random_user_desc, html, register, make_user
-from tests.wizard.tools import make_challenge
+from tests.wizard.models.tools import make_challenge
 from wizard import views as wizard_views
 
 ChallengeTuple = namedtuple('ChallengeTuple', ['user', 'desc', 'challenge', 'response', 'html'])

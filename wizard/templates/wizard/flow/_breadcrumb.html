@@ -4,7 +4,7 @@
             {% if f.active %}
                 {{ forloop.counter }}. {{ f.name }}
             {% else %}
-                <a href="{% url f.url pk=object.challenge.id %}">
+                <a href="{% url f.url pk=challenge.id %}">
                     {{ forloop.counter }}. {{ f.name }}
                 </a>
             {% endif %}

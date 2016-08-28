@@ -1,0 +1,35 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Data - Pick a dataset{% endblock %}
+
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}challenge{% endblock %}
+{% block module_name %}data-picker{% endblock %}
+
+{% block content %}
+    <h1>Which dataset do you want to use?</h1>
+
+    <div class="pick">
+        <div class="public">
+            <h2>Pick a Public Dataset</h2>
+            <form class="login" method="POST" action="#">
+                {% csrf_token %}
+                <input type="hidden" name="kind" value="public"/>
+
+                <select name="dataset">
+                    {% for dataset in public_datasets %}
+                        <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
+                    {% endfor %}
+                </select>
+
+                {% buttons %}
+                    <button class="primaryAction btn btn-primary"
+                            type="submit">Use
+                    </button>
+                {% endbuttons %}
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

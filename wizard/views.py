@@ -3,16 +3,17 @@ from collections import namedtuple
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
+from . import models
+from .models import ChallengeModel, DatasetModel
+
 log = logging.getLogger('wizard.views')
 log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
-
-from .models import ChallengeModel, ChallengeDataModel
 
 
 class Flow(object):
@@ -69,17 +70,49 @@ class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMi
 
 class ChallengeDataUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     template_name = 'wizard/data/detail.html'
-    model = ChallengeDataModel
+    model = DatasetModel
 
-    fields = ['name', 'kind']
+    fields = ['name']
     current_flow = Flow.Data
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        context = super().get_context_data(**kwargs)
+        context['challenge'] = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        return context
 
     def get_object(self, **kwargs):
         pk = self.kwargs['pk']
 
         challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        return challenge.dataset
 
-        if challenge.data.count() == 0:
-            return ChallengeDataModel.objects.create(challenge=challenge)
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_object(**kwargs) is None:
+            return redirect('wizard:challenge:data.pick', pk=kwargs['pk'])
         else:
-            return challenge.data.first()
+            return super().dispatch(request, *args, **kwargs)
+
+
+def data_picker(request, pk):
+    c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
+
+    if c.dataset is not None:
+        return redirect('wizard:challenge:data', pk=pk)
+
+    if request.method == 'POST':
+        k = request.POST['kind']
+        assert k == 'public'
+
+        ds = request.POST['dataset']
+
+        d = get_object_or_404(DatasetModel, is_public=True, id=ds)
+        c.dataset = d
+        c.save()
+
+        return redirect('wizard:challenge:data', pk=pk)
+    else:
+        pds = models.DatasetModel.objects.all().filter(is_public=True)
+        context = {'public_datasets': pds}
+        return render(request, 'wizard/data/picker.html', context=context)

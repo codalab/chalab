@@ -49,7 +49,8 @@ class BasicTest(LiveServerTestCase):
 
         # I can fill the registration form
         f = p.form('.signup')
-        f.fill(username=u.name, email=u.email, password1=u.password, password2=u.password).submit()
+        f.fill(username=u.username, email=u.email,
+               password1=u.password, password2=u.password).submit()
 
         # I'm on the wizard home page
         assert p.is_app('wizard')

@@ -12,7 +12,7 @@ from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.six.moves.urllib.parse import (urljoin, urlsplit)
 
-UserTuple = namedtuple('UserTuple', ['name', 'email', 'password'])
+UserTuple = namedtuple('UserTuple', ['username', 'email', 'password'])
 ClientQueryTuple = namedtuple('ClientQueryTuple', ['client', 'response', 'html'])
 
 _FACTORY = RequestFactory()
@@ -21,7 +21,9 @@ _FACTORY = RequestFactory()
 # Asserting Tools
 # ===============
 
-def assert_redirects(response, expected_url, status_code=302, target_status_code=200):
+def assert_redirects(response, expected_url,
+                     status_code=302, target_status_code=200,
+                     fetch_redirect_response=True):
     """
     Naive reimplementation of Django's assertRedirects.
     Compatible with pytest and should preserve its better error reporting.
@@ -34,14 +36,18 @@ def assert_redirects(response, expected_url, status_code=302, target_status_code
     url = response.url
     scheme, netloc, path, query, fragment = urlsplit(url)
 
-    url = urljoin(response.request['PATH_INFO'], url)
-    path = urljoin(response.request['PATH_INFO'], path)
+    # Prepend path for relative redirects.
+    if not path.startswith('/'):
+        url = urljoin(response.request['PATH_INFO'], url)
+        path = urljoin(response.request['PATH_INFO'], path)
 
-    redirect_response = response.client.get(path, QueryDict(query), secure=(scheme == 'https'))
-    assert redirect_response.status_code == target_status_code, \
-        "got status=%s instead of %s" % (redirect_response.status_code, target_status_code)
     assert url == expected_url, \
         "got url=%s instead of %s" % (url, expected_url)
+
+    if fetch_redirect_response:
+        redirect_response = response.client.get(path, QueryDict(query), secure=(scheme == 'https'))
+        assert redirect_response.status_code == target_status_code, \
+            "got status=%s instead of %s" % (redirect_response.status_code, target_status_code)
 
 
 # File & Dirs manipulation
@@ -74,13 +80,16 @@ def last_mail():
 # Making users and requests
 # =========================
 
-def random_user_desc(name):
-    name = '%s.%010d' % (name, random.randint(0, 1000000000))
-    return UserTuple(name=name, email='%s@chalab.test' % name, password='sadhasdjasdqwdnasdbkj')
+def random_user_desc(username):
+    username = '%s.%010d' % (username, random.randint(0, 1000000000))
+    return UserTuple(username=username,
+                     email='%s@chalab.test' % username,
+                     password='sadhasdjasdqwdnasdbkj')
 
 
 def make_user(desc):
-    return User.objects.create(username=desc.name, email=desc.email, password=desc.password)
+    return User.objects.create_user(username=desc.username, email=desc.email,
+                                    password=desc.password)
 
 
 def make_request(url, user=None):
@@ -104,17 +113,17 @@ def html(response):
 
 def register(client, user_desc):
     r = client.post(reverse('account_signup'),
-                    {'username': user_desc.name, 'email': user_desc.email,
+                    {'username': user_desc.username, 'email': user_desc.email,
                      'password1': user_desc.password, 'password2': user_desc.password})
     return r
 
 
-def query(f, c=None):
+def query(f, c=None, kwargs={}):
     """
     Query the view function F, using the given client C (or create one).
     Return a ClientQueryTuple(client, response, html)
     """
     c = c or Client()
-    r = c.get(reverse(f))
+    r = c.get(reverse(f, kwargs=kwargs))
     h = html(r)
     return ClientQueryTuple(client=c, response=r, html=h)
