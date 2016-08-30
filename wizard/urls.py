@@ -13,9 +13,12 @@ challenge_wizard = [
     url(r'^metric/pick$', views.metric_picker, name='metric.pick'),
     url(r'^metric$', views.ChallengeMetricUpdate.as_view(), name='metric'),
 
-    url(r'^protocol/$', views.ChallengeDataUpdate.as_view(), name='protocol'),
+    url(r'^protocol/$', views.ChallengeProtocolUpdate.as_view(), name='protocol'),
+
+    url(r'^documentation/$', views.documentation, name='documentation'),
+    url(r'^documentation/(?P<page_id>\d+)$', views.documentation_page, name='documentation.page'),
+
     url(r'^baseline/$', views.ChallengeDataUpdate.as_view(), name='baseline'),
-    url(r'^documentation/$', views.ChallengeDataUpdate.as_view(), name='documentation'),
     url(r'^rules/$', views.ChallengeDataUpdate.as_view(), name='rules'),
 ]
 

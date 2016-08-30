@@ -3,13 +3,15 @@ from collections import namedtuple
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
 from . import models
-from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel
+from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
+    DocumentationModel
 
 log = logging.getLogger('wizard.views')
 log.setLevel(logging.INFO)
@@ -133,7 +135,7 @@ def data_picker(request, pk):
         k = request.POST['kind']
         assert k == 'public'
 
-        ds = request.POST['metric']
+        ds = request.POST['dataset']
 
         d = get_object_or_404(DatasetModel, is_public=True, id=ds)
         c.dataset = d
@@ -143,7 +145,7 @@ def data_picker(request, pk):
 
         c.save()
 
-        return redirect('wizard:challenge:metric', pk=pk)
+        return redirect('wizard:challenge:data', pk=pk)
     else:
         pds = models.DatasetModel.objects.all().filter(is_public=True)
         context = {'public_datasets': pds}
@@ -197,3 +199,52 @@ class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             return redirect('wizard:challenge:metric.pick', pk=kwargs['pk'])
         else:
             return super().dispatch(request, *args, **kwargs)
+
+
+class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+    template_name = 'wizard/protocol.html'
+    model = ProtocolModel
+    context_object_name = 'protocol'
+
+    fields = ['end_date', 'allow_reuse', 'publicly_available',
+              'max_submission_per_day', 'max_submissions']
+    current_flow = Flow.Protocol
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        context = super().get_context_data(**kwargs)
+        context['challenge'] = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        return context
+
+    def get_object(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        protocol = challenge.protocol
+
+        if protocol is None:
+            protocol = ProtocolModel.objects.create()
+            challenge.protocol = protocol
+            challenge.save()
+
+        return protocol
+
+
+def documentation(request, pk):
+    c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
+    doc = c.documentation
+
+    if doc is None:
+        doc = DocumentationModel.create()
+        c.documentation = doc
+        c.save()
+        import sys; print("DOC=dc", doc, file=sys.stderr)
+
+    context = {'challenge': c, 'doc': doc, 'pages': doc.pages}
+
+    return render(request, "wizard/documentation.html", context=context)
+
+
+def documentation_page(request, pk, page_id):
+    return HttpResponse(status=200)

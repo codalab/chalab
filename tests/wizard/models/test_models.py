@@ -1,6 +1,7 @@
 import datetime
 
 import pytest
+from django.contrib.auth.models import User
 
 from tests.wizard.tools import (CHALEARN_SAMPLE,
                                 CHALEARN_SAMPLE_SPARSE)
@@ -82,3 +83,34 @@ class TestMetricModel:
 
         assert t is not None
         assert t.is_ready
+
+
+class TestDocumentationPageModel:
+    def test_page_has_title_and_content(self):
+        doc = models.DocumentationModel.create()
+        t = models.DocumentationPageModel.create(doc=doc,
+                                                 title='my title',
+                                                 content='lorem ipsum')
+
+        assert t.documentation == doc
+        assert t.title == 'my title'
+        assert t.content == 'lorem ipsum'
+
+
+class TestDocumentationModel:
+    def test_create_the_default_documentation_model(self):
+        t = models.DocumentationModel.objects.create()
+        assert t is not None
+
+    def test_default_documentation_contains_3_pages(self):
+        t = models.DocumentationModel.create()
+
+        assert len(t.pages) == 3
+
+
+class TestChallengeModel:
+    def test_challenge_model_has_documentation_field(self):
+        user = User.objects.create_user('username', None, 'password')
+        t = models.ChallengeModel.objects.create(created_by=user)
+
+        assert t.documentation is None

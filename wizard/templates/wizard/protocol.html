@@ -1,0 +1,24 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Define the protocol{% endblock %}
+
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}set-protocol{% endblock %}
+
+{% block content %}
+    <h2>{{ object.challenge.title }}</h2>
+    <p>{{ object.challenge.description }}</p>
+
+    <form class='set-data' action="#" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% buttons %}
+            <button type="submit" class="btn btn-primary">
+                {% bootstrap_icon "star" %} Update
+            </button>
+        {% endbuttons %}
+    </form>
+
+    {% include 'wizard/flow/_nav.html' %}
+{% endblock %}

@@ -368,6 +368,51 @@ class MetricModel(models.Model):
         return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
 
 
+class ProtocolModel(models.Model):
+    end_date = models.DateField(null=True, default=None)
+    allow_reuse = models.BooleanField(default=False)
+    publicly_available = models.BooleanField(default=False)
+
+    max_submissions_per_day = models.IntegerField(null=True, default=None)
+    max_submissions = models.IntegerField(null=True, default=None)
+
+
+class DocumentationModel(models.Model):
+    default_pages = [
+        {'title': 'base', 'content': 'the base'},
+        {'title': 'evaluation', 'content': 'the evalutation'},
+        {'title': 'data', 'content': 'the data'},
+    ]
+
+    @property
+    def pages(self):
+        return DocumentationPageModel.objects.filter(documentation=self)
+
+    @classmethod
+    def create(cls):
+        c = cls.objects.create()
+
+        for p in cls.default_pages:
+            DocumentationPageModel.create(doc=c,
+                                          title=p['title'],
+                                          content=p['content'])
+
+        return c
+
+
+class DocumentationPageModel(models.Model):
+    title = models.CharField(max_length=80)
+    content = models.TextField()
+
+    documentation = models.ForeignKey(DocumentationModel)
+
+    @classmethod
+    def create(cls, doc, title, content):
+        return cls.objects.create(documentation=doc,
+                                  title=title,
+                                  content=content)
+
+
 class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80)
@@ -378,6 +423,8 @@ class ChallengeModel(models.Model):
     dataset = models.ForeignKey(DatasetModel, null=True)
     task = models.ForeignKey(TaskModel, null=True)
     metric = models.ForeignKey(MetricModel, null=True)
+    protocol = models.ForeignKey(ProtocolModel, null=True)
+    documentation = models.ForeignKey(DocumentationModel, null=True, related_name='challenge')
 
     def get_absolute_url(self):
         return reverse('wizard:challenge', kwargs={'pk': self.pk})

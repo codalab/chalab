@@ -9,7 +9,7 @@ from wizard import models
 pytestmark = pytest.mark.django_db
 
 
-def get_without_dataset_redirects(random_challenge):
+def test_get_without_dataset_redirects(random_challenge):
     pk = random_challenge.challenge.pk
     d = random_challenge.desc
     c = Client()
@@ -20,7 +20,7 @@ def get_without_dataset_redirects(random_challenge):
     assert_redirects(r, reverse('wizard:challenge:data.pick', kwargs={'pk': pk}))
 
 
-def get_with_dataset_returns_200(random_challenge):
+def test_get_with_dataset_returns_200(random_challenge):
     pk = random_challenge.challenge.pk
     d = random_challenge.desc
 
