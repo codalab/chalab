@@ -1,1 +1,8 @@
 /static
+.cache
+.git
+.idea
+*.pyc
+.*.swp
+
+/tests/captures/
