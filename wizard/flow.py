@@ -77,7 +77,7 @@ class DocumentationFlowItem(FlowItem):
     name = 'Documentation'
 
     def _is_ready(self, c):
-        return True
+        return c.documentation.is_ready
 
 
 class Flow(object):
@@ -117,7 +117,7 @@ class Flow(object):
 
     @property
     def next(self):
-        for (cur, next_) in zip(self, drop_first(self)):
+        for (cur, next_) in zip(self, chain(drop_first(self), [None])):
             if cur.active:
                 return next_
 

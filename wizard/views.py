@@ -2,7 +2,6 @@ import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import CreateView
@@ -13,7 +12,7 @@ from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
-    DocumentationModel
+    DocumentationModel, DocumentationPageModel
 
 log = logging.getLogger('wizard.views')
 log.setLevel(logging.INFO)
@@ -149,12 +148,13 @@ def metric_picker(request, pk):
         return redirect('wizard:challenge:metric', pk=pk)
     else:
         public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
-        context = {'challenge': c, 'public_metrics': public_metrics}
+        context = {'challenge': c, 'public_metrics': public_metrics,
+                   'flow': flow.Flow(flow.MetricFlowItem, c)}
         return render(request, 'wizard/metric/picker.html', context=context)
 
 
 class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
-    template_name = 'wizard/metric/detail.html'
+    template_name = 'wizard/metric/editor.html'
     model = MetricModel
     context_object_name = 'metric'
 
@@ -229,10 +229,61 @@ def documentation(request, pk):
         c.documentation = doc
         c.save()
 
-    context = {'challenge': c, 'doc': doc, 'pages': doc.pages}
+    current = 'base'
+    current_page = doc.pages.filter(title=current).first()
 
-    return render(request, "wizard/documentation.html", context=context)
+    context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
+               'current': 'base', 'current_page': current_page,
+               'flow': flow.Flow(flow.DocumentationFlowItem, c)}
+
+    return render(request, "wizard/documentation/detail.html", context=context)
 
 
 def documentation_page(request, pk, page_id):
-    return HttpResponse(status=200)
+    c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
+    p = get_object_or_404(DocumentationPageModel, documentation=c.documentation, id=page_id)
+    doc = c.documentation
+
+    context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
+               'current': p.title, 'current_page': p,
+               'flow': flow.Flow(flow.DocumentationFlowItem, c)}
+
+    return render(request, "wizard/documentation/detail.html", context=context)
+
+
+class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+    template_name = 'wizard/documentation/editor.html'
+    model = DocumentationPageModel
+    context_object_name = 'page'
+
+    # Hacky way to pass back the challenge from get_object to get_success_url
+    _runtime_challenge = None
+
+    fields = ['title', 'content']
+
+    current_flow = flow.DocumentationFlowItem
+
+    def get_success_url(self):
+        return reverse('wizard:challenge:documentation.page',
+                       kwargs={'pk': self._runtime_challenge.pk,
+                               'page_id': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs['pk']
+        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
+        return context
+
+    def get_object(self, **kwargs):
+        pk = self.kwargs['pk']
+        page_id = self.kwargs['page_id']
+
+        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        page = get_object_or_404(DocumentationPageModel, id=page_id,
+                                 documentation=challenge.documentation)
+
+        self._runtime_challenge = challenge
+
+        return page

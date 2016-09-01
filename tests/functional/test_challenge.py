@@ -65,3 +65,28 @@ def test_flow_pick_protocol(challenge):
     p = p.up()
 
     assert p.definition.steps.get(clss='protocol').is_ready
+
+
+def test_flow_documentation(challenge):
+    p = challenge
+    assert not p.definition.steps.get(clss='documentation').is_ready
+
+    # move to documentation
+    p = p.to_documentation()
+
+    assert p.pages.get(text='base').is_active
+    assert p.page.title == 'base'
+    assert p.page.content
+
+    # select another page
+    p = p.focus('data')
+
+    assert p.pages.get(text='data').is_active
+    assert p.page.title == 'data'
+    assert p.page.content
+
+    # edit the page
+    p = p.edit()
+    p = p.submit('this is my new content')
+
+    assert p.page.content == 'this is my new content'

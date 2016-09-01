@@ -42,12 +42,12 @@ def test_documentation_shows_the_4_pages_by_default(random_challenge):
     q = query('wizard:challenge:documentation', c=c, kwargs={'pk': pk})
     h = q.html
 
-    assert h.select_one('.title').text == 'Documentation'
-    assert len(h.select('.page')) == len(PAGES)
-    assert [x.text for x in h.select('.page .title')] == PAGES
+    assert 'Documentation' in h.select_one('h2').text
+    assert len(h.select('.nav-page')) == len(PAGES)
+    assert [x.text.strip() for x in h.select('.nav-page')] == PAGES
 
 
-def test_documentation_page_links_to_the_edition_page(random_challenge):
+def test_documentation_page_links_to_the_specific_page_content(random_challenge):
     pk = random_challenge.challenge.pk
     d = random_challenge.desc
     c = Client()
@@ -56,9 +56,9 @@ def test_documentation_page_links_to_the_edition_page(random_challenge):
     q = query('wizard:challenge:documentation', c=c, kwargs={'pk': pk})
     h = q.html
 
-    s = h.select('.page')[0]
-    title = s.select_one('.title').text
-    a = s.select_one('a.edit')
+    s = h.select('.nav-page')[0]
+    title = s.text.strip()
+    a = s.select_one('a')
 
     pid = DocumentationPageModel.objects.get(title=title).id
 
@@ -82,6 +82,6 @@ def test_edit_page_returns_200(random_challenge):
     p = d.pages.first()
 
     r = c.get(reverse('wizard:challenge:documentation.page',
-                      kwargs={'pk': pk, 'page_id': d.id}))
+                      kwargs={'pk': pk, 'page_id': p.id}))
 
     assert r.status_code == 200

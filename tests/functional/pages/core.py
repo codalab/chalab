@@ -94,9 +94,16 @@ class FormBlock(Block):
     def fill(self, **kwargs):
         for (k, v) in kwargs.items():
             try:
-                self.by_css('input#id_%s' % k).send_keys(v)
+                e = self.by_css('input#id_%s' % k)
             except (NoSuchElementException, TimeoutException):
-                self.by_css('textarea#id_%s' % k).send_keys(v)
+                e = self.by_css('textarea#id_%s' % k)
+
+            if isinstance(v, bool):
+                if v != e.is_selected():
+                    e.click()
+            else:
+                e.clear()
+                e.send_keys(str(v))
 
         return self
 
@@ -119,15 +126,16 @@ class JumbotronBlock(Block):
 
 
 class AppMixin(object):
-    app, panel = None, None
+    app, panel, module = None, None, None
 
     def checked(self):
         assert self.app is not None, "forgot to define the AppMixin?"
 
         try:
-            assert self.is_(self.app, self.panel)
+            assert self.is_(self.app, self.panel, self.module)
         except AssertionError:
             self.capture("""check_%s_%s_%010d""" % (self.app, self.panel, time.time()))
+            raise
 
         return self
 
@@ -149,9 +157,10 @@ class AppMixin(object):
     def is_module(self, name):
         return self._is_('module', name)
 
-    def is_(self, app, panel=None):
+    def is_(self, app, panel=None, module=None):
         return (self.is_app(app) and
-                self.is_panel(panel) if panel is not None else True)
+                (self.is_panel(panel) if panel is not None else True) and
+                (self.is_module(module) if module is not None else True))
 
 
 class Page(SelectableMixin, CapturableMixin, BasicElementsMixin, AppMixin):

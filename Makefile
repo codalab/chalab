@@ -14,6 +14,13 @@ dataset:
 metrics:
 	docker-compose run web python manage.py load_default_metrics
 
+preload_db: dataset metrics
+
+clean:
+	killall phantomjs
+	rm -f ./tests/captures/*.png
+	rm -rf -- ./datasets/chalearn/*/ # remove all folders
+
 dev:
 	docker-compose build
 	docker-compose up -d db

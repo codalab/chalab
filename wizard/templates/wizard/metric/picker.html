@@ -1,20 +1,18 @@
-{% extends 'chalab/base.html' %}
+{% extends 'wizard/base.html' %}
 {% load bootstrap3 %}
 
-{% block title %}Metric - Pick a metric{% endblock %}
+{% block module_name %}picker{% endblock %}
 
-{% block app_name %}wizard{% endblock %}
-{% block panel_name %}challenge{% endblock %}
-{% block module_name %}metric-picker{% endblock %}
-
-{% block content %}
-    <h1>Which metric do you want to use?</h1>
+{% block flow_content %}
+    <h3>Which metric do you want to use?</h3>
 
     <div class="pick">
         <div class="public">
-            <h2>Pick a Public Metric</h2>
-            <form class="" method="POST" action="#">
+            <h4>Use a Public Metric</h4>
+
+            <form class="picker" method="POST" action="#">
                 {% csrf_token %}
+
                 <input type="hidden" name="kind" value="public"/>
 
                 <select name="metric">

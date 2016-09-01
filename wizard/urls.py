@@ -17,6 +17,8 @@ challenge_wizard = [
 
     url(r'^documentation/$', views.documentation, name='documentation'),
     url(r'^documentation/(?P<page_id>\d+)$', views.documentation_page, name='documentation.page'),
+    url(r'^documentation/(?P<page_id>\d+)/edit$', views.DocumentationPageUpdate.as_view(),
+        name='documentation.page.edit'),
 
     url(r'^baseline/$', views.ChallengeDataEdit.as_view(), name='baseline'),
     url(r'^rules/$', views.ChallengeDataEdit.as_view(), name='rules'),

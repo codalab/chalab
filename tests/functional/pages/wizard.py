@@ -1,3 +1,5 @@
+import time
+
 from selenium.webdriver.support.select import Select
 
 from .core import Page, SelectableMixin, FormBlock, Block
@@ -55,11 +57,14 @@ class GroupOfBlocks(SelectableMixin):
     def __len__(self):
         return len(self.all)
 
-    def get(self, clss=None):
+    def get(self, clss=None, text=None):
         r = self.all
 
         if clss is not None:
             r = [x for x in r if clss in x.elem.get_attribute('class')]
+
+        if text is not None:
+            r = [x for x in r if x.text == text]
 
         assert len(r) == 1
         return r[0]
@@ -198,6 +203,85 @@ class ChallengeTaskPage(ChallengeFlowPage):
     panel = 'challenge-task'
 
 
+class DocumentationNavPageBlock(Block):
+    selector = '.nav-page'
+
+    def __init__(self, parent, elem):
+        self.driver = parent.driver
+        self.elem = elem
+
+    @property
+    def is_active(self):
+        return 'active' in self.elem.get_attribute('class')
+
+    @property
+    def text(self):
+        return self.elem.text
+
+    def click(self, selector=None):
+        assert selector is None
+        self.by_css('a').click()
+
+
+class DocumentationNavPagesBlock(GroupOfBlocks):
+    selector = '.nav-pages'
+    block_clss = DocumentationNavPageBlock
+
+
+class DocumentationPageBlock(Block):
+    selector = '.page'
+    selector_title = 'h2'
+    selector_content = '.content'
+
+    @property
+    def title(self):
+        return self.by_css(self.selector_title).text
+
+    @property
+    def content(self):
+        return self.by_css(self.selector_content).text
+
+
+class DocumentationPageForm(FormBlock):
+    selector = '.update form'
+
+
+class ChallengeDocumentationEditPage(ChallengeFlowPage):
+    panel = 'challenge-documentation'
+    module = 'editor'
+
+    @property
+    def form(self):
+        return DocumentationPageForm(self)
+
+    def submit(self, content):
+        f = self.form
+        f.fill(content=content)
+        f.submit()
+        return ChallengeDocumentationPage(self).checked()
+
+
+class ChallengeDocumentationPage(ChallengeFlowPage):
+    panel = 'challenge-documentation'
+    selector_edit = '.edit'
+
+    @property
+    def pages(self):
+        return DocumentationNavPagesBlock(self)
+
+    @property
+    def page(self):
+        return DocumentationPageBlock(self)
+
+    def edit(self):
+        self.by_css(self.selector_edit).click()
+        return ChallengeDocumentationEditPage(self).checked()
+
+    def focus(self, name):
+        self.pages.get(text=name).click()
+        return ChallengeDocumentationPage(self).checked()
+
+
 class ProtocolForm(FormBlock):
     selector = '.protocol form'
 
@@ -269,11 +353,16 @@ class DetailChallengePage(LoggedPage):
 
     def to_metric(self):
         self.click_step('metric')
+        time.sleep(1)
         return ChallengeMetricPage(self).checked()
 
     def to_protocol(self):
         self.click_step('protocol')
         return ChallengeProtocolPage(self).checked()
+
+    def to_documentation(self):
+        self.click_step('documentation')
+        return ChallengeDocumentationPage(self).checked()
 
 
 class ChallengeForm(FormBlock):

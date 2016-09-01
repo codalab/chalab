@@ -30,8 +30,8 @@ def test_metric_picker_shows_public_metrics_picker_ui(random_challenge):
     response = wiz.metric_picker(request, pk=pk)
     h = html(response)
 
-    assert h.select_one('.module')['id'] == 'metric-picker'
-    assert 'Which metric' in h.select_one('.module h1').text
+    assert h.select_one('.module')['id'] == 'picker'
+    assert 'Which metric' in h.select_one('.module h3').text
 
 
 def test_metric_picker_has_public_metric_in_context(random_challenge):
