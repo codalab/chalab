@@ -2,7 +2,7 @@ import logging
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
-log = logging.getLogger('pages')
+log = logging.getLogger('functional.pages')
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
@@ -38,13 +38,33 @@ class SelectableMixin(object):
         else:
             return xs
 
+    def click(self, selector):
+        self.by_css(selector).click()
 
-class FormBlock(SelectableMixin):
-    def __init__(self, parent, elem):
+
+class CapturableMixin(object):
+    def capture(self, name):
+        self.driver.save_screenshot(name + '.png')
+
+
+class BasicElementsMixin(object):
+    @property
+    def h1(self):
+        return self.by_css('h1')
+
+
+class Block(SelectableMixin, CapturableMixin, BasicElementsMixin):
+    selector = None
+
+    def __init__(self, parent):
+        assert self.selector is not None, "define a selector for this block."
+        self.parent = parent
         self.driver = parent.driver
-        self.elem = elem
+        self.elem = self.by_css(self.selector)
 
-    def has_fields(self, inputs=[]):
+
+class FormBlock(Block):
+    def has_fields(self, inputs):
         for i in inputs:
             if not self.by_css('input#id_%s' % i, on_missing=False):
                 return False
@@ -65,59 +85,41 @@ class FormBlock(SelectableMixin):
         return self
 
 
-class ChallengeBlock(SelectableMixin):
-    selector = '.challenge'
-    selector_title = '.title'
-
-    def __init__(self, parent, elem):
-        self.driver = parent.driver
-        self.elem = elem
+class HeroBlock(Block):
+    selector = '.hero'
+    selector_lead = '.lead'
 
     @property
-    def title(self):
-        return self.by_css(self.selector_title).text
+    def lead(self):
+        return self.by_css(self.selector_lead)
 
 
-class ChallengesBlock(SelectableMixin):
-    selector = '.challenges'
+class Page(SelectableMixin, CapturableMixin, BasicElementsMixin):
+    selector_content = '.content'
 
-    def __init__(self, parent):
-        self.driver = parent.driver
-        self.elem = parent.by_css(self.selector)
-
-    @property
-    def all(self):
-        return self.by_css_many(ChallengeBlock.selector, clss=ChallengeBlock, on_missing=[])
-
-    def __getitem__(self, item):
-        return self.all[item]
-
-    def __len__(self):
-        return len(self.all)
-
-
-class Page(SelectableMixin):
-    def __init__(self, driver):
-        self.driver = driver
+    def __init__(self, driver_or_prev):
+        try:
+            self.driver = driver_or_prev.driver
+            self.prev = driver_or_prev
+        except AttributeError:
+            self.driver = driver_or_prev
+            self.prev = None
 
     def get(self, url):
         self.driver.get(url)
         return self
 
+    @property
+    def content(self):
+        return self.by_css(self.selector_content)
+
+    @property
+    def hero(self):
+        return HeroBlock(self)
+
     def nav_to(self, page_name):
         self.by_css('nav #%s a' % page_name).click()
         return self
-
-    def click_on_logo(self):
-        self.by_css('header #logo a').click()
-        return self
-
-    def click(self, selector):
-        self.by_css(selector).click()
-        return self
-
-    def form(self, selector):
-        return FormBlock(self, self.by_css('form%s' % selector))
 
     def is_app(self, name, panel=None):
         a = self.by_css('.app#%s' % name, on_missing=None) is not None
@@ -134,10 +136,3 @@ class Page(SelectableMixin):
             a = a and p
 
         return a
-
-    def capture(self, name):
-        self.driver.save_screenshot(name + '.png')
-
-    @property
-    def challenges(self):
-        return ChallengesBlock(self)
