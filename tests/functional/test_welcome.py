@@ -1,23 +1,5 @@
-import pytest
-
-from .pages import HomePage
 from .. import selen
 from ..tools import random_user_desc
-
-
-@pytest.fixture(scope='function')
-def raw_driver():
-    d = selen.raw_driver()
-    try:
-        yield d
-    finally:
-        d.close()
-
-
-@pytest.fixture(scope='function')
-def home(raw_driver):
-    raw_driver.get(selen.LIVE_SERVER_URL)
-    return HomePage(raw_driver)
 
 
 def test_is_setup(home):
