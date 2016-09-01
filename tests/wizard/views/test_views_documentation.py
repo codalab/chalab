@@ -7,6 +7,8 @@ from wizard.models import DocumentationPageModel, DocumentationModel
 
 pytestmark = pytest.mark.django_db
 
+PAGES = ['base', 'evaluation', 'data', 'rules']
+
 
 def test_documentation_returns_200(random_challenge):
     pk = random_challenge.challenge.pk
@@ -19,7 +21,7 @@ def test_documentation_returns_200(random_challenge):
     assert r.status_code == 200
 
 
-def test_documentation_pass_the_3_pages_by_default(random_challenge):
+def test_documentation_pass_the_4_pages_by_default(random_challenge):
     pk = random_challenge.challenge.pk
     d = random_challenge.desc
     c = Client()
@@ -27,11 +29,11 @@ def test_documentation_pass_the_3_pages_by_default(random_challenge):
 
     r = c.get(reverse('wizard:challenge:documentation', kwargs={'pk': pk}))
 
-    assert len(r.context['pages']) == 3
-    assert [x.title for x in r.context['pages']] == ['base', 'evaluation', 'data']
+    assert len(r.context['pages']) == len(PAGES)
+    assert [x.title for x in r.context['pages']] == PAGES
 
 
-def test_documentation_shows_the_3_pages_by_default(random_challenge):
+def test_documentation_shows_the_4_pages_by_default(random_challenge):
     pk = random_challenge.challenge.pk
     d = random_challenge.desc
     c = Client()
@@ -41,8 +43,8 @@ def test_documentation_shows_the_3_pages_by_default(random_challenge):
     h = q.html
 
     assert h.select_one('.title').text == 'Documentation'
-    assert len(h.select('.page')) == 3
-    assert [x.text for x in h.select('.page .title')] == ['base', 'evaluation', 'data']
+    assert len(h.select('.page')) == len(PAGES)
+    assert [x.text for x in h.select('.page .title')] == PAGES
 
 
 def test_documentation_page_links_to_the_edition_page(random_challenge):

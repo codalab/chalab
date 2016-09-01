@@ -105,7 +105,7 @@ class TestDocumentationModel:
     def test_default_documentation_contains_3_pages(self):
         t = models.DocumentationModel.create()
 
-        assert len(t.pages) == 3
+        assert len(t.pages) == 4
 
 
 class TestChallengeModel:

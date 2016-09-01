@@ -382,6 +382,7 @@ class DocumentationModel(models.Model):
         {'title': 'base', 'content': 'the base'},
         {'title': 'evaluation', 'content': 'the evalutation'},
         {'title': 'data', 'content': 'the data'},
+        {'title': 'rules', 'content': 'the rules'},
     ]
 
     @property
