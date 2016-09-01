@@ -1,16 +1,6 @@
-{% extends 'chalab/base.html' %}
+{% extends 'wizard/base.html' %}
 {% load bootstrap3 %}
 
-{% block title %}1. Define the data{% endblock %}
-
-{% block app_name %}wizard{% endblock %}
-{% block panel_name %}task{% endblock %}
-
-{% block content %}
-    <h2>{{ object.challenge.title }}</h2>
-    <p>{{ object.challenge.description }}</p>
-
-    <h3>{{ object }}</h3>
-
-    {% include 'wizard/flow/_nav.html' %}
+{% block flow_content %}
+    <h3>Task Name: {{ task.name }}</h3>
 {% endblock %}

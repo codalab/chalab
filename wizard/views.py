@@ -1,5 +1,4 @@
 import logging
-from collections import namedtuple
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -9,43 +8,14 @@ from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
-from . import models
+from . import models, flow
+from .flow import FlowOperationMixin
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
     DocumentationModel
 
 log = logging.getLogger('wizard.views')
 log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
-
-
-class Flow(object):
-    Data = 'Data'
-    Task = 'Task'
-    Metric = 'Metric'
-    Protocol = 'Protocol'
-    Baseline = 'Baseline'
-    Documentation = 'Documentation'
-    Rules = 'Rules'
-
-    FlowItem = namedtuple('FlowItem', ['slug', 'name', 'active', 'url', 'descr_template'])
-
-    FLOW = [Data, Task, Metric, Protocol, Baseline, Documentation, Rules]
-
-    @classmethod
-    def list(cls, current):
-        return [cls.FlowItem(slug=x.lower(),
-                             name=x, active=current == x, url='wizard:challenge:' + x.lower(),
-                             descr_template='wizard/flow/descr/_%s.html' % x.lower())
-                for x in cls.FLOW]
-
-
-class FlowOperationMixin:
-    current_flow = None
-
-    def get_context_data(self, **kwargs):
-        context = super(FlowOperationMixin, self).get_context_data(**kwargs)
-        context['flow'] = Flow.list(self.current_flow)
-        return context
 
 
 @login_required
@@ -55,7 +25,7 @@ def home(request):
 
 
 class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
-    template_name = 'wizard/create.html'
+    template_name = 'wizard/challenge/create.html'
     model = ChallengeModel
     fields = ['title', 'organization_name', 'description']
 
@@ -65,23 +35,28 @@ class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
 
 
 class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMixin):
-    template_name = 'wizard/detail.html'
+    template_name = 'wizard/challenge/detail.html'
     model = ChallengeModel
     fields = ['title', 'organization_name', 'description']
 
+    def get_context_data(self, challenge=None, **kwargs):
+        context = super().get_context_data(challenge=self.object, **kwargs)
+        return context
 
-class ChallengeDataUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
-    template_name = 'wizard/data/detail.html'
+
+class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+    template_name = 'wizard/data/editor.html'
     model = DatasetModel
 
     fields = ['name']
-    current_flow = Flow.Data
+    current_flow = flow.DataFlowItem
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
+        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
 
-        context = super().get_context_data(**kwargs)
-        context['challenge'] = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
         return context
 
     def get_object(self, **kwargs):
@@ -103,13 +78,14 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     context_object_name = 'task'
 
     fields = ['name']
-    current_flow = Flow.Task
+    current_flow = flow.TaskFlowItem
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
+        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
 
-        context = super().get_context_data(**kwargs)
-        context['challenge'] = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
         return context
 
     def get_object(self, **kwargs):
@@ -148,7 +124,9 @@ def data_picker(request, pk):
         return redirect('wizard:challenge:data', pk=pk)
     else:
         pds = models.DatasetModel.objects.all().filter(is_public=True)
-        context = {'public_datasets': pds}
+        context = {'public_datasets': pds,
+                   'challenge': c,
+                   'flow': flow.Flow(flow.DataFlowItem, c)}
         return render(request, 'wizard/data/picker.html', context=context)
 
 
@@ -179,13 +157,14 @@ class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     context_object_name = 'metric'
 
     fields = ['name']
-    current_flow = Flow.Metric
+    current_flow = flow.MetricFlowItem
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
+        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
 
-        context = super().get_context_data(**kwargs)
-        context['challenge'] = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
         return context
 
     def get_object(self, **kwargs):
@@ -208,13 +187,14 @@ class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
 
     fields = ['end_date', 'allow_reuse', 'publicly_available',
               'max_submission_per_day', 'max_submissions']
-    current_flow = Flow.Protocol
+    current_flow = flow.ProtocolFlowItem
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
+        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
 
-        context = super().get_context_data(**kwargs)
-        context['challenge'] = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
         return context
 
     def get_object(self, **kwargs):
@@ -239,7 +219,6 @@ def documentation(request, pk):
         doc = DocumentationModel.create()
         c.documentation = doc
         c.save()
-        import sys; print("DOC=dc", doc, file=sys.stderr)
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages}
 

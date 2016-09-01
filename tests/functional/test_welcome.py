@@ -1,5 +1,5 @@
+from tests.tools import ChallengeTuple
 from .. import selen
-from ..tools import random_user_desc
 
 
 def test_is_setup(home):
@@ -27,30 +27,22 @@ def test_browse_around_shows_the_basics(home):
     assert f.has_fields(inputs=['username', 'email', 'password1', 'password2'])
 
 
-def test_register_and_create_first_competition(home):
-    u = random_user_desc('napier_j')
-
-    # There's a register button in the navigation
-    p = home.signup()
-
-    # I can fill the registration form
-    p = p.register(username=u.username, email=u.email, password=u.password)
-
+def test_register_and_create_first_competition(wizard):
     # I'm on the wizard home page
-    assert p.is_app('wizard')
-    assert len(p.challenges) == 0
+    assert wizard.is_app('wizard')
+    assert len(wizard.challenges) == 0
 
     # I can create a challenge
-    p = p.create_challenge()
-    assert p.is_app('wizard', 'create-challenge')
+    p = wizard.create_challenge()
+    assert p.is_('wizard', 'create-challenge')
 
     # I can fill the form
     # TODO(laurent): Upload organization image
-    p.submit(title='My first competition',
-             org_name='UmbrellaCorp',
-             description='Cure Zombiism')
+    p.submit(ChallengeTuple(title='My first competition',
+                            org_name='UmbrellaCorp',
+                            description='Cure Zombiism'))
 
-    assert p.is_app('wizard', 'challenge')
+    assert p.is_('wizard', 'challenge')
 
     # I can go back home and find my competition
     p = p.go_home(selen.LIVE_SERVER_URL)

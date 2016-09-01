@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils.six.moves.urllib.parse import (urljoin, urlsplit)
 
 UserTuple = namedtuple('UserTuple', ['username', 'email', 'password'])
+ChallengeTuple = namedtuple('ChallengeTuple', ['title', 'org_name', 'description'])
 ClientQueryTuple = namedtuple('ClientQueryTuple', ['client', 'response', 'html'])
 
 _FACTORY = RequestFactory()
@@ -85,6 +86,15 @@ def random_user_desc(username):
     return UserTuple(username=username,
                      email='%s@chalab.test' % username,
                      password='sadhasdjasdqwdnasdbkj')
+
+
+def random_challenge_desc(name):
+    title = '%s.%010d' % (name, random.randint(0, 1000000000))
+    org_name = '%s.org.%010d' % (name, random.randint(0, 1000000000))
+    desc = '%s.desc.%010d' % (name, random.randint(0, 1000000000))
+    return ChallengeTuple(title=title,
+                          org_name=org_name,
+                          description=desc)
 
 
 def make_user(desc):

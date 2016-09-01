@@ -1,20 +1,18 @@
-{% extends 'chalab/base.html' %}
+{% extends 'wizard/base.html' %}
 {% load bootstrap3 %}
 
-{% block title %}Data - Pick a dataset{% endblock %}
+{% block module_name %}picker{% endblock %}
 
-{% block app_name %}wizard{% endblock %}
-{% block panel_name %}challenge{% endblock %}
-{% block module_name %}data-picker{% endblock %}
-
-{% block content %}
-    <h1>Which dataset do you want to use?</h1>
+{% block flow_content %}
+    <h3>Pick/Create a dataset</h3>
 
     <div class="pick">
         <div class="public">
-            <h2>Pick a Public Dataset</h2>
-            <form class="login" method="POST" action="#">
+            <h4>Use a Public Dataset</h4>
+
+            <form class="picker" method="POST" action="#">
                 {% csrf_token %}
+
                 <input type="hidden" name="kind" value="public"/>
 
                 <select name="dataset">
@@ -31,5 +29,4 @@
             </form>
         </div>
     </div>
-
 {% endblock %}

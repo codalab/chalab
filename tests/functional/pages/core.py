@@ -1,4 +1,5 @@
 import logging
+import time
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
@@ -22,6 +23,8 @@ class SelectableMixin(object):
             if on_missing != Exception:
                 return on_missing
             else:
+                self.capture("""./tests/failures/%s_by_css_%s_%020d"""
+                             % (self.__class__.__name__, selector, time.time()))
                 raise e
 
     def by_css_many(self, selector, on_missing=Exception, clss=None):
@@ -38,8 +41,11 @@ class SelectableMixin(object):
         else:
             return xs
 
-    def click(self, selector):
-        self.by_css(selector).click()
+    def click(self, selector=None):
+        if selector is None:
+            self.elem.click()
+        else:
+            self.by_css(selector).click()
 
 
 class CapturableMixin(object):
@@ -48,9 +54,23 @@ class CapturableMixin(object):
 
 
 class BasicElementsMixin(object):
+    selector_content = '.content'
+
     @property
     def h1(self):
         return self.by_css('h1')
+
+    @property
+    def h2(self):
+        return self.by_css('h2')
+
+    @property
+    def h3(self):
+        return self.by_css('h3')
+
+    @property
+    def content(self):
+        return self.by_css(self.selector_content)
 
 
 class Block(SelectableMixin, CapturableMixin, BasicElementsMixin):
@@ -94,7 +114,43 @@ class HeroBlock(Block):
         return self.by_css(self.selector_lead)
 
 
-class Page(SelectableMixin, CapturableMixin, BasicElementsMixin):
+class JumbotronBlock(Block):
+    selector = '.jumbotron'
+
+
+class AppMixin(object):
+    app, panel = None, None
+
+    def checked(self):
+        assert self.app is not None, "forgot to define the AppMixin?"
+        assert self.is_(self.app, self.panel)
+
+        return self
+
+    def _is_(self, kind, value):
+        x = self.by_css('.%s#%s' % (kind, value), on_missing=None) is not None
+
+        if not x:
+            m = self.by_css('.%s' % kind)
+            log.warning("got %s: %s, expected: %s", kind, m.get_attribute('id'), value)
+
+        return x
+
+    def is_app(self, name):
+        return self._is_('app', name)
+
+    def is_panel(self, name):
+        return self._is_('panel', name)
+
+    def is_module(self, name):
+        return self._is_('module', name)
+
+    def is_(self, app, panel=None):
+        return (self.is_app(app) and
+                self.is_panel(panel) if panel is not None else True)
+
+
+class Page(SelectableMixin, CapturableMixin, BasicElementsMixin, AppMixin):
     selector_content = '.content'
 
     def __init__(self, driver_or_prev):
@@ -117,22 +173,10 @@ class Page(SelectableMixin, CapturableMixin, BasicElementsMixin):
     def hero(self):
         return HeroBlock(self)
 
+    @property
+    def jumbotron(self):
+        return JumbotronBlock(self)
+
     def nav_to(self, page_name):
         self.by_css('nav #%s a' % page_name).click()
         return self
-
-    def is_app(self, name, panel=None):
-        a = self.by_css('.app#%s' % name, on_missing=None) is not None
-
-        if not a:
-            log.error('not app=%s', name)
-
-        if panel is not None:
-            p = self.by_css('.panel#%s' % panel, on_missing=None) is not None
-
-            if not p:
-                log.error('not panel=%s', panel)
-
-            a = a and p
-
-        return a

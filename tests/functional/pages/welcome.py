@@ -1,5 +1,6 @@
 from .core import Page, FormBlock
 from .wizard import WizardPage
+from tests.tools import UserTuple, ChallengeTuple
 
 
 class SignupForm(FormBlock):
@@ -29,8 +30,8 @@ class SignupPage(HomePage):
     def form(self):
         return SignupForm(self)
 
-    def register(self, username, email, password):
+    def register(self, user_tuple):
         f = self.form
-        f.fill(username=username, email=email,
-               password1=password, password2=password).submit()
-        return WizardPage(self)
+        f.fill(username=user_tuple.username, email=user_tuple.email,
+               password1=user_tuple.password, password2=user_tuple.password).submit()
+        return WizardPage(self, user=user_tuple)

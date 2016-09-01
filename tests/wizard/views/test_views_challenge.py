@@ -30,7 +30,7 @@ def test_create_challenges_redirect_to_challenge(random_user):
 
 
 @pytest.mark.parametrize("flow_name", [
-    'data', 'task', 'metric', 'protocol', 'baseline', 'documentation', 'rules'
+    'data', 'task', 'metric', 'protocol', 'baseline', 'documentation'
 ])
 def test_challenge_page_shows_flow_links(flow_name, random_challenge):
     c, h = random_challenge.challenge, random_challenge.html

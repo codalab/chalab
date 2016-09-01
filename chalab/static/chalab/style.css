@@ -34,6 +34,18 @@
     text-align: center;
 }
 
+.vertical-stepper .circle.ready {
+    background: #65CE3E;
+}
+
+.vertical-stepper .circle.not-ready {
+    background: #F4A842;
+}
+
+.vertical-stepper .circle .fa {
+    margin: 0;
+}
+
 .vertical-stepper .line {
     position: absolute;
     border-left: 1px solid gainsboro;

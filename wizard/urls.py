@@ -6,7 +6,7 @@ app_name = 'wizard'
 
 challenge_wizard = [
     url(r'^data/pick$', views.data_picker, name='data.pick'),
-    url(r'^data/$', views.ChallengeDataUpdate.as_view(), name='data'),
+    url(r'^data/$', views.ChallengeDataEdit.as_view(), name='data'),
 
     url(r'^task/$', views.ChallengeTaskUpdate.as_view(), name='task'),
 
@@ -18,8 +18,8 @@ challenge_wizard = [
     url(r'^documentation/$', views.documentation, name='documentation'),
     url(r'^documentation/(?P<page_id>\d+)$', views.documentation_page, name='documentation.page'),
 
-    url(r'^baseline/$', views.ChallengeDataUpdate.as_view(), name='baseline'),
-    url(r'^rules/$', views.ChallengeDataUpdate.as_view(), name='rules'),
+    url(r'^baseline/$', views.ChallengeDataEdit.as_view(), name='baseline'),
+    url(r'^rules/$', views.ChallengeDataEdit.as_view(), name='rules'),
 ]
 
 urlpatterns = [

@@ -2,7 +2,21 @@
     {% for f in flow %}
         <div class="step {{ f.slug }}">
             <div>
-                <div class="circle">{{ forloop.counter }}</div>
+                {% if f.is_prepared %}
+                    {% if f.is_ready %}
+                        <div class="circle ready">
+                            <i class="fa fa-check" aria-hidden="true"></i>
+                        </div>
+                    {% else %}
+                        <div class="circle not-ready">
+                            <i class="fa fa-exclamation" aria-hidden="true"></i>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="circle">
+                        <i class="fa fa-question" aria-hidden="true"></i>
+                    </div>
+                {% endif %}
                 <div class="line"></div>
             </div>
             <div>

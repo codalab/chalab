@@ -14,7 +14,7 @@ def test_open_data_redirects_to_picker(random_challenge):
     url = reverse('wizard:challenge:data', kwargs={'pk': random_challenge.challenge.pk})
     request = make_request(url, user=random_challenge.user)
 
-    response = wiz.ChallengeDataUpdate.as_view()(request, pk=pk)
+    response = wiz.ChallengeDataEdit.as_view()(request, pk=pk)
 
     assert_redirects(response, reverse('wizard:challenge:data.pick', kwargs={'pk': pk}),
                      fetch_redirect_response=False)
@@ -29,8 +29,8 @@ def test_data_picker_shows_public_dataset(random_challenge):
     response = wiz.data_picker(request, pk=pk)
     h = html(response)
 
-    assert h.select_one('.module')['id'] == 'data-picker'
-    assert 'Which dataset' in h.select_one('.module h1').text
+    assert h.select_one('.module')['id'] == 'picker'
+    assert 'Pick' in h.select_one('.module h3').text
 
 
 def test_data_picker_shows_public_datasets_empty(random_challenge):

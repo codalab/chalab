@@ -1,0 +1,19 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}
+    {{ flow.id }}. {{ flow.name }}
+{% endblock %}
+
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}challenge-{{ flow.slug }}{% endblock %}
+
+{% block content %}
+    <h1>{{ challenge.title }}</h1>
+    <h2>{{ flow.id }}. {{ flow.name }}</h2>
+
+    {% block flow_content %}
+    {% endblock %}
+
+    {% include 'wizard/flow/_nav.html' %}
+{% endblock %}
