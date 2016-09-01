@@ -4,12 +4,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
 from . import models, flow
 from .flow import FlowOperationMixin
+from .forms import ProtocolForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
     DocumentationModel
 
@@ -183,11 +185,16 @@ class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     template_name = 'wizard/protocol.html'
     model = ProtocolModel
+    form_class = ProtocolForm
     context_object_name = 'protocol'
 
-    fields = ['end_date', 'allow_reuse', 'publicly_available',
-              'max_submission_per_day', 'max_submissions']
+    # Hacky way to pass back the challenge from get_object to get_success_url
+    _runtime_challenge = None
+
     current_flow = flow.ProtocolFlowItem
+
+    def get_success_url(self):
+        return reverse('wizard:challenge:protocol', kwargs={'pk': self._runtime_challenge.pk})
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
@@ -201,6 +208,8 @@ class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
         pk = self.kwargs['pk']
 
         challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        self._runtime_challenge = challenge
+
         protocol = challenge.protocol
 
         if protocol is None:

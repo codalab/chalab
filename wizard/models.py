@@ -369,12 +369,17 @@ class MetricModel(models.Model):
 
 
 class ProtocolModel(models.Model):
-    end_date = models.DateField(null=True, default=None)
+    is_ready = models.BooleanField(default=True, null=False)
+
+    end_date = models.DateField(null=True, default=None, blank=True)
     allow_reuse = models.BooleanField(default=False)
     publicly_available = models.BooleanField(default=False)
 
-    max_submissions_per_day = models.IntegerField(null=True, default=None)
-    max_submissions = models.IntegerField(null=True, default=None)
+    has_registration = models.BooleanField(default=False)
+    ranked_submissions = models.BooleanField(default=False)
+
+    max_submissions_per_day = models.IntegerField(null=True, default=None, blank=True)
+    max_submissions = models.IntegerField(null=True, default=None, blank=True)
 
 
 class DocumentationModel(models.Model):
@@ -424,7 +429,7 @@ class ChallengeModel(models.Model):
     dataset = models.ForeignKey(DatasetModel, null=True)
     task = models.ForeignKey(TaskModel, null=True)
     metric = models.ForeignKey(MetricModel, null=True)
-    protocol = models.ForeignKey(ProtocolModel, null=True)
+    protocol = models.ForeignKey(ProtocolModel, null=True, related_name='challenge')
     documentation = models.ForeignKey(DocumentationModel, null=True, related_name='challenge')
 
     def get_absolute_url(self):

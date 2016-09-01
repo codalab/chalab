@@ -23,8 +23,7 @@ class SelectableMixin(object):
             if on_missing != Exception:
                 return on_missing
             else:
-                self.capture("""./tests/failures/%s_by_css_%s_%020d"""
-                             % (self.__class__.__name__, selector, time.time()))
+                self.capture("by_css_%s" % selector)
                 raise e
 
     def by_css_many(self, selector, on_missing=Exception, clss=None):
@@ -50,6 +49,7 @@ class SelectableMixin(object):
 
 class CapturableMixin(object):
     def capture(self, name):
+        name = """./tests/captures/%s_%s_%020d""" % (self.__class__.__name__, name, time.time())
         self.driver.save_screenshot(name + '.png')
 
 
@@ -123,7 +123,11 @@ class AppMixin(object):
 
     def checked(self):
         assert self.app is not None, "forgot to define the AppMixin?"
-        assert self.is_(self.app, self.panel)
+
+        try:
+            assert self.is_(self.app, self.panel)
+        except AssertionError:
+            self.capture("""check_%s_%s_%010d""" % (self.app, self.panel, time.time()))
 
         return self
 

@@ -5,7 +5,7 @@ media/*
 # Chalab Datasources & Tests
 datasets/chalearn/*
 tests/chromedriver
-tests/failures/*.png
+tests/captures/*.png
 
 # Docker production
 .env

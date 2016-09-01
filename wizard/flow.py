@@ -63,7 +63,7 @@ class ProtocolFlowItem(FlowItem):
     name = 'Protocol'
 
     def _is_ready(self, c):
-        return True
+        return c.protocol.is_ready
 
 
 class BaselineFlowItem(FlowItem):

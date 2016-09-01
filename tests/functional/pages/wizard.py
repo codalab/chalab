@@ -118,11 +118,19 @@ class DefinitionBlock(PanelBlock):
         return StepBlocks(self)
 
 
-class PublicPickerForm(FormBlock):
+class PublicPickerDataForm(FormBlock):
     selector = '.pick .public form'
 
     def pick(self, name):
         s = Select(self.by_css('select[name="dataset"]'))
+        s.select_by_visible_text(name)
+
+
+class PublicPickerMetricForm(FormBlock):
+    selector = '.pick .public form'
+
+    def pick(self, name):
+        s = Select(self.by_css('select[name="metric"]'))
         s.select_by_visible_text(name)
 
 
@@ -160,9 +168,51 @@ class ChallengeFlowPage(LoggedPage):
 class ChallengeMetricPage(ChallengeFlowPage):
     panel = 'challenge-metric'
 
+    picker_module = 'picker'
+    editor_module = 'editor'
+
+    @property
+    def is_picker(self):
+        return self.is_module(self.picker_module)
+
+    @property
+    def is_editor(self):
+        return self.is_module(self.editor_module)
+
+    @property
+    def picker_form_public(self):
+        return PublicPickerMetricForm(self)
+
+    def pick_metric(self, public, name):
+        if public:
+            f = self.picker_form_public
+        else:
+            f = None
+
+        f.pick(name)
+        f.submit()
+        return self
+
 
 class ChallengeTaskPage(ChallengeFlowPage):
     panel = 'challenge-task'
+
+
+class ProtocolForm(FormBlock):
+    selector = '.protocol form'
+
+
+class ChallengeProtocolPage(ChallengeFlowPage):
+    panel = 'challenge-protocol'
+
+    @property
+    def form(self):
+        return ProtocolForm(self)
+
+    def set(self, values):
+        self.form.fill(**values)
+        self.form.submit()
+        return self
 
 
 class ChallengeDataPage(ChallengeFlowPage):
@@ -181,7 +231,7 @@ class ChallengeDataPage(ChallengeFlowPage):
 
     @property
     def picker_form_public(self):
-        return PublicPickerForm(self)
+        return PublicPickerDataForm(self)
 
     def pick_dataset(self, public, name):
         if public:
@@ -216,6 +266,14 @@ class DetailChallengePage(LoggedPage):
     def to_data(self):
         self.click_step('data')
         return ChallengeDataPage(self).checked()
+
+    def to_metric(self):
+        self.click_step('metric')
+        return ChallengeMetricPage(self).checked()
+
+    def to_protocol(self):
+        self.click_step('protocol')
+        return ChallengeProtocolPage(self).checked()
 
 
 class ChallengeForm(FormBlock):
