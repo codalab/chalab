@@ -17,7 +17,7 @@ metrics:
 preload_db: dataset metrics
 
 clean:
-	killall phantomjs
+	killall phantomjs || true
 	rm -f ./tests/captures/*.png
 	rm -rf -- ./datasets/chalearn/*/ # remove all folders
 

@@ -1,7 +1,8 @@
 import logging
 import time
 
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, \
+    NoSuchFrameException
 
 log = logging.getLogger('functional.pages')
 log.setLevel(logging.DEBUG)
@@ -48,7 +49,8 @@ class SelectableMixin(object):
 
 
 class CapturableMixin(object):
-    def capture(self, name):
+    def capture(self, *name):
+        name = '_'.join(str(x) for x in name)
         name = """./tests/captures/%s_%s_%020d""" % (self.__class__.__name__, name, time.time())
         self.driver.save_screenshot(name + '.png')
 
@@ -93,14 +95,26 @@ class FormBlock(Block):
 
     def fill(self, **kwargs):
         for (k, v) in kwargs.items():
+            is_tinymce = False
+
             try:
                 e = self.by_css('input#id_%s' % k)
             except (NoSuchElementException, TimeoutException):
-                e = self.by_css('textarea#id_%s' % k)
+                try:
+                    self.driver.switch_to_frame('id_%s_ifr' % k)
+                    e = self.driver.find_element_by_css_selector('#tinymce')
+                    self.driver.switch_to_default_content()
+                    is_tinymce = True
+                except (NoSuchFrameException,):
+                    e = self.by_css('textarea#id_%s' % k)
 
             if isinstance(v, bool):
                 if v != e.is_selected():
                     e.click()
+            elif is_tinymce:
+                self.driver.execute_script("""
+                tinyMCE.activeEditor.setContent('%s');
+                """ % str(v))
             else:
                 e.clear()
                 e.send_keys(str(v))
