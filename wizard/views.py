@@ -268,12 +268,31 @@ class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
                        kwargs={'pk': self._runtime_challenge.pk,
                                'page_id': self.object.pk})
 
+    def templated_objects(self):
+        c = self._runtime_challenge
+        return [x for x in (c, c.dataset, c.task, c.metric, c.protocol, c.documentation)
+                if x is not None]
+
+    def mappings_all(self):
+        r = {}
+        for x in self.templated_objects():
+            r.update(x.template_mapping)
+
+        return r
+
+    def mappings_doc(self):
+        r = {}
+        for x in self.templated_objects():
+            r.update(x.template_doc)
+
+        return r
+
     def form_valid(self, form):
         r = super().form_valid(form)
 
         page = self.object
 
-        mapping = self._runtime_challenge.template_mapping
+        mapping = self.mappings_all()
         page.render(mapping)
         return r
 
@@ -283,6 +302,7 @@ class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
 
         context = super().get_context_data(challenge=c, **kwargs)
         context['challenge'] = c
+        context['template_doc'] = self.mappings_doc()
         return context
 
     def get_object(self, **kwargs):

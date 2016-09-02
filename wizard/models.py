@@ -236,6 +236,14 @@ class DatasetModel(models.Model):
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
 
+    @property
+    def template_mapping(self):
+        return {}
+
+    @property
+    def template_doc(self):
+        return {}
+
     @classmethod
     def from_chalearn(cls, path, name, owner=None, is_public=True):
         try:
@@ -322,6 +330,14 @@ class TaskModel(models.Model):
     input_test = OneToOneField(MatrixModel, null=True, related_name='model_tested')
     input_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated')
 
+    @property
+    def template_mapping(self):
+        return {}
+
+    @property
+    def template_doc(self):
+        return {}
+
     def clean(self):
         super().clean()
 
@@ -366,6 +382,14 @@ class MetricModel(models.Model):
     classification = models.BooleanField(default=False, null=False)
     regression = models.BooleanField(default=False, null=False)
 
+    @property
+    def template_mapping(self):
+        return {}
+
+    @property
+    def template_doc(self):
+        return {}
+
     def __str__(self):
         return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
 
@@ -382,6 +406,14 @@ class ProtocolModel(models.Model):
 
     max_submissions_per_day = models.IntegerField(null=True, default=None, blank=True)
     max_submissions = models.IntegerField(null=True, default=None, blank=True)
+
+    @property
+    def template_mapping(self):
+        return {}
+
+    @property
+    def template_doc(self):
+        return {}
 
 
 class DocumentationModel(models.Model):
@@ -407,6 +439,14 @@ class DocumentationModel(models.Model):
 
         return c
 
+    @property
+    def template_mapping(self):
+        return {}
+
+    @property
+    def template_doc(self):
+        return {}
+
 
 class DocumentationPageModel(models.Model):
     title = models.CharField(max_length=80)
@@ -419,6 +459,10 @@ class DocumentationPageModel(models.Model):
         template = string.Template(self.content)
         self.rendered = template.safe_substitute(mapping_values)
         self.save()
+
+    @property
+    def template_doc(self):
+        return self.documentation.challenge.first().template_doc
 
     @property
     def displayed(self):

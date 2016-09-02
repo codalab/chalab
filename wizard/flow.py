@@ -82,7 +82,8 @@ class DocumentationFlowItem(FlowItem):
 
 class Flow(object):
     FLOW = [DataFlowItem, TaskFlowItem, MetricFlowItem, ProtocolFlowItem,
-            BaselineFlowItem, DocumentationFlowItem]
+            # BaselineFlowItem,
+            DocumentationFlowItem]
 
     def __init__(self, current_clss, challenge):
         self._current_clss = current_clss
