@@ -437,10 +437,15 @@ class ProtocolModel(models.Model):
 
 class DocumentationModel(models.Model):
     default_pages = docs.DEFAULT_PAGES
+    is_ready = models.BooleanField(default=True, null=False)
 
     @property
     def pages(self):
         return DocumentationPageModel.objects.filter(documentation=self)
+
+    def save(self, *args, **kwargs):
+        self.is_ready = all(page.is_rendered for page in self.pages)
+        super().save(*args, **kwargs)
 
     @classmethod
     def create(cls):
@@ -508,6 +513,14 @@ class ChallengeModel(models.Model):
                                  related_name='challenge')
     documentation = models.ForeignKey(DocumentationModel, null=True, blank=True,
                                       related_name='challenge')
+
+    @property
+    def is_ready(self):
+        return ((self.dataset and self.dataset.is_ready)
+                and (self.task and self.task.is_ready)
+                and (self.metric and self.metric.is_ready)
+                and (self.protocol and self.protocol.is_ready)
+                and (self.documentation and self.documentation.is_ready))
 
     @property
     def template_mapping(self):

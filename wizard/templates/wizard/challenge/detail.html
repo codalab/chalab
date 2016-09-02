@@ -31,9 +31,11 @@
         </div>
     </div>
 
-    <div class="definition panel panel-warning">
+    <div class="definition panel {% if object.is_ready %}ready panel-info{% else %}panel-warning{% endif %}">
         <div class="panel-heading">
-            <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+            {% if not object.is_ready %}
+                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+            {% endif %}
             Definition
         </div>
         <div class="panel-body">
@@ -41,9 +43,11 @@
         </div>
     </div>
 
-    <div class="panel panel-warning">
+    <div class="complete panel {% if object.is_ready %}ready panel-info{% else %}panel-warning{% endif %}">
         <div class="panel-heading">
-            <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+            {% if not object.is_ready %}
+                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+            {% endif %}
             Complete
         </div>
         <div class="panel-body">

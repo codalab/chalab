@@ -119,6 +119,10 @@ class DefinitionBlock(PanelBlock):
     selector = '.definition'
 
     @property
+    def is_ready(self):
+        return 'ready' in self.elem.get_attribute('class')
+
+    @property
     def steps(self):
         return StepBlocks(self)
 
@@ -156,6 +160,7 @@ class FlowBlock(Block):
 
 class ChallengeFlowPage(LoggedPage):
     app = 'wizard'
+    next_clss = None
 
     @property
     def flow(self):
@@ -163,11 +168,67 @@ class ChallengeFlowPage(LoggedPage):
 
     def next(self):
         self.flow.next.click()
-        return ChallengeTaskPage(self).checked()
+        return self.next_clss(self).checked()
 
     def up(self):
         self.flow.up.click()
         return DetailChallengePage(self).checked()
+
+
+class DocumentationNavPageBlock(Block):
+    selector = '.nav-page'
+
+    def __init__(self, parent, elem):
+        self.driver = parent.driver
+        self.elem = elem
+
+    @property
+    def is_active(self):
+        return 'active' in self.elem.get_attribute('class')
+
+    @property
+    def text(self):
+        return self.elem.text
+
+    def click(self, selector=None):
+        assert selector is None
+        self.by_css('a').click()
+
+
+class ChallengeDocumentationPage(ChallengeFlowPage):
+    panel = 'challenge-documentation'
+    selector_edit = '.edit'
+
+    @property
+    def pages(self):
+        return DocumentationNavPagesBlock(self)
+
+    @property
+    def page(self):
+        return DocumentationPageBlock(self)
+
+    def edit(self):
+        self.by_css(self.selector_edit).click()
+        return ChallengeDocumentationEditPage(self).checked()
+
+    def focus(self, name):
+        self.pages.get(text=name).click()
+        return ChallengeDocumentationPage(self).checked()
+
+
+class ChallengeProtocolPage(ChallengeFlowPage):
+    panel = 'challenge-protocol'
+
+    next_clss = ChallengeDocumentationPage
+
+    @property
+    def form(self):
+        return ProtocolForm(self)
+
+    def set(self, values):
+        self.form.fill(**values)
+        self.form.submit()
+        return self
 
 
 class ChallengeMetricPage(ChallengeFlowPage):
@@ -175,6 +236,8 @@ class ChallengeMetricPage(ChallengeFlowPage):
 
     picker_module = 'picker'
     editor_module = 'editor'
+
+    next_clss = ChallengeProtocolPage
 
     @property
     def is_picker(self):
@@ -202,25 +265,7 @@ class ChallengeMetricPage(ChallengeFlowPage):
 class ChallengeTaskPage(ChallengeFlowPage):
     panel = 'challenge-task'
 
-
-class DocumentationNavPageBlock(Block):
-    selector = '.nav-page'
-
-    def __init__(self, parent, elem):
-        self.driver = parent.driver
-        self.elem = elem
-
-    @property
-    def is_active(self):
-        return 'active' in self.elem.get_attribute('class')
-
-    @property
-    def text(self):
-        return self.elem.text
-
-    def click(self, selector=None):
-        assert selector is None
-        self.by_css('a').click()
+    next_clss = ChallengeMetricPage
 
 
 class DocumentationNavPagesBlock(GroupOfBlocks):
@@ -254,31 +299,11 @@ class ChallengeDocumentationEditPage(ChallengeFlowPage):
     def form(self):
         return DocumentationPageForm(self)
 
-    def submit(self, content):
+    def submit(self, content=None):
         f = self.form
-        f.fill(content=content)
+        if content is not None:
+            f.fill(content=content)
         f.submit()
-        return ChallengeDocumentationPage(self).checked()
-
-
-class ChallengeDocumentationPage(ChallengeFlowPage):
-    panel = 'challenge-documentation'
-    selector_edit = '.edit'
-
-    @property
-    def pages(self):
-        return DocumentationNavPagesBlock(self)
-
-    @property
-    def page(self):
-        return DocumentationPageBlock(self)
-
-    def edit(self):
-        self.by_css(self.selector_edit).click()
-        return ChallengeDocumentationEditPage(self).checked()
-
-    def focus(self, name):
-        self.pages.get(text=name).click()
         return ChallengeDocumentationPage(self).checked()
 
 
@@ -286,24 +311,13 @@ class ProtocolForm(FormBlock):
     selector = '.protocol form'
 
 
-class ChallengeProtocolPage(ChallengeFlowPage):
-    panel = 'challenge-protocol'
-
-    @property
-    def form(self):
-        return ProtocolForm(self)
-
-    def set(self, values):
-        self.form.fill(**values)
-        self.form.submit()
-        return self
-
-
 class ChallengeDataPage(ChallengeFlowPage):
     panel = 'challenge-data'
 
     picker_module = 'picker'
     editor_module = 'editor'
+
+    next_clss = ChallengeTaskPage
 
     @property
     def is_picker(self):

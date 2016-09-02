@@ -100,3 +100,23 @@ def test_documentation_with_templating(challenge):
 
     c = p.challenge
     assert p.page.content == "my challenge: %s with %s" % (c.title, c.description)
+
+
+def test_complete_flow(challenge):
+    p = challenge
+
+    assert not p.definition.is_ready
+
+    p = (p.to_data().pick_dataset(public=True, name='Chalearn - adult')
+         .next()
+         .next()
+         .pick_metric(public=True, name='log_loss')
+         .next()
+         .set({'end_date': '2024-01-01',
+               'allow_reuse': True,
+               'max_submissions_per_day': 2})
+         .next()
+         .edit().submit()
+         .up())
+
+    assert p.definition.is_ready
