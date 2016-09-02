@@ -8,7 +8,7 @@ For development (running the tests):
 
 - `python3.5`
 - an env with the content of the `requirements.txt` (`pip install -r requirements.txt`).
-- `phantomjs`, at least, for browser testing.
+- `phantomjs` for browser testing. Other drivers (Firefox, Chrome, etc) can be used too.
 
 
 Structure
@@ -17,6 +17,7 @@ Structure
 - `chalab`: core of the project,
 - `landing`: the home page app,
 - `wizard`: the wizard app,
+- `user`: user profile app,
 - `instances`: the module containing the settings per environment:
     - `local`: the settings to run django on your local machine,
     - `local_docker`: the settings to run django in docker on your local machine (preferred way),
@@ -55,7 +56,8 @@ Kill it (ctrl-c) then re-run `make dev` to rebuild the container and apply db mi
 
 Chalab comes with a few datasets by defaults, we don't store them in the git repository.
 
-- `make dataset`: Download the datasets in the local folder.
+- `make dataset`: Download the default datasets locally and add them to the database,
+- `make metrics`: generate the default metrics options and add them to the database.
 
 ### Testing: setup
 
@@ -72,6 +74,9 @@ pip install -r requirements.txt
 ```
 # while the server is running with `make dev':
 make test
+
+# clean the data produced by tests
+make clean
 ```
 
 - You can override the selenium ENVs used by `tests/selen.py` to use different drivers,

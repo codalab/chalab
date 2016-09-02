@@ -234,6 +234,17 @@ class DatasetModel(models.Model):
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
+    description = models.TextField(null=True, blank=True, default=None)
+    preparation = models.TextField(null=True, blank=True, default=None)
+    license = models.CharField(max_length=256, null=True, blank=True, default=None)
+
+    keywords = models.CharField(max_length=256, default="")
+    authors = models.CharField(max_length=256, default="")
+
+    resource_created = models.DateField(null=True, blank=True, default=None)
+    resource_url = models.URLField(null=True, blank=True, default=None)
+    contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
+    contact_url = models.URLField(max_length=256, null=True, blank=True, default=None)
 
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
