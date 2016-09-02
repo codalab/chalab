@@ -18,4 +18,6 @@ ADD . /app
 
 # Generate statics
 RUN python manage.py collectstatic --noinput
+
 VOLUME "/app/static"
+VOLUME "/app/media"

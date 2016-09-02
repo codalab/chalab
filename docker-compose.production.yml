@@ -20,6 +20,16 @@ services:
       - smtp
     ports:
       - "8742:8000"
+  media:
+    image: lsenta/noconf-nginx
+    depends_on:
+      - web
+    ports:
+      - 8843:80
+    environment:
+      - "STATIC_FOLDER=/app/media"
+    volumes_from:
+      - web
   static:
     image: lsenta/noconf-nginx
     depends_on:
