@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # 'allauth.socialaccount.providers.linkedin',
     # 'allauth.socialaccount.providers.facebook',
 
+    'tinymce',
     'bootstrap3',
     'debug_toolbar',
 

@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models import OneToOneField
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
+from tinymce.models import HTMLField
 
 log = logging.getLogger('wizard/models')
 
@@ -408,7 +409,7 @@ class DocumentationModel(models.Model):
 
 class DocumentationPageModel(models.Model):
     title = models.CharField(max_length=80)
-    content = models.TextField()
+    content = HTMLField()
 
     documentation = models.ForeignKey(DocumentationModel)
 

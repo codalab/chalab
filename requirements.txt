@@ -7,6 +7,7 @@ Django==1.10
 django-allauth==0.26.1
 django-bootstrap3==7.0.1
 django-debug-toolbar==1.5
+django-tinymce==2.4.0
 ipython==5.0.0
 ipython-genutils==0.1.0
 oauthlib==1.1.2

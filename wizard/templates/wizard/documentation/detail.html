@@ -16,7 +16,7 @@
     <div class="page">
         <h2>{{ current_page.title }}</h2>
         <div class="content">
-            {{ current_page.content }}
+            {{ current_page.content | safe }}
         </div>
         <a href="{% url 'wizard:challenge:documentation.page.edit' pk=challenge.id page_id=current_page.id %}"
            class="edit">Edit</a>

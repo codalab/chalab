@@ -22,6 +22,8 @@ from landing import views as landing
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^tinymce/', include('tinymce.urls')),
+
     url(r'^$', landing.home, name='home'),
     url(r'^about$', landing.about, name='about'),
     url(r'^accounts/', include('allauth.urls')),

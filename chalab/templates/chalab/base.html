@@ -75,5 +75,13 @@
         })
     });
 </script>
+<script src="//cdn.tinymce.com/4/tinymce.min.js"></script>
+<script>
+    tinymce.init({
+        selector: '.tinymce',
+        plugins: "code",
+        toolbar: "undo , redo | formatselect | bold, italic | alignleft, aligncenter, alignright | bullist, numlist | outdent, indent | removeformat , code",
+    });
+</script>
 </body>
 </html>
