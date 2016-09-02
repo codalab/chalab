@@ -486,14 +486,17 @@ class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80)
     description = models.TextField(max_length=255)
+    logo = models.ImageField(null=True, blank=True, upload_to="data/logos/%Y/%m/%d/")
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    dataset = models.ForeignKey(DatasetModel, null=True)
-    task = models.ForeignKey(TaskModel, null=True)
-    metric = models.ForeignKey(MetricModel, null=True)
-    protocol = models.ForeignKey(ProtocolModel, null=True, related_name='challenge')
-    documentation = models.ForeignKey(DocumentationModel, null=True, related_name='challenge')
+    dataset = models.ForeignKey(DatasetModel, null=True, blank=True)
+    task = models.ForeignKey(TaskModel, null=True, blank=True)
+    metric = models.ForeignKey(MetricModel, null=True, blank=True)
+    protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
+                                 related_name='challenge')
+    documentation = models.ForeignKey(DocumentationModel, null=True, blank=True,
+                                      related_name='challenge')
 
     @property
     def template_mapping(self):

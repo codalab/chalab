@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^about$', landing.about, name='about'),
     url(r'^accounts/', include('allauth.urls')),
     url(r'^wizard/', include('wizard.urls', namespace='wizard')),
+    url(r'^user/', include('user.urls', namespace='user')),
 ]
 
 if settings.DEBUG:
@@ -37,3 +38,4 @@ if settings.DEBUG:
         url(r'^__debug__/', include(debug_toolbar.urls)),
     ]
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

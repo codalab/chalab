@@ -7,7 +7,7 @@
 {% block panel_name %}create-challenge{% endblock %}
 
 {% block content %}
-    <form class='challenge' action="#" method="post">
+    <form class='challenge' action="#" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% bootstrap_form form %}
         {% buttons %}

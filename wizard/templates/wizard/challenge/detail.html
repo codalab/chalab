@@ -9,6 +9,11 @@
 {% block content %}
     <div class="jumbotron">
         <h1 class="text-center">{{ object.title }}</h1>
+
+        {% if object.logo %}
+            <img class="center-block img-rounded img-responsive" src="{{ object.logo.url }}">
+        {% endif %}
+
         <h3 class="text-center text-muted">
             <small>
                 <i class="fa fa-users" aria-hidden="true"></i>

@@ -20,12 +20,12 @@ class SelectableMixin(object):
     def by_css(self, selector, on_missing=Exception):
         try:
             return self.selectable.find_element_by_css_selector(selector)
-        except (NoSuchElementException, TimeoutException) as e:
+        except (NoSuchElementException, TimeoutException):
             if on_missing != Exception:
                 return on_missing
             else:
                 self.capture("by_css_%s" % selector)
-                raise e
+                raise
 
     def by_css_many(self, selector, on_missing=Exception, clss=None):
         try:

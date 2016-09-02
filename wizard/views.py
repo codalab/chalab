@@ -28,7 +28,7 @@ def home(request):
 class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
     template_name = 'wizard/challenge/create.html'
     model = ChallengeModel
-    fields = ['title', 'organization_name', 'description']
+    fields = ['title', 'organization_name', 'description', 'logo']
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -38,7 +38,7 @@ class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
 class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMixin):
     template_name = 'wizard/challenge/detail.html'
     model = ChallengeModel
-    fields = ['title', 'organization_name', 'description']
+    fields = ['title', 'organization_name', 'description', 'logo']
 
     def get_context_data(self, challenge=None, **kwargs):
         context = super().get_context_data(challenge=self.object, **kwargs)

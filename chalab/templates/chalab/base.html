@@ -32,6 +32,7 @@
                 <ul class="nav nav-justified">
                     {% if user.is_authenticated %}
                         <li id="home"><a href="{% url 'home' %}">Home</a></li>
+                        <li id="profile"><a href="{% url 'user:profile' %}">Profile</a></li>
                         <li id="logout"><a href="{% url 'account_logout' %}">Logout</a></li>
                     {% else %}
                         <li id="home"><a href="{% url 'home' %}">Home</a></li>
