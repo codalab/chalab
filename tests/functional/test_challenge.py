@@ -74,8 +74,8 @@ def test_flow_documentation(challenge):
     # move to documentation
     p = p.to_documentation()
 
-    assert p.pages.get(text='base').is_active
-    assert p.page.title == 'base'
+    assert p.pages.get(text='presentation').is_active
+    assert p.page.title == 'presentation'
     assert p.page.content
 
     # select another page
@@ -94,7 +94,7 @@ def test_flow_documentation(challenge):
 
 def test_documentation_with_templating(challenge):
     p = (challenge.to_documentation()
-         .focus('base')
+         .focus('presentation')
          .edit()
          .submit('my challenge: $challenge_title with ${challenge_description}'))
 

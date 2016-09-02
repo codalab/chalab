@@ -12,6 +12,8 @@ from django.urls import reverse
 from django.utils.deconstruct import deconstructible
 from tinymce.models import HTMLField
 
+from . import docs
+
 log = logging.getLogger('wizard/models')
 
 storage = DefaultStorage()
@@ -238,11 +240,11 @@ class DatasetModel(models.Model):
 
     @property
     def template_mapping(self):
-        return {}
+        return {'dataset_name': self.name}
 
     @property
     def template_doc(self):
-        return {}
+        return {'dataset_name': ""}
 
     @classmethod
     def from_chalearn(cls, path, name, owner=None, is_public=True):
@@ -384,11 +386,11 @@ class MetricModel(models.Model):
 
     @property
     def template_mapping(self):
-        return {}
+        return {'metric_name': self.name}
 
     @property
     def template_doc(self):
-        return {}
+        return {'metric_name': ''}
 
     def __str__(self):
         return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
@@ -409,20 +411,21 @@ class ProtocolModel(models.Model):
 
     @property
     def template_mapping(self):
-        return {}
+        return {'protocol_max_submissions_per_day': self.max_submissions_per_day,
+                'protocol_max_submissions': self.max_submissions,
+                'protocol_allow_reuse': self.allow_reuse,
+                'protocol_publicly_available': self.publicly_available}
 
     @property
     def template_doc(self):
-        return {}
+        return {'protocol_max_submissions_per_day': '',
+                'protocol_max_submissions': '',
+                'protocol_allow_reuse': '',
+                'protocol_publicly_avaiable': ''}
 
 
 class DocumentationModel(models.Model):
-    default_pages = [
-        {'title': 'base', 'content': 'the base'},
-        {'title': 'evaluation', 'content': 'the evalutation'},
-        {'title': 'data', 'content': 'the data'},
-        {'title': 'rules', 'content': 'the rules'},
-    ]
+    default_pages = docs.DEFAULT_PAGES
 
     @property
     def pages(self):

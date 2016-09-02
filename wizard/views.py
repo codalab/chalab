@@ -229,11 +229,11 @@ def documentation(request, pk):
         c.documentation = doc
         c.save()
 
-    current = 'base'
+    current = 'presentation'
     current_page = doc.pages.filter(title=current).first()
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
-               'current': 'base', 'current_page': current_page,
+               'current': 'presentation', 'current_page': current_page,
                'flow': flow.Flow(flow.DocumentationFlowItem, c)}
 
     return render(request, "wizard/documentation/detail.html", context=context)
