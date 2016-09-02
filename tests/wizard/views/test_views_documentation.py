@@ -7,7 +7,7 @@ from wizard.models import DocumentationPageModel, DocumentationModel
 
 pytestmark = pytest.mark.django_db
 
-PAGES = ['base', 'evaluation', 'data', 'rules']
+PAGES = sorted(['base', 'evaluation', 'data', 'rules'])
 
 
 def test_documentation_returns_200(random_challenge):
@@ -30,7 +30,7 @@ def test_documentation_pass_the_4_pages_by_default(random_challenge):
     r = c.get(reverse('wizard:challenge:documentation', kwargs={'pk': pk}))
 
     assert len(r.context['pages']) == len(PAGES)
-    assert [x.title for x in r.context['pages']] == PAGES
+    assert sorted([x.title for x in r.context['pages']]) == PAGES
 
 
 def test_documentation_shows_the_4_pages_by_default(random_challenge):
@@ -44,7 +44,7 @@ def test_documentation_shows_the_4_pages_by_default(random_challenge):
 
     assert 'Documentation' in h.select_one('h2').text
     assert len(h.select('.nav-page')) == len(PAGES)
-    assert [x.text.strip() for x in h.select('.nav-page')] == PAGES
+    assert sorted([x.text.strip() for x in h.select('.nav-page')]) == PAGES
 
 
 def test_documentation_page_links_to_the_specific_page_content(random_challenge):

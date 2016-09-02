@@ -1,6 +1,8 @@
 import os
 from collections import namedtuple
 
+from django.contrib.auth.models import User
+
 from tests.wizard import tools
 from tests.wizard.tools import random_name
 from wizard import models
@@ -35,7 +37,8 @@ def make_samples_datasets():
     return d1, d2
 
 
-def make_challenge(user, title=None, description=None, organization_name=None):
+def make_challenge(user=None, title=None, description=None, organization_name=None):
+    user = user or User.objects.create_user('username', None, 'password')
     title = title or random_name('title', 30)
     description = description or random_name('description', 120)
     organization_name = organization_name or random_name('organization_name', 30)

@@ -268,6 +268,15 @@ class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
                        kwargs={'pk': self._runtime_challenge.pk,
                                'page_id': self.object.pk})
 
+    def form_valid(self, form):
+        r = super().form_valid(form)
+
+        page = self.object
+
+        mapping = self._runtime_challenge.template_mapping
+        page.render(mapping)
+        return r
+
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
         c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)

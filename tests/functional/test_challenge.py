@@ -90,3 +90,13 @@ def test_flow_documentation(challenge):
     p = p.submit('this is my new content')
 
     assert p.page.content == 'this is my new content'
+
+
+def test_documentation_with_templating(challenge):
+    p = (challenge.to_documentation()
+         .focus('base')
+         .edit()
+         .submit('my challenge: $challenge_title with ${challenge_description}'))
+
+    c = p.challenge
+    assert p.page.content == "my challenge: %s with %s" % (c.title, c.description)

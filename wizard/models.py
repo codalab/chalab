@@ -1,5 +1,6 @@
 import logging
 import os
+import string
 from time import gmtime, strftime
 
 from django.contrib.auth.models import User
@@ -410,8 +411,22 @@ class DocumentationModel(models.Model):
 class DocumentationPageModel(models.Model):
     title = models.CharField(max_length=80)
     content = HTMLField()
+    rendered = HTMLField(null=True)
 
     documentation = models.ForeignKey(DocumentationModel)
+
+    def render(self, mapping_values):
+        template = string.Template(self.content)
+        self.rendered = template.safe_substitute(mapping_values)
+        self.save()
+
+    @property
+    def displayed(self):
+        return self.rendered if self.is_rendered else self.content
+
+    @property
+    def is_rendered(self):
+        return self.rendered is not None
 
     @classmethod
     def create(cls, doc, title, content):
@@ -432,6 +447,18 @@ class ChallengeModel(models.Model):
     metric = models.ForeignKey(MetricModel, null=True)
     protocol = models.ForeignKey(ProtocolModel, null=True, related_name='challenge')
     documentation = models.ForeignKey(DocumentationModel, null=True, related_name='challenge')
+
+    @property
+    def template_mapping(self):
+        return {'challenge_title': self.title,
+                'challenge_organization_name': self.organization_name,
+                'challenge_description': self.description}
+
+    @property
+    def template_doc(self):
+        return {'challenge_title': "",
+                'challenge_organization_name': "",
+                'challenge_description': ""}
 
     def get_absolute_url(self):
         return reverse('wizard:challenge', kwargs={'pk': self.pk})
