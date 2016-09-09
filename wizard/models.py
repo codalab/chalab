@@ -138,7 +138,7 @@ FIELD_PARSER = re.compile('(\S+)\s*=\s*(\S.*\S?)\s*')
 
 class InfoFile(object):
     """
-    A simple key = value file representation.
+    A simple key = value file reoverview.
     Deals with info files such as:
     ```
     my_field = 'my string value'

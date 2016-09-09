@@ -1,4 +1,4 @@
-DEFAULT_PRESENTATION = """
+DEFAULT_OVERVIEW = """
 <h1>${challenge_title}</h1>
 
 <h3>Brought to you by ${challenge_organization_name}</h3>
@@ -43,7 +43,7 @@ ${protocol_max_submissions} in total.
 """
 
 DEFAULT_PAGES = [
-    {'title': 'presentation', 'content': DEFAULT_PRESENTATION},
+    {'title': 'overview', 'content': DEFAULT_OVERVIEW},
     {'title': 'evaluation', 'content': DEFAULT_EVALUATION},
     {'title': 'data', 'content': DEFAULT_DATA},
     {'title': 'rules', 'content': DEFAULT_RULES}
