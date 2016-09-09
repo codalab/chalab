@@ -18,11 +18,16 @@ Structure
 - `landing`: the home page app,
 - `wizard`: the wizard app,
 - `user`: user profile app,
+- `bundler`: the challenge -> bundles (zipfiles) app,
 - `instances`: the module containing the settings per environment:
     - `local`: the settings to run django on your local machine,
     - `local_docker`: the settings to run django in docker on your local machine (preferred way),
+    - `production.py`: settings in production.
 - `templates`: global templates,
 - `datasets`: default datasets from [automl](http://automl.chalearn.org/data).
+
+
+We use Celery + RabbitMQ to schedule long running tasks like creating the bundles.
     
 
 Local Dev
@@ -56,8 +61,11 @@ Kill it (ctrl-c) then re-run `make dev` to rebuild the container and apply db mi
 
 Chalab comes with a few datasets by defaults, we don't store them in the git repository.
 
-- `make dataset`: Download the default datasets locally and add them to the database,
-- `make metrics`: generate the default metrics options and add them to the database.
+- `make predload_db`: setup the database with datasets and metrics:
+    - `make dataset`: download the default datasets locally and add them to the database,
+    - `make metrics`: generate the default metrics options and add them to the database.
+    
+Note that you should these commands only once or you'll have duplicates.
 
 ### Testing: setup
 
@@ -72,7 +80,7 @@ pip install -r requirements.txt
 ### Run the tests
 
 ```
-# while the server is running with `make dev':
+# while the server is running using `make dev':
 make test
 
 # clean the data produced by tests
