@@ -4,5 +4,22 @@ services:
     image: postgres:9.5
     ports:
      - "127.0.0.1:5432:5432"
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      - "RABBITMQ_DEFAULT_USER=admin"
+      - "RABBITMQ_DEFAULT_PASS=admin"
+      - "RABBITMQ_DEFAULT_VHOST=chalab"
+    ports:
+      - "127.0.0.1:15672:15672"
+      - "127.0.0.1:5672:5672"
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile.flower
   web:
     build: .

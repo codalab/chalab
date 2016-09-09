@@ -7,6 +7,29 @@ services:
     restart: always
   smtp:
     image: namshi/smtp
+    restart: always
+  rabbitmq:
+    extends:
+      file: docker-compose.base.yml
+      service: rabbitmq
+    restart: always
+  celery:
+    extends:
+      file: docker-compose.base.yml
+      service: celery
+    depends_on:
+      - rabbitmq
+    environment:
+      - "DJANGO_SETTINGS_MODULE=instances.production"
+    restart: always
+  flower:
+    extends:
+      file: docker-compose.base.yml
+      service: flower
+    depends_on:
+      - celery
+      - rabbitmq
+    restart: always
   web:
     extends:
       file: docker-compose.base.yml
@@ -18,6 +41,7 @@ services:
     depends_on:
       - db
       - smtp
+      - celery
     ports:
       - "8742:8000"
   media:

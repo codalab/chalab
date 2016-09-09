@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.auth',
 
+    'djcelery',  # Django ORM result backend for celery
+
     # django allauth
     'allauth',
     'allauth.account',
@@ -103,6 +105,16 @@ DATABASES = {
         'PORT': 5432
     }
 }
+
+# Celery
+# ======
+
+import djcelery
+
+djcelery.setup_loader()
+
+BROKER_URL = 'amqp://admin:admin@rabbitmq:5672/chalab'
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 
 # SMTP
 # ====

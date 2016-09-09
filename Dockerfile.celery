@@ -1,0 +1,24 @@
+FROM python:3.5
+
+ENV PYTHONUNBUFFERED 1
+
+# Dockerfile based on the official Celery
+# https://github.com/docker-library/celery
+
+# Prepare app folders & cmd
+RUN mkdir -p /app/ /app/static
+WORKDIR /app
+CMD ["celery", "-A", "chalab.celery", "worker", "--loglevel=info"]
+
+# Setup user (celery doesn't like being root)
+RUN groupadd user && \
+    useradd --home-dir /app -g user user
+
+# Install the dependencies (rarely change)
+ADD requirements.txt /app
+RUN pip install -r requirements.txt
+
+# Install the app code (change often)
+USER user
+ADD . /app
+

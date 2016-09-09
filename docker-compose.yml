@@ -4,6 +4,30 @@ services:
     extends:
       file: docker-compose.base.yml
       service: db
+  rabbitmq:
+    extends:
+      file: docker-compose.base.yml
+      service: rabbitmq
+  celery:
+    extends:
+      file: docker-compose.base.yml
+      service: celery
+    depends_on:
+      - rabbitmq
+    environment:
+      - "DJANGO_SETTINGS_MODULE=instances.local_docker"
+    volumes:
+      - .:/app
+      - ./static:/app/static
+  flower:
+    extends:
+      file: docker-compose.base.yml
+      service: flower
+    depends_on:
+      - celery
+      - rabbitmq
+    ports:
+      - "15555:5555"
   web:
     extends:
       file: docker-compose.base.yml
@@ -16,5 +40,6 @@ services:
       - ./static:/app/static
     depends_on:
       - db
+      - celery
     ports:
       - "8000:8000"

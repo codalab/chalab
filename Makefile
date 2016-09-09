@@ -25,17 +25,17 @@ dev:
 	docker-compose up -d db
 	docker-compose build
 	docker-compose run web python manage.py migrate
-	docker-compose up web
+	docker-compose up web flower
 
 superuser:
-	@echo "Run with docker compose up complete."
+	@echo 'Run after `docker compose up`.'
 	docker exec -t -i chalab_web_1 python manage.py createsuperuser
 
 prod:
-	docker-compose -f 'docker-compose.production.yml' build
 	docker-compose -f 'docker-compose.production.yml' up -d db
+	docker-compose -f 'docker-compose.production.yml' build
 	docker-compose -f 'docker-compose.production.yml' run --rm web python manage.py migrate
-	docker-compose -f 'docker-compose.production.yml' up -d web static
+	docker-compose -f 'docker-compose.production.yml' up -d web static media flower
 
 always:
 	@ echo ""

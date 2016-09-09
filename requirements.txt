@@ -1,6 +1,11 @@
+amqp==1.4.9
+anyjson==0.3.3
 appnope==0.1.0
+Babel==2.3.4
 beautifulsoup4==4.5.1
+billiard==3.3.0.23
 bs4==0.0.1
+celery==3.1.23
 decorator==4.0.10
 defusedxml==0.4.1
 Django==1.10
@@ -8,8 +13,10 @@ django-allauth==0.26.1
 django-bootstrap3==7.0.1
 django-debug-toolbar==1.5
 django-tinymce==2.4.0
+flower==0.9.1
 ipython==5.0.0
 ipython-genutils==0.1.0
+kombu==3.0.35
 oauthlib==1.1.2
 pexpect==4.2.0
 pickleshare==0.7.3
@@ -21,12 +28,16 @@ py==1.4.31
 Pygments==2.1.3
 pytest==3.0.1
 pytest-django==3.0.0
+pytest-timeout==1.0.0
 python3-openid==3.0.10
+pytz==2016.6.1
 requests==2.11.0
 requests-oauthlib==0.6.2
 selenium==2.53.6
 simplegeneric==0.8.1
 six==1.10.0
 sqlparse==0.2.0
+tornado==4.2
 traitlets==4.2.2
 wcwidth==0.1.7
+git+git://github.com/celery/django-celery.git#egg=django-celery # need the last master (9 sept 2016, to avoid python3 + django 1.10 issues)
