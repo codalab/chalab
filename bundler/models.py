@@ -10,7 +10,7 @@ class LogModel(models.Model):
     ERROR = 30
     CRITICAL = 40
 
-    task = models.ForeignKey('BundleTaskModel', null=False, related_name='log')
+    task = models.ForeignKey('BundleTaskModel', null=False, related_name='log_set')
 
     created = models.DateTimeField(auto_now_add=True)
     level = models.IntegerField()
@@ -39,5 +39,9 @@ class BundleTaskModel(models.Model):
 
     output = models.FileField(null=True)
 
-    def do_log(self, message, level=LogModel.INFO):
+    def add_log(self, message, level=LogModel.INFO):
         return LogModel.objects.create(task=self, level=level, message=message)
+
+    @property
+    def logs(self):
+        return self.log_set.order_by('created').all()
