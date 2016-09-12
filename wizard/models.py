@@ -448,13 +448,19 @@ class DocumentationModel(models.Model):
         super().save(*args, **kwargs)
 
     @classmethod
-    def create(cls):
+    def create(cls, render_for=None):
         c = cls.objects.create()
+        if render_for:
+            mapping = challenge_to_mappings(render_for)
+        else:
+            mapping = None
 
         for p in cls.default_pages:
-            DocumentationPageModel.create(doc=c,
-                                          title=p['title'],
-                                          content=p['content'])
+            pm = DocumentationPageModel.create(doc=c,
+                                               title=p['title'],
+                                               content=p['content'])
+            if mapping:
+                pm.render(mapping)
 
         return c
 
@@ -465,6 +471,28 @@ class DocumentationModel(models.Model):
     @property
     def template_doc(self):
         return {}
+
+
+def challenge_to_mappings(challenge):
+    c = challenge
+    ls = [x for x in (c, c.dataset, c.task, c.metric, c.protocol, c.documentation)
+          if x is not None]
+
+    mappings = {}
+    for x in ls:
+        mappings.update(x.template_mapping)
+    return mappings
+
+
+def challenge_to_mappings_doc(challenge):
+    c = challenge
+    ls = [x for x in (c, c.dataset, c.task, c.metric, c.protocol, c.documentation)
+          if x is not None]
+
+    mappings = {}
+    for x in ls:
+        mappings.update(x.template_doc)
+    return mappings
 
 
 class DocumentationPageModel(models.Model):

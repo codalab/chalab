@@ -1,12 +1,13 @@
 import os
 import shutil
 from contextlib import contextmanager
-from datetime import datetime
 from os import path
 from tempfile import TemporaryDirectory
 
+import yaml
 from celery import shared_task
 from django.core.files import File
+from django.utils import timezone
 
 
 @contextmanager
@@ -21,9 +22,33 @@ def tmp_dirs(challenge):
         yield d_data, d_output
 
 
+def gen_documentation(output_dir, challenge):
+    doc = challenge.documentation
+    if doc is None:
+        return {}
+
+    pages = doc.pages
+    r = {}
+
+    for p in pages:
+        r[p.title] = p.title + '.html'
+
+        with open(path.join(output_dir, p.title + '.html'), 'w') as f:
+            f.write(p.rendered)
+
+
 def create_bundle(output_dir, challenge):
+    html = gen_documentation(output_dir, challenge)
+
+    data = {
+        'title': challenge.title,
+        'description': challenge.description,
+        # 'image':  TODO
+        'html': html
+    }
+
     with open(path.join(output_dir, 'competition.yaml'), 'w') as f:
-        f.write('helloworld')
+        yaml.dump(data, f)
 
 
 def create_archive(data_dir, output_dir):
@@ -50,5 +75,5 @@ def bundle(bundle_task):
         save_archive(a, challenge, bundle_task)
 
     bundle_task.state = bundle_task.FINISHED
-    bundle_task.closed = datetime.now()
+    bundle_task.closed = timezone.now()
     bundle_task.save()

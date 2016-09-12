@@ -1,7 +1,7 @@
-/static
-/media
-/postgresql-data
-/datasets
+static
+media
+postgresql-data
+datasets
 
 .cache
 .git
@@ -9,4 +9,4 @@
 *.pyc
 .*.swp
 
-/tests/captures/
+tests/captures/

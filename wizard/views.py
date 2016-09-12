@@ -14,6 +14,7 @@ from .flow import FlowOperationMixin
 from .forms import ProtocolForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
     DocumentationModel, DocumentationPageModel
+from .models import challenge_to_mappings, challenge_to_mappings_doc
 
 log = logging.getLogger('wizard.views')
 log.setLevel(logging.INFO)
@@ -276,24 +277,11 @@ class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
                        kwargs={'pk': self._runtime_challenge.pk,
                                'page_id': self.object.pk})
 
-    def templated_objects(self):
-        c = self._runtime_challenge
-        return [x for x in (c, c.dataset, c.task, c.metric, c.protocol, c.documentation)
-                if x is not None]
-
     def mappings_all(self):
-        r = {}
-        for x in self.templated_objects():
-            r.update(x.template_mapping)
-
-        return r
+        return challenge_to_mappings(self._runtime_challenge)
 
     def mappings_doc(self):
-        r = {}
-        for x in self.templated_objects():
-            r.update(x.template_doc)
-
-        return r
+        return challenge_to_mappings_doc(self._runtime_challenge)
 
     def form_valid(self, form):
         r = super().form_valid(form)

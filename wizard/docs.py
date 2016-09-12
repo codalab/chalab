@@ -46,5 +46,5 @@ DEFAULT_PAGES = [
     {'title': 'overview', 'content': DEFAULT_OVERVIEW},
     {'title': 'evaluation', 'content': DEFAULT_EVALUATION},
     {'title': 'data', 'content': DEFAULT_DATA},
-    {'title': 'rules', 'content': DEFAULT_RULES}
+    {'title': 'terms_and_conditions', 'content': DEFAULT_RULES}
 ]
