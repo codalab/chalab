@@ -19,6 +19,8 @@ services:
     volumes:
       - .:/app
       - ./static:/app/static
+    command:
+      celery -A chalab.chacelery worker --loglevel=info --autoreload
   flower:
     extends:
       file: docker-compose.base.yml

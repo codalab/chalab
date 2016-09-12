@@ -342,6 +342,19 @@ class ChallengeDataPage(ChallengeFlowPage):
         return self
 
 
+class CompleteBlock(Block):
+    selector = '.panel.complete'
+    selector_build = '.build .btn'
+    selector_build_status = '.build .status'
+
+    @property
+    def build_status(self):
+        return self.by_css(self.selector_build_status).text
+
+    def do_build(self):
+        self.by_css(self.selector_build).click()
+
+
 class DetailChallengePage(LoggedPage):
     app = 'wizard'
     panel = 'challenge'
@@ -357,6 +370,14 @@ class DetailChallengePage(LoggedPage):
     @property
     def definition(self):
         return DefinitionBlock(self)
+
+    @property
+    def complete(self):
+        return CompleteBlock(self)
+
+    def build(self):
+        self.complete.do_build()
+        return self.checked()
 
     def click_step(self, name):
         self.definition.steps.get(clss=name).click()

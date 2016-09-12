@@ -1,5 +1,6 @@
 from django.conf.urls import url, include
 
+from bundler import urls as bundler_urls
 from . import views
 
 app_name = 'wizard'
@@ -22,6 +23,8 @@ challenge_wizard = [
 
     url(r'^baseline/$', views.ChallengeDataEdit.as_view(), name='baseline'),
     url(r'^rules/$', views.ChallengeDataEdit.as_view(), name='rules'),
+
+    url(r'^bundler/', include(bundler_urls, namespace='bundler'))
 ]
 
 urlpatterns = [

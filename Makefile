@@ -21,9 +21,12 @@ clean:
 	rm -f ./tests/captures/*.png
 	rm -rf -- ./datasets/chalearn/*/ # remove all folders
 
-dev:
+build:
 	docker-compose up -d db
 	docker-compose build
+
+dev:
+	docker-compose up -d db
 	docker-compose run web python manage.py migrate
 	docker-compose up web flower
 

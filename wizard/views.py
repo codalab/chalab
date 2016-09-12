@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import CreateView
@@ -42,6 +43,13 @@ class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMi
 
     def get_context_data(self, challenge=None, **kwargs):
         context = super().get_context_data(challenge=self.object, **kwargs)
+
+        try:
+            from bundler.models import BundleTaskModel
+            context['bundler'] = BundleTaskModel.objects.get(challenge=self.object)
+        except ObjectDoesNotExist:
+            pass
+
         return context
 
 

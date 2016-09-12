@@ -51,6 +51,21 @@
             Complete
         </div>
         <div class="panel-body">
+            <div class="row build text-center">
+                <div class="col-xs-4">
+                    <form action="{% url 'wizard:challenge:bundler:build' object.id %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn {% if bundler %}disabled{% else %}btn-warning{% endif %}">
+                            <i class="fa fa-gears" aria-hidden="true"></i>
+                            Build
+                        </button>
+                    </form>
+                </div>
+                <div class="col-xs-8 status">
+                    {{ bundler.get_state_display }}
+                </div>
+            </div>
             <div class="row">
                 <div class="col-xs-3">
                     <a href="#" class="btn btn-block btn-warning">

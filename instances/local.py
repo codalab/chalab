@@ -32,4 +32,5 @@ BROKER_URL = 'amqp://admin:admin@%s:%s/chalab' % (h, p)
 # Celery
 # ------
 
-CELERY_ALWAYS_EAGER = True # avoid going through the daemon: because test db is not the daemon db.
+# avoid going through the daemon: because test db is not the daemon db.
+CELERY_ALWAYS_EAGER = True

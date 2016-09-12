@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED 1
 # Prepare app folders & cmd
 RUN mkdir -p /app/ /app/static
 WORKDIR /app
-CMD ["celery", "-A", "chalab.celery", "worker", "--loglevel=info"]
+CMD ["celery", "-A", "chalab.chacelery", "worker", "--loglevel=info"]
 
 # Setup user (celery doesn't like being root)
 RUN groupadd user && \

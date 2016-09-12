@@ -39,8 +39,19 @@ class BundleTaskModel(models.Model):
 
     output = models.FileField(null=True)
 
+    def __str__(self):
+        return "<%s: challenge=%s, state=%s>" \
+               % (type(self).__name__, self.challenge.title, self.get_state_display())
+
     def add_log(self, message, level=LogModel.INFO):
         return LogModel.objects.create(task=self, level=level, message=message)
+
+    @classmethod
+    def create(cls, challenge):
+        return cls.objects.create(challenge=challenge,
+                                  state=cls.SCHEDULED,
+                                  closed=None,
+                                  output=None)
 
     @property
     def logs(self):
