@@ -192,6 +192,14 @@ class Page(SelectableMixin, CapturableMixin, BasicElementsMixin, AppMixin):
         self.driver.get(url)
         return self
 
+    def refresh(self):
+        self.driver.refresh()
+        return self.checked()
+
+    def request(self, method='GET', url=None, stream=False):
+        assert url is not None
+        return self.driver.request(method, url, stream=stream)
+
     @property
     def content(self):
         return self.by_css(self.selector_content)

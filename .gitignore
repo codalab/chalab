@@ -6,6 +6,11 @@ media/*
 datasets/chalearn/*
 tests/chromedriver
 tests/captures/*.png
+postgresql-data
+
+.ipython
+.bash_history
+.python_history
 
 # Docker production
 .env

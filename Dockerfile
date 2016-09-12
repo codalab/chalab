@@ -2,7 +2,7 @@ FROM python:3.5
 
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir -p /app/ /app/static
+RUN mkdir -p /app/ /app/static /app/media /app/datasets
 WORKDIR /app
 CMD ["/usr/local/bin/gunicorn", "chalab.wsgi:application", "-w 2", "-b :8000"]
 

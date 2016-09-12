@@ -14,13 +14,12 @@ services:
       service: celery
     depends_on:
       - rabbitmq
+      - db
     environment:
       - "DJANGO_SETTINGS_MODULE=instances.local_docker"
     volumes:
       - .:/app
-      - ./static:/app/static
-    command:
-      celery -A chalab.chacelery worker --loglevel=info --autoreload
+    command: celery -A chalab.chacelery worker --loglevel=debug
   flower:
     extends:
       file: docker-compose.base.yml
@@ -28,8 +27,6 @@ services:
     depends_on:
       - celery
       - rabbitmq
-    ports:
-      - "15555:5555"
   web:
     extends:
       file: docker-compose.base.yml
@@ -40,8 +37,7 @@ services:
     volumes:
       - .:/app
       - ./static:/app/static
+      - ./media:/app/media
     depends_on:
       - db
       - celery
-    ports:
-      - "8000:8000"

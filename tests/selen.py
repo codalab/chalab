@@ -1,6 +1,6 @@
 import os
 
-from selenium import webdriver
+from seleniumrequests import Chrome, Firefox, PhantomJS, Remote
 
 # TODO(laurent): All the options for this part is under-tested. Recap how a user may override
 #                these options.
@@ -13,11 +13,11 @@ SELENIUM_REMOTE_DRIVER = os.environ.get('SELENIUM_REMOTE_DRIVER', 'firefox')
 _HERE = os.path.dirname(os.path.realpath(__file__))
 
 _DRIVERS = {
-    'chrome': lambda: webdriver.Chrome(executable_path=os.path.join(_HERE, '..', 'chromedriver')),
-    'firefox': webdriver.Firefox,
-    'phantomjs': webdriver.PhantomJS,
-    'remote': lambda: webdriver.Remote(command_executor=SELENIUM_REMOTE_URL,
-                                       desired_capabilities={'browserName': SELENIUM_REMOTE_DRIVER})
+    'chrome': lambda: Chrome(executable_path=os.path.join(_HERE, '..', 'chromedriver')),
+    'firefox': Firefox,
+    'phantomjs': PhantomJS,
+    'remote': lambda: Remote(command_executor=SELENIUM_REMOTE_URL,
+                             desired_capabilities={'browserName': SELENIUM_REMOTE_DRIVER})
 }
 
 CURRENT_DRIVER = _DRIVERS[SELENIUM_DRIVER]

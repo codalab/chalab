@@ -46,6 +46,10 @@ class BundleTaskModel(models.Model):
     def add_log(self, message, level=LogModel.INFO):
         return LogModel.objects.create(task=self, level=level, message=message)
 
+    @property
+    def is_download_ready(self):
+        return self.state == self.FINISHED
+
     @classmethod
     def create(cls, challenge):
         return cls.objects.create(challenge=challenge,

@@ -2,8 +2,12 @@ version: '2'
 services:
   db:
     image: postgres:9.5
+    environment:
+      - "PGDATA=/var/lib/postgresql/data/pgdata"
     ports:
      - "127.0.0.1:5432:5432"
+    volumes:
+      - "./postgresql-data:/var/lib/postgresql/data"
   rabbitmq:
     image: rabbitmq:3-management
     environment:
@@ -21,5 +25,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.flower
+    ports:
+      - "127.0.0.1:15555:5555"
   web:
     build: .
+    ports:
+      - "127.0.0.1:8000:8000"

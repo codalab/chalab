@@ -1,4 +1,8 @@
 /static
+/media
+/postgresql-data
+/datasets
+
 .cache
 .git
 .idea

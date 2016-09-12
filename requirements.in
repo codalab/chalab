@@ -10,6 +10,7 @@ flower
 # Testing
 bs4
 selenium
+selenium-requests
 django-debug-toolbar
 pytest-django
 pytest-timeout

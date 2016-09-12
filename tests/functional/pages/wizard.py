@@ -346,10 +346,15 @@ class CompleteBlock(Block):
     selector = '.panel.complete'
     selector_build = '.build .btn'
     selector_build_status = '.build .status'
+    selector_download = '.download a'
 
     @property
     def build_status(self):
         return self.by_css(self.selector_build_status).text
+
+    @property
+    def download_url(self):
+        return self.by_css(self.selector_download).get_attribute('href')
 
     def do_build(self):
         self.by_css(self.selector_build).click()
