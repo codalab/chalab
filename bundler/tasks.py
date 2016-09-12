@@ -1,6 +1,7 @@
 import os
 import shutil
 from contextlib import contextmanager
+from datetime import datetime
 from os import path
 from tempfile import TemporaryDirectory
 
@@ -49,4 +50,5 @@ def bundle(bundle_task):
         save_archive(a, challenge, bundle_task)
 
     bundle_task.state = bundle_task.FINISHED
+    bundle_task.closed = datetime.now()
     bundle_task.save()

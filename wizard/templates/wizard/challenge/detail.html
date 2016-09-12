@@ -53,63 +53,73 @@
         <div class="panel-body">
             <div class="row build text-center">
                 <div class="col-xs-4">
-                    <form action="{% url 'wizard:challenge:bundler:build' object.id %}">
-                        {% csrf_token %}
-                        <button type="submit"
-                                class="btn {% if bundler %}disabled{% else %}btn-warning{% endif %}">
+                    {% if bundler %}
+                        <button class="btn disabled btn-block">
                             <i class="fa fa-gears" aria-hidden="true"></i>
                             Build
                         </button>
-                    </form>
+                    {% else %}
+                        <form action="{% url 'wizard:challenge:bundler:build' object.id %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn btn-block btn-warning">
+                                <i class="fa fa-gears" aria-hidden="true"></i>
+                                Build
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
                 <div class="col-xs-8 status">
                     {{ bundler.get_state_display }}
                 </div>
             </div>
-            <div class="row download text-center">
+            <div class="row download top10 text-center">
                 <div class="col-xs-4">
                     {% if bundler.is_download_ready %}
                         <a href="{% url 'wizard:challenge:bundler:download' object.id %}"
-                           class="btn btn-success">
-                            <i class="fa fa-gears" aria-hidden="true"></i>
+                           class="btn btn-success btn-block">
+                            <i class="fa fa-cloud-download" aria-hidden="true"></i>
                             Download
                         </a>
                     {% else %}
-                        <button type="submit"
-                                class="btn disabled">
-                            <i class="fa fa-gears" aria-hidden="true"></i>
+                        <button type="submit" class="btn btn-block disabled">
+                            <i class="fa fa-cloud-download" aria-hidden="true"></i>
                             Download
                         </button>
                     {% endif %}
                 </div>
                 <div class="col-xs-8 status">
-                    ...
+                    Last build: {{ bundler.closed | date:'Y-m-d H:i' }}
                 </div>
             </div>
-            <div class="row">
-                <div class="col-xs-3">
-                    <a href="#" class="btn btn-block btn-warning">
+            <div class="row test top10 text-center">
+                <div class="col-xs-4">
+                    <button type="submit" class="btn btn-block btn-warning">
                         <i class="fa fa-gears" aria-hidden="true"></i>
                         Test
-                    </a>
+                    </button>
                 </div>
-                <div class="col-xs-3">
-                    <a href="#" class="btn btn-block btn-success">
+                <div class="col-xs-8 status">
+                </div>
+            </div>
+            <div class="row publish top10 text-center">
+                <div class="col-xs-4">
+                    <button type="submit" class="btn btn-block disabled">
                         <i class="fa fa-paper-plane" aria-hidden="true"></i>
                         Publish
-                    </a>
+                    </button>
                 </div>
-                <div class="col-xs-3">
-                    <a href="#" class="btn btn-block btn-success">
-                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                        Download
-                    </a>
+                <div class="col-xs-8 status">
                 </div>
-                <div class="col-xs-3">
-                    <a href="#" class="btn btn-block btn-danger">
+            </div>
+            <div class="row delete top10 text-center">
+                <div class="col-xs-4">
+                    <button type="submit" class="btn btn-block btn-danger">
                         <i class="fa fa-trash" aria-hidden="true"></i>
                         Delete
-                    </a>
+                    </button>
+                </div>
+                <div class="col-xs-8 status">
                 </div>
             </div>
         </div>
