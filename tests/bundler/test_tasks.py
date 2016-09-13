@@ -27,7 +27,7 @@ class TestCreateBundle(object):
 
     def test_adds_dataset(self, challenge_ready):
         with create_bundle(challenge_ready) as (output_path, yaml, ls):
-            assert has(yaml, ['phases', '1', 'datasets', '1'])
+            assert has(yaml, ['phases', 1, 'datasets', 1])
 
     def test_adds_logo(self, challenge_ready):
         with create_bundle(challenge_ready) as (output_path, yaml, ls):
@@ -45,7 +45,7 @@ class TestCreateBundle(object):
         c = challenge_ready.challenge
 
         with create_bundle(c) as (output_path, yaml, ls):
-            name = has(yaml, ['phases', '1', 'datasets', '1', 'reference_data'], get_value=True)
+            name = has(yaml, ['phases', 1, 'datasets', 1, 'reference_data'], get_value=True)
             assert name in ls
 
             with zip(path.join(output_path, name)) as (z, ls):

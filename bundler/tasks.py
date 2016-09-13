@@ -45,6 +45,8 @@ def gen_documentation(output_dir, challenge):
         with open(path.join(output_dir, p.name + '.html'), 'w') as f:
             f.write(p.rendered)
 
+    return r
+
 
 def gen_reference(output_dir, dataset, phase_id):
     pass
@@ -53,12 +55,13 @@ def gen_reference(output_dir, dataset, phase_id):
 def gen_phases(output_dir, challenge):
     dataset = challenge.dataset
 
-    return {'1':
-                {'datasets':
-                     {'1':
-                          {'name': dataset.name,
-                           'description': dataset.description,
-                           'reference': gen_reference(output_dir, dataset, '1')}}}}
+    x = {'name': dataset.name}
+
+    if dataset.description is not None:
+        x['description'] = dataset.description
+    # x['reference']= gen_reference(output_dir, dataset, '1')
+
+    return {1: {'datasets': {1: x}}}
 
 
 def gen_logo(output_dir, challenge):
@@ -83,7 +86,6 @@ def create_bundle(output_dir, challenge):
     data = {
         'title': challenge.title,
         'description': challenge.description,
-        # 'image':  TODO
         'html': html,
         'phases': phases
     }
