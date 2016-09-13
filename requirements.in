@@ -10,6 +10,8 @@ flower
 
 # Testing
 bs4
+lxml
+cssselect
 selenium
 selenium-requests
 django-debug-toolbar

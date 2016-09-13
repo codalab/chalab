@@ -76,3 +76,31 @@ class TestDataPicker(object):
 
         r = cb.get('wizard:challenge:data.pick', pk=cb.pk)
         assert_redirects(r, sreverse('wizard:challenge:data', pk=cb.pk))
+
+
+@pytest.fixture(scope='function')
+def cbpicked(cb):
+    samples = make_samples_datasets()
+    s = samples[0]
+    cb.post('wizard:challenge:data.pick', pk=cb.pk,
+            data={'kind': 'public', 'dataset': s.pk})
+    cb.sample = s
+
+    yield cb
+
+
+class TestDataUpdate(object):
+    def test_cant_update_public_datasets_i_dont_own_form(self, cbpicked):
+        r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
+        assert 'disabled' in r.lhtml.cssselect('form #id_name')[0].attrib
+
+    def test_cant_update_public_ds_i_dont_own_post(self, cbpicked):
+        s = cbpicked.sample
+        old_name = s.name
+
+        r = cbpicked.post('wizard:challenge:data', pk=cbpicked.pk,
+                          data={'title': 'something new'})
+        assert r.status_code == 400
+
+        s.refresh_from_db()
+        assert s.name == old_name

@@ -308,10 +308,13 @@ class DatasetModel(models.Model):
         might_be_ready = self.input is not None and self.target is not None
 
         if might_be_ready:
-            if self.input.rows.count != self.target.rows.count:
-                raise ValidationError('The number of rows in the input and target do not match')
-
-            self.is_ready = True
+            try:
+                if self.input.rows.count != self.target.rows.count:
+                    raise ValidationError('The number of rows in the input and target do not match')
+                else:
+                    self.is_ready = True
+            except AttributeError:
+                pass
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.

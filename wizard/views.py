@@ -9,6 +9,7 @@ from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
+from chalab import errors
 from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm
@@ -68,6 +69,19 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
     fields = ['name']
     current_flow = flow.DataFlowItem
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class=form_class)
+
+        for f in self.fields:
+            form.fields[f].disabled = True
+
+        return form
+
+    def form_valid(self, form):
+        raise errors.HTTP400Exception('wizard/challenge/error.html',
+                                      "Forbidden edit on a dataset",
+                                      """You can't edit a dataset that you do not own.""")
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']

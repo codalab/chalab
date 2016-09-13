@@ -1,0 +1,13 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Error - {{ message }}{% endblock %}
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}challenge{% endblock %}
+{% block module_name %}editor{% endblock %}
+
+{% block content %}
+    <h1>Something went wrong:</h1>
+    <h2>Error {{ status_code }}</h2>
+    <p>{{ long_message }}</p>
+{% endblock %}

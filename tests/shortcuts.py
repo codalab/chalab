@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from .tools import html
 
+from lxml import html as lhtml
 
 class SResponse(object):
     def __init__(self, django_response):
@@ -24,6 +25,10 @@ class SResponse(object):
     @property
     def html(self):
         return html(self._response)
+
+    @property
+    def lhtml(self):
+        return lhtml.fromstring(self._response.content)
 
     @property
     def url(self):
