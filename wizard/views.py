@@ -37,9 +37,17 @@ class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
         return super(ChallengeDescriptionCreate, self).form_valid(form)
 
 
+class ChallengeDescriptionUpdate(UpdateView, LoginRequiredMixin):
+    template_name = 'wizard/challenge/editor.html'
+    model = ChallengeModel
+
+    fields = ChallengeDescriptionCreate.fields
+
+
 class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMixin):
     template_name = 'wizard/challenge/detail.html'
     model = ChallengeModel
+    context_object_name = 'challenge'
     fields = ['title', 'organization_name', 'description', 'logo']
 
     def get_context_data(self, challenge=None, **kwargs):

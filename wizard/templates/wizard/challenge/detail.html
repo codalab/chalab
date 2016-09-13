@@ -8,6 +8,8 @@
 
 {% block content %}
     <div class="jumbotron">
+        <a href="{% url 'wizard:challenge:edit' pk=challenge.pk %}" class="pull-right btn btn-edit">Edit</a>
+
         <h1 class="text-center">{{ object.title }}</h1>
 
         {% if object.logo %}

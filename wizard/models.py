@@ -598,3 +598,7 @@ class ChallengeModel(models.Model):
 
     def get_absolute_url(self):
         return reverse('wizard:challenge', kwargs={'pk': self.pk})
+
+    @classmethod
+    def get(cls, pk):
+        return cls.objects.get(pk=pk)

@@ -1,0 +1,22 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Edit a competition{% endblock %}
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}challenge{% endblock %}
+{% block module_name %}editor{% endblock %}
+
+{% block content %}
+    <div class="update">
+        <form class='editor' action="#" method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+
+            {% buttons %}
+                <button type="submit" class="btn btn-primary">
+                    {% bootstrap_icon "star" %} Update
+                </button>
+            {% endbuttons %}
+        </form>
+    </div>
+{% endblock %}
