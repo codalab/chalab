@@ -130,6 +130,18 @@ class AxisDescriptionModel(models.Model):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
 
+    @classmethod
+    def create(cls, types=None, count=None, names=None):
+        x = {}
+        if types is not None:
+            x['types'] = types
+        if count is not None:
+            x['count'] = count
+        if names is not None:
+            x['names'] = names
+
+        return cls.objects.create(**x)
+
 
 import re
 
@@ -274,11 +286,21 @@ class DatasetModel(models.Model):
         except FileNotFoundError:
             pass  # It's fine, feat specs are not mandatory.
 
-        return cls.objects.create(
+        return cls.create(
             owner=owner, is_public=is_public, name=name,
             input=input,
             target=load_chalearn(path, '.solution')
         )
+
+    @classmethod
+    def create(cls, name, owner=None, is_public=False, input=None, target=None):
+        x = {}
+        if input is not None:
+            x['input'] = input
+        if target is not None:
+            x['target'] = target
+
+        return cls.objects.create(name=name, owner=owner, is_public=is_public, **x)
 
     def clean(self):
         super().clean()
@@ -544,11 +566,23 @@ class ChallengeModel(models.Model):
 
     @property
     def is_ready(self):
-        return ((self.dataset and self.dataset.is_ready)
-                and (self.task and self.task.is_ready)
-                and (self.metric and self.metric.is_ready)
-                and (self.protocol and self.protocol.is_ready)
-                and (self.documentation and self.documentation.is_ready))
+        return len(self.missings) == 0
+
+    @property
+    def missings(self):
+        missing = []
+
+        required = ['dataset', 'task', 'metric', 'protocol', 'documentation']
+        for x in required:
+            v = getattr(self, x)
+
+            if v is None:
+                missing.append(x)
+            else:
+                if not v.is_ready:
+                    missing.append(x)
+
+        return missing
 
     @property
     def template_mapping(self):

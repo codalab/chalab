@@ -1,8 +1,6 @@
 import pytest
-from django.test import Client
-from django.urls import reverse
 
-from tests.tools import query
+from tests.tools import sreverse
 from wizard.models import DocumentationPageModel, DocumentationModel
 
 pytestmark = pytest.mark.django_db
@@ -10,51 +8,29 @@ pytestmark = pytest.mark.django_db
 PAGES = sorted(['overview', 'evaluation', 'data', 'terms_and_conditions'])
 
 
-def test_documentation_returns_200(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
-
-    r = c.get(reverse('wizard:challenge:documentation', kwargs={'pk': pk}))
+def test_documentation_returns_200(cb):
+    r = cb.get('wizard:challenge:documentation', pk=cb.pk)
 
     assert r.status_code == 200
 
 
-def test_documentation_pass_the_4_pages_by_default(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
-
-    r = c.get(reverse('wizard:challenge:documentation', kwargs={'pk': pk}))
+def test_documentation_pass_the_4_pages_by_default(cb):
+    r = cb.get('wizard:challenge:documentation', pk=cb.pk)
 
     assert len(r.context['pages']) == len(PAGES)
     assert sorted([x.title for x in r.context['pages']]) == PAGES
 
 
-def test_documentation_shows_the_4_pages_by_default(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
-
-    q = query('wizard:challenge:documentation', c=c, kwargs={'pk': pk})
-    h = q.html
+def test_documentation_shows_the_4_pages_by_default(cb):
+    h = cb.get('wizard:challenge:documentation', pk=cb.pk).html
 
     assert 'Documentation' in h.select_one('h2').text
     assert len(h.select('.nav-page')) == len(PAGES)
     assert sorted([x.text.strip() for x in h.select('.nav-page')]) == PAGES
 
 
-def test_documentation_page_links_to_the_specific_page_content(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
-
-    q = query('wizard:challenge:documentation', c=c, kwargs={'pk': pk})
-    h = q.html
+def test_documentation_page_links_to_the_specific_page_content(cb):
+    h = cb.get('wizard:challenge:documentation', pk=cb.pk).html
 
     s = h.select('.nav-page')[0]
     title = s.text.strip()
@@ -63,25 +39,20 @@ def test_documentation_page_links_to_the_specific_page_content(random_challenge)
     pid = DocumentationPageModel.objects.get(title=title).id
 
     assert a is not None
-    assert a['href'] == reverse('wizard:challenge:documentation.page',
-                                kwargs={'pk': pk, 'page_id': pid})
+    assert a['href'] == sreverse('wizard:challenge:documentation.page',
+                                 pk=cb.pk, page_id=pid)
 
 
-def test_edit_page_returns_200(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
-
+def test_edit_page_returns_200(cb):
     # TODO(laurent): Instead of querying the view (time dependency)
     #                to create the documentation model
     #                provide a create method in the challenge object.
-    q = query('wizard:challenge:documentation', c=c, kwargs={'pk': pk})
+    cb.get('wizard:challenge:documentation', pk=cb.pk)
 
-    d = DocumentationModel.objects.get(challenge=random_challenge.challenge)
+    d = DocumentationModel.objects.get(challenge=cb.challenge)
     p = d.pages.first()
 
-    r = c.get(reverse('wizard:challenge:documentation.page',
-                      kwargs={'pk': pk, 'page_id': p.id}))
+    r = cb.get('wizard:challenge:documentation.page',
+               pk=cb.pk, page_id=p.id)
 
     assert r.status_code == 200

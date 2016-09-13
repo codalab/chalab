@@ -1,0 +1,19 @@
+{% extends 'chalab/base.html' %}
+
+{% block title %}400 - {{ message }}{% endblock %}
+
+{% block app_name %}wizard{% endblock %}
+{% block module_name %}error400{% endblock %}
+
+{% block content %}
+    <h1>An error occured:</h1>
+    <b>{{ message }}</b>
+
+    {% if challenge %}
+        <p>
+            <a href="{% url 'wizard:challenge' pk=challenge.pk %}">
+                Go Back to the challenge
+            </a>
+        </p>
+    {% endif %}
+{% endblock %}

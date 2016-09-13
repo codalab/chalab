@@ -6,8 +6,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_can_create_logs(random_challenge):
-    challenge = random_challenge.challenge
-    bt = BundleTaskModel.objects.create(challenge=challenge, state=BundleTaskModel.SCHEDULED)
+    bt = BundleTaskModel.create(random_challenge.challenge)
 
     bt.add_log("This is a message")
     bt.add_log("This is another message")

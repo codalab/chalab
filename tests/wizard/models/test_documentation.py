@@ -71,7 +71,7 @@ class TestDocumentationPageModel:
 
 class TestDocumentationModel:
     def test_create_the_default_documentation_model(self):
-        t = models.DocumentationModel.objects.create()
+        t = models.DocumentationModel.create()
         assert t is not None
 
     def test_default_documentation_contains_3_pages(self):

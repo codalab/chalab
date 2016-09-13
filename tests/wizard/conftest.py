@@ -45,10 +45,26 @@ def challenge_ready(random_challenge):
     c = random_challenge.challenge
     c.documentation = models.DocumentationModel.create(render_for=c)
     c.dataset = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
+    c.task = models.TaskModel.from_chalearn(c.dataset, CHALEARN_SAMPLE, 'chalearn - task sample')
+
     c.logo = SimpleUploadedFile(name='my_logo.png',
                                 content=open(LOGO_PATH, 'rb').read(),
                                 content_type='image/png')
+
+    c.metric = models.MetricModel.objects.create(owner=None, is_public=True,
+                                                 name='some metric', is_ready=True,
+                                                 classification=True)
+    c.protocol = models.ProtocolModel.objects.create(is_ready=True)
+
     c.save()
+
+    assert c.missings == []
+    assert c.is_ready
 
     # TODO: fill challenge to be ready for export
     return random_challenge
+
+
+from tests.shortcuts import cb
+
+cb = cb

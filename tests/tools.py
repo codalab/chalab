@@ -137,3 +137,10 @@ def query(f, c=None, kwargs={}):
     r = c.get(reverse(f, kwargs=kwargs))
     h = html(r)
     return ClientQueryTuple(client=c, response=r, html=h)
+
+
+# Simplif Tools
+# =============
+
+def sreverse(viewname, **kwargs):
+    return reverse(viewname, kwargs=kwargs)

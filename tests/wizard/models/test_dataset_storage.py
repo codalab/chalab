@@ -19,23 +19,26 @@ class TestColumnarStorage:
 
 class TestAxisDescriptionModel:
     def test_create_an_axis_description_empty_is_fine(self):
-        a = models.AxisDescriptionModel.objects.create()
+        a = models.AxisDescriptionModel.create()
+
         assert a is not None
         assert a.count is None
 
     def test_create_an_axis_force_count_works(self):
-        a = models.AxisDescriptionModel.objects.create(count=64)
+        a = models.AxisDescriptionModel.create(count=64)
+
         assert a.count == 64
 
     def test_create_axis_with_types_works(self):
         c = create_with_file(models.ColumnarTypesDefinition, COLUMNS_5)
-        a = models.AxisDescriptionModel.objects.create(types=c)
+        a = models.AxisDescriptionModel.create(types=c)
+
         assert a.types.count == 5
 
     def test_create_axis_with_types_and_names_works(self):
         c_types = create_with_file(models.ColumnarTypesDefinition, COLUMNS_5)
         c_names = create_with_file(models.ColumnarNamesDefinition, COLUMNS_5)
-        a = models.AxisDescriptionModel.objects.create(types=c_types, names=c_names)
+        a = models.AxisDescriptionModel.create(types=c_types, names=c_names)
 
         assert a.types.count == 5
         assert a.names.count == 5
@@ -48,13 +51,14 @@ class TestAxisDescriptionModel:
         try:
             models.AxisDescriptionModel.objects.create(types=c_types, names=c_names)
             assert False, 'creating the axis with different columns sizes should fail.'
-        except ValidationError as e:
+        except ValidationError:
             assert True
 
 
 class TestMatrixStorage:
     def test_create_a_matrix_file_sets_the_count_correctly(self):
         m = create_with_file(models.MatrixModel, MATRIX_5_3)
+
         assert m.rows.count == 5
         assert m.cols.count == 3
 
@@ -63,9 +67,9 @@ class TestMatrixStorage:
         a = models.AxisDescriptionModel(types=c)
 
         try:
-            m = create_with_file(models.MatrixModel, MATRIX_5_3, cols=a)
+            create_with_file(models.MatrixModel, MATRIX_5_3, cols=a)
             assert False, 'creating the matrix with wrong columns (12 vs 5) should fail.'
-        except ValidationError as e:
+        except ValidationError:
             assert True
 
     def test_sparse_matrix_doesnt_fail_when_columns_count_do_not_match(self):
@@ -82,7 +86,7 @@ class TestMatrixStorage:
 
 class TestDatasetModel:
     def test_create_a_public_empty_dataset(self):
-        d = models.DatasetModel.objects.create(owner=None, is_public=True, name='An empty dataset')
+        d = models.DatasetModel.create('An empty dataset', is_public=True)
 
         assert d is not None
         assert not d.is_ready
