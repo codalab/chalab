@@ -24,6 +24,11 @@ def tmp_dirs(challenge):
         yield d_data, d_output
 
 
+def copy_file_field(file_desc, dest_path):
+    with open(dest_path, 'wb') as f:
+        shutil.copyfileobj(file_desc, f)
+
+
 def gen_documentation(output_dir, challenge):
     doc = challenge.documentation
     if doc is None:
@@ -41,15 +46,51 @@ def gen_documentation(output_dir, challenge):
             f.write(p.rendered)
 
 
+def gen_reference(output_dir, dataset, phase_id):
+    pass
+
+
+def gen_phases(output_dir, challenge):
+    dataset = challenge.dataset
+
+    return {'1':
+                {'datasets':
+                     {'1':
+                          {'name': dataset.name,
+                           'description': dataset.description,
+                           'reference': gen_reference(output_dir, dataset, '1')}}}}
+
+
+def gen_logo(output_dir, challenge):
+    assert challenge.logo is not None, 'logo should be set'
+
+    logo = challenge.logo
+    name = path.basename(logo.name)
+
+    try:
+        logo.open()
+        copy_file_field(logo.file, path.join(output_dir, name))
+    finally:
+        logo.close()
+
+    return name
+
+
 def create_bundle(output_dir, challenge):
     html = gen_documentation(output_dir, challenge)
+    phases = gen_phases(output_dir, challenge)
 
     data = {
         'title': challenge.title,
         'description': challenge.description,
         # 'image':  TODO
-        'html': html
+        'html': html,
+        'phases': phases
     }
+
+    if challenge.logo:
+        logo = gen_logo(output_dir, challenge)
+        data['logo'] = logo
 
     with open(path.join(output_dir, 'competition.yaml'), 'w') as f:
         yaml.dump(data, f)
