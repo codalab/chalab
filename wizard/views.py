@@ -274,7 +274,7 @@ def documentation(request, pk):
         c.save()
 
     current = 'overview'
-    current_page = doc.pages.filter(title=current).first()
+    current_page = doc.pages.filter(name=current).first()
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
                'current': 'overview', 'current_page': current_page,
@@ -289,7 +289,7 @@ def documentation_page(request, pk, page_id):
     doc = c.documentation
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
-               'current': p.title, 'current_page': p,
+               'current': p.name, 'current_page': p,
                'flow': flow.Flow(flow.DocumentationFlowItem, c)}
 
     return render(request, "wizard/documentation/detail.html", context=context)
@@ -303,7 +303,7 @@ class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
     # Hacky way to pass back the challenge from get_object to get_success_url
     _runtime_challenge = None
 
-    fields = ['title', 'content']
+    fields = ['name', 'content']
 
     current_flow = flow.DocumentationFlowItem
 

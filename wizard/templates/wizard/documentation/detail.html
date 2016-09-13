@@ -6,15 +6,15 @@
         <ul class="nav nav-tabs">
             {% for page in pages %}
                 <li role="presentation"
-                    class="nav-page {% if page.title == current %}active{% endif %}">
+                    class="nav-page {% if page.name == current %}active{% endif %}">
                     <a href="{% url 'wizard:challenge:documentation.page' pk=challenge.id page_id=page.id %}"
-                       class="focus">{{ page.title }}</a>
+                       class="focus">{{ page.name }}</a>
                 </li>
             {% endfor %}
         </ul>
     </div>
     <div class="page">
-        <h2>{{ current_page.title }}</h2>
+        <h2>{{ current_page.name }}</h2>
         <div class="content">
             {{ current_page.displayed | safe }}
         </div>

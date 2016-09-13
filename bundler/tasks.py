@@ -39,10 +39,10 @@ def gen_documentation(output_dir, challenge):
     r = {}
 
     for p in pages:
-        r[p.title] = p.title + '.html'
+        r[p.name] = p.name + '.html'
         p.render(mapping)
 
-        with open(path.join(output_dir, p.title + '.html'), 'w') as f:
+        with open(path.join(output_dir, p.name + '.html'), 'w') as f:
             f.write(p.rendered)
 
 

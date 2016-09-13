@@ -43,8 +43,8 @@ ${protocol_max_submissions} in total.
 """
 
 DEFAULT_PAGES = [
-    {'title': 'overview', 'content': DEFAULT_OVERVIEW},
-    {'title': 'evaluation', 'content': DEFAULT_EVALUATION},
-    {'title': 'data', 'content': DEFAULT_DATA},
-    {'title': 'terms_and_conditions', 'content': DEFAULT_RULES}
+    {'name': 'overview', 'content': DEFAULT_OVERVIEW},
+    {'name': 'evaluation', 'content': DEFAULT_EVALUATION},
+    {'name': 'data', 'content': DEFAULT_DATA},
+    {'name': 'terms_and_conditions', 'content': DEFAULT_RULES}
 ]

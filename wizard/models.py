@@ -6,6 +6,7 @@ from time import gmtime, strftime
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.files.storage import DefaultStorage
+from django.core.validators import validate_slug
 from django.db import models
 from django.db.models import OneToOneField
 from django.urls import reverse
@@ -482,7 +483,7 @@ class DocumentationModel(models.Model):
 
         for p in cls.default_pages:
             pm = DocumentationPageModel.create(doc=c,
-                                               title=p['title'],
+                                               name=p['name'],
                                                content=p['content'])
             if mapping:
                 pm.render(mapping)
@@ -521,9 +522,10 @@ def challenge_to_mappings_doc(challenge):
 
 
 class DocumentationPageModel(models.Model):
-    title = models.CharField(max_length=80)
+    name = models.CharField(max_length=80, validators=[validate_slug])
+
     content = HTMLField()
-    rendered = HTMLField(null=True)
+    rendered = HTMLField(null=True, blank=True)
 
     documentation = models.ForeignKey(DocumentationModel)
 
@@ -531,6 +533,10 @@ class DocumentationPageModel(models.Model):
         template = string.Template(self.content)
         self.rendered = template.safe_substitute(mapping_values)
         self.save()
+
+    def save(self, **kwargs):
+        self.full_clean()
+        super().save(**kwargs)
 
     @property
     def template_doc(self):
@@ -545,9 +551,9 @@ class DocumentationPageModel(models.Model):
         return self.rendered is not None
 
     @classmethod
-    def create(cls, doc, title, content):
+    def create(cls, doc, name, content):
         return cls.objects.create(documentation=doc,
-                                  title=title,
+                                  name=name,
                                   content=content)
 
 

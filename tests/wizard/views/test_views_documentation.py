@@ -18,7 +18,7 @@ def test_documentation_pass_the_4_pages_by_default(cb):
     r = cb.get('wizard:challenge:documentation', pk=cb.pk)
 
     assert len(r.context['pages']) == len(PAGES)
-    assert sorted([x.title for x in r.context['pages']]) == PAGES
+    assert sorted([x.name for x in r.context['pages']]) == PAGES
 
 
 def test_documentation_shows_the_4_pages_by_default(cb):
@@ -33,10 +33,10 @@ def test_documentation_page_links_to_the_specific_page_content(cb):
     h = cb.get('wizard:challenge:documentation', pk=cb.pk).html
 
     s = h.select('.nav-page')[0]
-    title = s.text.strip()
+    name = s.text.strip()
     a = s.select_one('a')
 
-    pid = DocumentationPageModel.objects.get(title=title).id
+    pid = DocumentationPageModel.objects.get(name=name).id
 
     assert a is not None
     assert a['href'] == sreverse('wizard:challenge:documentation.page',
