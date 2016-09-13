@@ -1,9 +1,15 @@
 version: '2'
 services:
+  db_volume:
+    extends:
+      file: docker-compose.base.yml
+      service: db_volume
   db:
     extends:
       file: docker-compose.base.yml
       service: db
+    volumes_from:
+      - db_volume
   rabbitmq:
     extends:
       file: docker-compose.base.yml

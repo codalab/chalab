@@ -42,3 +42,10 @@ prod:
 
 always:
 	@ echo ""
+
+NOW = $(shell date +%Y-%m-%d_%H%M%S)
+CONTAINER_DB_SUFFIXED = chalab_db_volume_1_${NOW}
+
+backupdb:
+		docker commit -p chalab_db_volume_1 "${CONTAINER_DB_SUFFIXED}"
+		docker save -o "./backups/${CONTAINER_DB_SUFFIXED}.tar" "${CONTAINER_DB_SUFFIXED}"

@@ -1,0 +1,3 @@
+FROM tianon/true
+
+VOLUME "/pg-data"

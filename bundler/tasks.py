@@ -9,6 +9,8 @@ from celery import shared_task
 from django.core.files import File
 from django.utils import timezone
 
+from wizard.models import challenge_to_mappings
+
 
 @contextmanager
 def tmp_dirs(challenge):
@@ -27,11 +29,13 @@ def gen_documentation(output_dir, challenge):
     if doc is None:
         return {}
 
+    mapping = challenge_to_mappings(challenge)
     pages = doc.pages
     r = {}
 
     for p in pages:
         r[p.title] = p.title + '.html'
+        p.render(mapping)
 
         with open(path.join(output_dir, p.title + '.html'), 'w') as f:
             f.write(p.rendered)

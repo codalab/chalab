@@ -1,13 +1,15 @@
 version: '2'
 services:
+  db_volume:
+    build:
+      context: .
+      dockerfile: Dockerfile.db_volume
   db:
     image: postgres:9.5
-    environment:
-      - "PGDATA=/var/lib/postgresql/data/pgdata"
     ports:
      - "5432:5432"
-    volumes:
-      - "./postgresql-data:/var/lib/postgresql/data"
+    environment:
+      - "PGDATA=/pg-data"
   rabbitmq:
     image: rabbitmq:3-management
     environment:

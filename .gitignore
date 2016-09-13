@@ -1,6 +1,7 @@
 # Django "runtime"
 static/*
 media/*
+backups/*
 
 # Chalab Datasources & Tests
 datasets/chalearn/*
