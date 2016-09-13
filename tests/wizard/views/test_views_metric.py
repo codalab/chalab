@@ -1,24 +1,16 @@
 import pytest
-from django.test import Client
 from django.urls import reverse
 
-from tests.tools import make_request, assert_redirects, html, query
+from tests.tools import make_request, assert_redirects, html, sreverse
 from tests.wizard.models import tools
 from wizard import views as wiz
 
 pytestmark = pytest.mark.django_db
 
 
-def test_open_metric_redirects_to_picker(random_challenge):
-    pk = random_challenge.challenge.pk
-    desc = random_challenge.desc
-
-    client = Client()
-    assert client.login(username=desc.username, password=desc.password)
-
-    r = client.get(reverse('wizard:challenge:metric', kwargs={'pk': pk}))
-
-    assert_redirects(r, reverse('wizard:challenge:metric.pick', kwargs={'pk': pk}))
+def test_open_metric_redirects_to_picker(cb):
+    r = cb.get('wizard:challenge:metric', pk=cb.pk)
+    assert_redirects(r, sreverse('wizard:challenge:metric.pick', pk=cb.pk))
 
 
 def test_metric_picker_shows_public_metrics_picker_ui(random_challenge):
@@ -34,70 +26,75 @@ def test_metric_picker_shows_public_metrics_picker_ui(random_challenge):
     assert 'Which metric' in h.select_one('.module h3').text
 
 
-def test_metric_picker_has_public_metric_in_context(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
+class TestMetricPicker(object):
+    def test_has_public_metric_in_context(self, cb):
+        s = tools.make_samples_metrics()
 
-    s = tools.make_samples_metrics()
+        r = cb.get('wizard:challenge:metric.pick', pk=cb.pk)
+        pds = r.context['public_metrics']
 
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
+        assert pds.count() == len(s)
+        for x in s:
+            assert x in pds
 
-    q = query('wizard:challenge:metric.pick', c=c, kwargs={'pk': pk})
-    pds = q.response.context['public_metrics']
+    def test_shows_form_pick_public_metrics(self, cb):
+        samples = tools.make_samples_metrics()
 
-    assert pds.count() == len(s)
-    for x in s:
-        assert x in pds
+        r = cb.get('wizard:challenge:metric.pick', pk=cb.pk)
 
+        s = r.html.select_one('.pick .public form select')
+        options = s.select('option')
+        options_txt = [x.text for x in options]
 
-def test_metric_picker_shows_form_pick_public_metrics(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
+        assert len(options) == len(samples)
+        for s in samples:
+            assert s.name in options_txt
 
-    samples = tools.make_samples_metrics()
+    def test_when_select_public_metric_returns_to_metric_update(self, cb):
+        samples = tools.make_samples_metrics()
+        s = samples[0]
 
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
-    q = query('wizard:challenge:metric.pick', c=c, kwargs={'pk': pk})
+        r = cb.post('wizard:challenge:metric.pick', pk=cb.pk,
+                    data={'kind': 'public', 'metric': s.pk})
 
-    s = q.html.select_one('.pick .public form select')
-    options = s.select('option')
-    options_txt = [x.text for x in options]
+        assert_redirects(r, sreverse('wizard:challenge:metric', pk=cb.pk))
 
-    assert len(options) == len(samples)
-    for s in samples:
-        assert s.name in options_txt
+    def test_once_selected_redirects_to_update_metric(self, cb):
+        samples = tools.make_samples_metrics()
+        s = samples[0]
 
+        cb.post('wizard:challenge:metric.pick', pk=cb.pk,
+                data={'kind': 'public', 'metric': s.pk})
 
-def test_metric_picker_when_select_public_metric_returns_to_metric_update(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
-
-    samples = tools.make_samples_metrics()
-    s = samples[0]
-
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
-
-    r = c.post(reverse('wizard:challenge:metric.pick', kwargs={'pk': pk}),
-               {'kind': 'public', 'metric': s.pk})
-
-    assert_redirects(r, reverse('wizard:challenge:metric', kwargs={'pk': pk}))
+        r = cb.get('wizard:challenge:metric.pick', pk=cb.pk)
+        assert_redirects(r, sreverse('wizard:challenge:metric', pk=cb.pk))
 
 
-def test_metric_picker_once_selected_redirects_to_update_metric(random_challenge):
-    pk = random_challenge.challenge.pk
-    d = random_challenge.desc
-
+@pytest.fixture(scope='function')
+def cbpicked(cb):
     samples = tools.make_samples_metrics()
     s = samples[0]
 
-    c = Client()
-    assert c.login(username=d.username, password=d.password)
+    cb.post('wizard:challenge:metric.pick', pk=cb.pk,
+            data={'kind': 'public', 'metric': s.pk})
 
-    r = c.post(reverse('wizard:challenge:metric.pick', kwargs={'pk': pk}),
-               {'kind': 'public', 'metric': s.pk})
+    cb.metric = s
+    yield cb
 
-    r = c.get(reverse('wizard:challenge:metric.pick', kwargs={'pk': pk}))
-    assert_redirects(r, reverse('wizard:challenge:metric', kwargs={'pk': pk}))
+
+class TestMetricUpdate(object):
+    def test_edit_form_is_disabled_for_public_metrics(self, cbpicked):
+        r = cbpicked.get('wizard:challenge:metric', pk=cbpicked.pk)
+        assert 'disabled' in r.lhtml.cssselect('form #id_name')[0].attrib
+
+    def test_cant_update_public_metrics_on_post(self, cbpicked):
+        s = cbpicked.metric
+        old_name = s.name
+
+        r = cbpicked.post('wizard:challenge:metric', pk=cbpicked.pk,
+                          data={'title': 'something new'})
+
+        assert r.status_code == 400
+
+        s.refresh_from_db()
+        assert s.name == old_name

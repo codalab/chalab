@@ -192,6 +192,19 @@ class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     fields = ['name']
     current_flow = flow.MetricFlowItem
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class=form_class)
+
+        for f in self.fields:
+            form.fields[f].disabled = True
+
+        return form
+
+    def form_valid(self, form):
+        raise errors.HTTP400Exception('wizard/challenge/error.html',
+                                      "Forbidden edit on a metric",
+                                      """You can't edit a metric that you do not own.""")
+
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
         c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
