@@ -37,7 +37,11 @@ def build(request, pk):
 @login_required
 def download(request, pk):
     c = get_object_or_404(ChallengeModel, created_by=request.user, pk=pk)
-    b = get_object_or_404(BundleTaskModel, state=BundleTaskModel.FINISHED, challenge=c)
+    b = BundleTaskModel.objects.filter(challenge=c, state=BundleTaskModel.FINISHED).first()
+
+    if b is None:
+        raise Http404('No bundle successfully built available for download')
+
     return redirect(b.output.url)
 
 

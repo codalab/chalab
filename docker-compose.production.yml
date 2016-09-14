@@ -23,6 +23,7 @@ services:
     extends:
       file: docker-compose.base.yml
       service: celery
+    env_file: .env
     depends_on:
       - rabbitmq
       - db
