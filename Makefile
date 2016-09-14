@@ -42,8 +42,8 @@ prod:
 
 prod_preload_db:
 	cd ./datasets/chalearn/ && ./download.sh
-	docker-compose -f 'docker-compose.production.yml' run web python manage.py load_chalearn_dataset
-	docker-compose -f 'docker-compose.production.yml' run web python manage.py load_default_metrics
+	docker-compose -f 'docker-compose.production.yml' run web_scripts python manage.py load_chalearn_dataset
+	docker-compose -f 'docker-compose.production.yml' run web_scripts python manage.py load_default_metrics
 
 always:
 	@ echo ""

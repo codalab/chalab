@@ -51,6 +51,19 @@ services:
       - celery
     ports:
       - "8742:8000"
+  web_scripts:
+    extends:
+      file: docker-compose.base.yml
+      service: web
+    env_file: .env
+    environment:
+      - "DJANGO_SETTINGS_MODULE=instances.production"
+    depends_on:
+      - db
+      - smtp
+      - celery
+    volumes:
+      - .:/app
   media:
     image: lsenta/noconf-nginx
     depends_on:
