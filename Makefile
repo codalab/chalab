@@ -40,6 +40,11 @@ prod:
 	docker-compose -f 'docker-compose.production.yml' run --rm web python manage.py migrate
 	docker-compose -f 'docker-compose.production.yml' up -d web static media flower
 
+prod_preload_db:
+	cd ./datasets/chalearn/ && ./download.sh
+	docker-compose -f 'docker-compose.production.yml' run web python manage.py load_chalearn_dataset
+	docker-compose -f 'docker-compose.production.yml' run web python manage.py load_default_metrics
+
 always:
 	@ echo ""
 

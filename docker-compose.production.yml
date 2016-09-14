@@ -1,9 +1,15 @@
 version: '2'
 services:
+  db_volume:
+    extends:
+      file: docker-compose.base.yml
+      service: db_volume
   db:
     extends:
       file: docker-compose.base.yml
       service: db
+    volumes_from:
+      - db_volume
     restart: always
   smtp:
     image: namshi/smtp
@@ -19,6 +25,7 @@ services:
       service: celery
     depends_on:
       - rabbitmq
+      - db
     environment:
       - "DJANGO_SETTINGS_MODULE=instances.production"
     restart: always
