@@ -1,6 +1,10 @@
+from wsgiref.util import FileWrapper
+
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
+from django.http import StreamingHttpResponse
 from django.shortcuts import redirect, get_object_or_404, render
+from django.urls import reverse
 
 from chalab import errors
 from wizard.models import ChallengeModel
@@ -42,7 +46,21 @@ def download(request, pk):
     if b is None:
         raise Http404('No bundle successfully built available for download')
 
-    return redirect(b.output.url)
+    return redirect(
+        reverse('wizard:challenge:bundler:download_zip', kwargs={'pk': pk, 'task_id': b.pk}))
+
+
+@login_required
+def download_zip(request, pk, task_id):
+    c = get_object_or_404(ChallengeModel, created_by=request.user, pk=pk)
+    b = get_object_or_404(BundleTaskModel, challenge=c, pk=task_id)
+
+    chunk_size = 8192
+    response = StreamingHttpResponse(FileWrapper(b.output, chunk_size),
+                                     content_type='application/zip')
+    response['Content-Length'] = b.output.size
+    response['Content-Disposition'] = "attachment; filename=%s" % 'bundle.zip'
+    return response
 
 
 @login_required
