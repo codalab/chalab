@@ -1,5 +1,6 @@
 import os
 import shutil
+import traceback
 from contextlib import contextmanager
 from os import path
 from tempfile import TemporaryDirectory
@@ -141,5 +142,5 @@ def bundle(bundle_task):
         bundle_task.save()
 
         bundle_task.add_log('Exception: %r' % e)
+        bundle_task.add_log('Traceback:\n%s' % traceback.format_exc())
         bundle_task.add_log('Set state to failed')
-        raise

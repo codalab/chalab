@@ -87,9 +87,10 @@
                         </a>
                     {% endif %}
                 </div>
-                <div class="col-xs-4 status">
+                <div class="col-xs-4">
                     {% if bundler %}
-                        Build Status: {{ bundler.get_state_display }}<br/>
+                        Build Status: <span class="status">{{ bundler.get_state_display }}</span>
+                        <br/>
                         {% if bundler.done %}
                             Last build: {{ bundler.closed | date:'Y-m-d H:i' }}
                         {% endif %}

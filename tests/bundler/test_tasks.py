@@ -5,7 +5,7 @@ import pytest
 
 from bundler import models
 from bundler import tasks
-from tests.bundler.tools import has, zip, remove_logo, create_bundle, bundle
+from tests.bundler.tools import has, zip, remove_logo, create_bundle, bundle, mock_bundle
 
 pytestmark = pytest.mark.django_db
 
@@ -57,8 +57,8 @@ def test_create_archive_creates_zip_file(challenge_ready):
     c = challenge_ready.challenge
 
     with tasks.tmp_dirs(c) as (data, output):
-        tasks.create_bundle(data, c)
-        a = tasks.create_archive(data, output)
+        tasks.create_bundle(mock_bundle, data, c)
+        a = tasks.create_archive(mock_bundle, data, output)
         assert path.exists(a)
 
 

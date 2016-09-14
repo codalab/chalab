@@ -1,6 +1,7 @@
 import os
 from contextlib import contextmanager
 from os import path
+from unittest.mock import create_autospec
 from zipfile import ZipFile
 
 import yaml
@@ -35,12 +36,13 @@ def zip(path):
     with ZipFile(path, 'r') as z:
         yield z, z.namelist()
 
+mock_bundle = create_autospec(models.BundleTaskModel, return_value=None)
 
 @contextmanager
 def create_bundle(challenge_tuple):
     challenge = challenge_tuple.challenge
     with tasks.tmp_dirs(challenge) as (data, output):
-        tasks.create_bundle(data, challenge)
+        tasks.create_bundle(mock_bundle, data, challenge)
 
         with open(path.join(data, 'competition.yaml'), 'r') as f:
             data_yaml = yaml.load(f)
