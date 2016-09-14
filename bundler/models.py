@@ -60,6 +60,10 @@ class BundleTaskModel(models.Model):
                                   output=None)
 
     @property
+    def done(self):
+        return self.state in {self.FAILED, self.CANCELLED, self.FINISHED}
+
+    @property
     def logs(self):
         return self.log_set.order_by('created').all()
 

@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.http import Http404
 from django.shortcuts import redirect, get_object_or_404, render
 
 from chalab import errors
@@ -22,9 +23,7 @@ def build(request, pk):
 
     b = BundleTaskModel.objects.filter(challenge=c).first()
 
-    if b is None or b.state in {BundleTaskModel.FINISHED,
-                                BundleTaskModel.CANCELLED,
-                                BundleTaskModel.FAILED}:
+    if b is None or b.done:
         b = BundleTaskModel.create(c)
         bundle.delay(b)
     else:
@@ -40,3 +39,14 @@ def download(request, pk):
     c = get_object_or_404(ChallengeModel, created_by=request.user, pk=pk)
     b = get_object_or_404(BundleTaskModel, state=BundleTaskModel.FINISHED, challenge=c)
     return redirect(b.output.url)
+
+
+@login_required
+def logs(request, pk):
+    c = get_object_or_404(ChallengeModel, created_by=request.user, pk=pk)
+    b = BundleTaskModel.objects.filter(challenge=c).first()
+
+    if b is None:
+        raise Http404('Bundler not found')
+
+    return render(request, 'bundler/logs.html', dict(task=b))

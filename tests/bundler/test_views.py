@@ -58,6 +58,18 @@ class TestBundler(object):
         assert_redirects(r, sreverse('wizard:challenge', pk=c.pk))
 
 
+class TestBundlerLogs(object):
+    def test_logs_pages_returns_404_by_default(self, c):
+        r = c.get('wizard:challenge:bundler:logs', pk=c.pk)
+        assert r.status_code == 404
+
+    def test_logs_pages_returns_200_when_building(self, c):
+        c.post('wizard:challenge:bundler:build', pk=c.pk)
+
+        r = c.get('wizard:challenge:bundler:logs', pk=c.pk)
+        assert r.status_code == 200
+
+
 class TestBundleDownload(object):
     def test_returns_404_by_default(self, c):
         r = c.get('wizard:challenge:bundler:download', pk=c.pk)

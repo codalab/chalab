@@ -62,6 +62,10 @@ def test_create_archive_creates_zip_file(challenge_ready):
         assert path.exists(a)
 
 
+def log_file(bt):
+    return '\n'.join([x.message for x in bt.logs])
+
+
 class TestBundler(object):
     def test_set_output_zipfile(self, challenge_ready):
         with bundle(challenge_ready) as (bt, output):
@@ -71,6 +75,31 @@ class TestBundler(object):
     def test_set_finished_state(self, challenge_ready):
         with bundle(challenge_ready) as (bt, output):
             assert bt.state == models.BundleTaskModel.FINISHED
+
+    def test_bundler_stores_logs_along_the_way(self, challenge_ready):
+        with bundle(challenge_ready) as (bt, output):
+            lf = log_file(bt)
+
+            assert 'Set state to finished' in lf
+            assert 'Create phase 1' in lf
+
+    def test_set_canceled_state_on_exception(self, monkeypatch, challenge_ready):
+        def fail(*args, **kwargs):
+            raise Exception()
+
+        monkeypatch.setattr(tasks, 'gen_phases', fail)
+
+        with bundle(challenge_ready) as (bt, output):
+            assert bt.state == models.BundleTaskModel.FAILED
+
+    def test_bundler_stores_logs_on_failure(self, monkeypatch, challenge_ready):
+        def fail(*args, **kwargs):
+            raise Exception('some random exception happened')
+
+        monkeypatch.setattr(tasks, 'gen_phases', fail)
+
+        with bundle(challenge_ready) as (bt, output):
+            assert 'some random exception happened' in log_file(bt)
 
     def test_doesnt_bundle_itself(self, challenge_ready):
         with bundle(challenge_ready) as (bt, output):

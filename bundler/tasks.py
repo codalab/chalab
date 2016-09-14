@@ -29,7 +29,8 @@ def copy_file_field(file_desc, dest_path):
         shutil.copyfileobj(file_desc, f)
 
 
-def gen_documentation(output_dir, challenge):
+def gen_documentation(bt, output_dir, challenge):
+    bt.add_log('Generate the documentation')
     doc = challenge.documentation
     if doc is None:
         return {}
@@ -39,6 +40,7 @@ def gen_documentation(output_dir, challenge):
     r = {}
 
     for p in pages:
+        bt.add_log('Export page: %s' % p.name)
         r[p.name] = p.name + '.html'
         p.render(mapping)
 
@@ -52,7 +54,7 @@ def gen_reference(output_dir, dataset, phase_id):
     pass
 
 
-def gen_phases(output_dir, challenge):
+def gen_phases(bt, output_dir, challenge):
     dataset = challenge.dataset
 
     x = {'name': dataset.name}
@@ -61,16 +63,19 @@ def gen_phases(output_dir, challenge):
         x['description'] = dataset.description
     # x['reference']= gen_reference(output_dir, dataset, '1')
 
+    bt.add_log('Create phase 1')
+
     return {1: {'datasets': {1: x}}}
 
 
-def gen_logo(output_dir, challenge):
+def gen_logo(bt, output_dir, challenge):
     assert challenge.logo is not None, 'logo should be set'
 
     logo = challenge.logo
     name = path.basename(logo.name)
 
     try:
+        bt.add_log('Load the challenge logo')
         logo.open()
         copy_file_field(logo.file, path.join(output_dir, name))
     finally:
@@ -79,9 +84,9 @@ def gen_logo(output_dir, challenge):
     return name
 
 
-def create_bundle(output_dir, challenge):
-    html = gen_documentation(output_dir, challenge)
-    phases = gen_phases(output_dir, challenge)
+def create_bundle(bt, output_dir, challenge):
+    html = gen_documentation(bt, output_dir, challenge)
+    phases = gen_phases(bt, output_dir, challenge)
 
     data = {
         'title': challenge.title,
@@ -91,36 +96,49 @@ def create_bundle(output_dir, challenge):
     }
 
     if challenge.logo:
-        logo = gen_logo(output_dir, challenge)
+        logo = gen_logo(bt, output_dir, challenge)
         data['logo'] = logo
 
+    bt.add_log('Dump the competition.yaml file')
     with open(path.join(output_dir, 'competition.yaml'), 'w') as f:
         yaml.dump(data, f)
 
 
-def create_archive(data_dir, output_dir):
+def create_archive(bt, data_dir, output_dir):
+    bt.add_log('Package to bundle directory')
     a = shutil.make_archive(path.join(output_dir, 'bundle'), 'zip',
                             root_dir=data_dir, base_dir='.')
     return a
 
 
-def save_archive(archive, challenge, bundle_task):
+def save_archive(bt, archive, challenge, bundle_task):
+    bt.add_log('Export the archive')
     with open(archive, 'rb') as f:
         bundle_task.output.save('bundle_%s_%s.zip' % (challenge.pk, bundle_task.pk), File(f))
 
 
 @shared_task
 def bundle(bundle_task):
-    challenge = bundle_task.challenge
+    try:
+        challenge = bundle_task.challenge
 
-    with tmp_dirs(challenge) as (data, output):
-        bundle_task.state = bundle_task.STARTED
+        with tmp_dirs(challenge) as (data, output):
+            bundle_task.add_log('Starting bundler for: %s' % (challenge.title,))
+
+            bundle_task.state = bundle_task.STARTED
+            bundle_task.save()
+
+            create_bundle(bundle_task, data, challenge)
+            a = create_archive(bundle_task, data, output)
+            save_archive(bundle_task, a, challenge, bundle_task)
+
+        bundle_task.add_log('Set state to finished')
+        bundle_task.state = bundle_task.FINISHED
+        bundle_task.closed = timezone.now()
+        bundle_task.save()
+    except Exception as e:
+        bundle_task.state = bundle_task.FAILED
         bundle_task.save()
 
-        create_bundle(data, challenge)
-        a = create_archive(data, output)
-        save_archive(a, challenge, bundle_task)
-
-    bundle_task.state = bundle_task.FINISHED
-    bundle_task.closed = timezone.now()
-    bundle_task.save()
+        bundle_task.add_log('Exception: %r' % e)
+        bundle_task.add_log('Set state to failed')

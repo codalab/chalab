@@ -1,0 +1,16 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Logs{% endblock %}
+
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}bundler-logs{% endblock %}
+
+{% block content %}
+    <h1>Logs</h1>
+    {% for log in task.logs %}
+        <div class="row">
+            {{ log.message }}
+        </div>
+    {% endfor %}
+{% endblock %}
