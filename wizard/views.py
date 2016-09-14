@@ -56,7 +56,7 @@ class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMi
 
         try:
             from bundler.models import BundleTaskModel
-            context['bundler'] = BundleTaskModel.objects.get(challenge=self.object)
+            context['bundler'] = BundleTaskModel.objects.filter(challenge=self.object).first()
         except ObjectDoesNotExist:
             pass
 

@@ -2,33 +2,70 @@ import time
 
 import pytest
 
+from bundler import models
 from tests.shortcuts import SClient
 from tests.tools import assert_redirects, sreverse
 
 pytestmark = pytest.mark.django_db
 
 
-def test_bundler_disallow_build_on_incomplete_challenge(random_challenge):
-    client = SClient.logged(random_challenge.desc)
-    r = client.post('wizard:challenge:bundler:build', pk=random_challenge.challenge.pk)
+class TestBundler(object):
+    def test_disallow_build_on_incomplete_challenge(self, random_challenge):
+        client = SClient.logged(random_challenge.desc)
+        r = client.post('wizard:challenge:bundler:build', pk=random_challenge.challenge.pk)
 
-    assert r.status_code == 400
-    assert b'The challenge is not ready to be bundled' in r.content
+        assert r.status_code == 400
+        assert b'The challenge is not ready to be bundled' in r.content
+
+    def test_build_redirects_to_challenge(self, c):
+        r = c.post('wizard:challenge:bundler:build', pk=c.pk)
+        assert_redirects(r, sreverse('wizard:challenge', pk=c.pk))
+
+    def test_cant_build_if_previous_is_SCHEDULED(self, c):
+        bt = models.BundleTaskModel.create(c.challenge)
+        bt.state = bt.SCHEDULED
+        bt.save()
+
+        r = c.post('wizard:challenge:bundler:build', pk=c.pk)
+
+        assert r.status_code == 400
+        assert b'The bundle is already being built' in r.content
+
+    def test_cant_build_if_previous_is_STARTED(self, c):
+        bt = models.BundleTaskModel.create(c.challenge)
+        bt.state = bt.STARTED
+        bt.save()
+
+        r = c.post('wizard:challenge:bundler:build', pk=c.pk)
+
+        assert r.status_code == 400
+        assert b'The bundle is already being built' in r.content
+
+    def test_cant_build_again_if_previous_is_FINISHED(self, c):
+        bt = models.BundleTaskModel.create(c.challenge)
+        bt.state = bt.FINISHED
+        bt.save()
+
+        r = c.post('wizard:challenge:bundler:build', pk=c.pk)
+        assert_redirects(r, sreverse('wizard:challenge', pk=c.pk))
+
+    def test_cant_build_again_if_previous_is_FAILED(self, c):
+        bt = models.BundleTaskModel.create(c.challenge)
+        bt.state = bt.FAILED
+        bt.save()
+
+        r = c.post('wizard:challenge:bundler:build', pk=c.pk)
+        assert_redirects(r, sreverse('wizard:challenge', pk=c.pk))
 
 
-def test_bundler_build_redirects_to_challenge(c):
-    r = c.post('wizard:challenge:bundler:build', pk=c.pk)
-    assert_redirects(r, sreverse('wizard:challenge', pk=c.pk))
+class TestBundleDownload(object):
+    def test_returns_404_by_default(self, c):
+        r = c.get('wizard:challenge:bundler:download', pk=c.pk)
+        assert r.status_code == 404
 
+    def test_returns_redirect_to_file_when_ready(self, c):
+        r = c.post('wizard:challenge:bundler:build', pk=c.pk)
+        time.sleep(5)
+        r = c.get('wizard:challenge:bundler:download', pk=c.pk)
 
-def test_download_bundle_returns_404_by_default(c):
-    r = c.get('wizard:challenge:bundler:download', pk=c.pk)
-    assert r.status_code == 404
-
-
-def test_download_bundle_returns_redirect_to_file_when_ready(c):
-    r = c.post('wizard:challenge:bundler:build', pk=c.pk)
-    time.sleep(5)
-    r = c.get('wizard:challenge:bundler:download', pk=c.pk)
-
-    assert r.status_code == 302
+        assert r.status_code == 302

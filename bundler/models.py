@@ -21,13 +21,15 @@ class BundleTaskModel(models.Model):
     SCHEDULED = "scheduled"
     STARTED = "started"
     CANCELLED = "cancelled"
+    FAILED = 'failed'
     FINISHED = "finished"
 
     STATE_CHOICES = (
         (SCHEDULED, "Scheduled"),
         (STARTED, "Started"),
         (CANCELLED, "Cancelled"),
-        (FINISHED, "Finished")
+        (FINISHED, "Finished"),
+        (FAILED, 'Failed'),
     )
 
     challenge = models.ForeignKey(ChallengeModel, null=False)
@@ -60,3 +62,6 @@ class BundleTaskModel(models.Model):
     @property
     def logs(self):
         return self.log_set.order_by('created').all()
+
+    class Meta:
+        ordering = ['-created']

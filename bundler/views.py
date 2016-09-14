@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import ObjectDoesNotExist
 from django.shortcuts import redirect, get_object_or_404, render
 
+from chalab import errors
 from wizard.models import ChallengeModel
 from .models import BundleTaskModel
 from .tasks import bundle
@@ -20,12 +20,17 @@ def build(request, pk):
                    challenge=c,
                    message='The challenge is not ready to be bundled.')
 
-    try:
-        b = BundleTaskModel.objects.get(challenge=c)
-        raise Exception()
-    except ObjectDoesNotExist:
+    b = BundleTaskModel.objects.filter(challenge=c).first()
+
+    if b is None or b.state in {BundleTaskModel.FINISHED,
+                                BundleTaskModel.CANCELLED,
+                                BundleTaskModel.FAILED}:
         b = BundleTaskModel.create(c)
         bundle.delay(b)
+    else:
+        raise errors.HTTP400Exception('wizard/challenge/error.html', 'build is in progress',
+                                      """The bundle is already being built.""",
+                                      challenge=c)
 
     return redirect(c.get_absolute_url())
 
