@@ -16,6 +16,12 @@ RUN pip install -r requirements.txt
 # Install the app code (change often)
 ADD . /app
 
+# This is not ideal, we chmod so that the celery container (running non root)
+# can write to the media folder (for outputs).
+# TODO(laurent): Use groups to avoid chmoding for the whole world, or use
+#  data volumes.
+RUN chmod -R 777 /app/media
+
 # Generate statics
 RUN python manage.py collectstatic --noinput
 

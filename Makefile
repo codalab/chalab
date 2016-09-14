@@ -38,7 +38,7 @@ prod:
 	docker-compose -f 'docker-compose.production.yml' up -d db
 	docker-compose -f 'docker-compose.production.yml' build
 	docker-compose -f 'docker-compose.production.yml' run --rm web python manage.py migrate
-	docker-compose -f 'docker-compose.production.yml' up -d web static media flower
+	docker-compose -f 'docker-compose.production.yml' up -d web static media flower celery
 
 prod_preload_db:
 	cd ./datasets/chalearn/ && ./download.sh

@@ -142,3 +142,4 @@ def bundle(bundle_task):
 
         bundle_task.add_log('Exception: %r' % e)
         bundle_task.add_log('Set state to failed')
+        raise

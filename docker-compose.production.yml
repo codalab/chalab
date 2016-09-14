@@ -30,6 +30,12 @@ services:
     environment:
       - "DJANGO_SETTINGS_MODULE=instances.production"
     restart: always
+    volumes_from:
+      - web
+    # This part is a problem: web depends on celery to run,
+    # but celery depends on web volumes (uploads, medias/, etc).
+    # For now we avoid circular dependencies by avoiding web <- celery
+    # TODO(laurent): use volumes to avoid this situation
   flower:
     extends:
       file: docker-compose.base.yml
@@ -49,7 +55,6 @@ services:
     depends_on:
       - db
       - smtp
-      - celery
     ports:
       - "8742:8000"
   web_scripts:
