@@ -8,15 +8,15 @@ from wizard import views as wiz
 pytestmark = pytest.mark.django_db
 
 
-def test_open_data_redirects_to_picker(random_challenge):
-    pk = random_challenge.challenge.pk
-    url = reverse('wizard:challenge:data', kwargs={'pk': random_challenge.challenge.pk})
-    request = make_request(url, user=random_challenge.user)
+@pytest.fixture(scope='function')
+def cbpicked(cb):
+    samples = make_samples_datasets()
+    s = samples[0]
+    cb.post('wizard:challenge:data.pick', pk=cb.pk,
+            data={'kind': 'public', 'dataset': s.pk})
+    cb.sample = s
 
-    response = wiz.ChallengeDataEdit.as_view()(request, pk=pk)
-
-    assert_redirects(response, reverse('wizard:challenge:data.pick', kwargs={'pk': pk}),
-                     fetch_redirect_response=False)
+    yield cb
 
 
 class TestDataPicker(object):
@@ -67,29 +67,29 @@ class TestDataPicker(object):
                     data={'kind': 'public', 'dataset': s.pk})
         assert_redirects(r, sreverse('wizard:challenge:data', pk=cb.pk))
 
-    def test_once_selected_redirects_to_regular_data(self, cb):
+    def test_once_picked_returning_to_picker_allows_you_to_pick_another(self, cbpicked):
         samples = make_samples_datasets()
-        s = samples[0]
+        s = samples[-1]
 
-        cb.post('wizard:challenge:data.pick', pk=cb.pk,
-                data={'kind': 'public', 'dataset': s.pk})
+        assert s != cbpicked.sample
 
-        r = cb.get('wizard:challenge:data.pick', pk=cb.pk)
-        assert_redirects(r, sreverse('wizard:challenge:data', pk=cb.pk))
+        r = cbpicked.post('wizard:challenge:data.pick', pk=cbpicked.pk,
+                          data={'kind': 'public', 'dataset': s.pk})
 
-
-@pytest.fixture(scope='function')
-def cbpicked(cb):
-    samples = make_samples_datasets()
-    s = samples[0]
-    cb.post('wizard:challenge:data.pick', pk=cb.pk,
-            data={'kind': 'public', 'dataset': s.pk})
-    cb.sample = s
-
-    yield cb
+        assert_redirects(r, sreverse('wizard:challenge:data', pk=cbpicked.pk))
 
 
 class TestDataUpdate(object):
+    def test_open_data_redirects_to_picker(self, random_challenge):
+        pk = random_challenge.challenge.pk
+        url = reverse('wizard:challenge:data', kwargs={'pk': random_challenge.challenge.pk})
+        request = make_request(url, user=random_challenge.user)
+
+        response = wiz.ChallengeDataEdit.as_view()(request, pk=pk)
+
+        assert_redirects(response, reverse('wizard:challenge:data.pick', kwargs={'pk': pk}),
+                         fetch_redirect_response=False)
+
     def test_cant_update_public_datasets_i_dont_own_form(self, cbpicked):
         r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
         assert 'disabled' in r.lhtml.cssselect('form #id_name')[0].attrib
@@ -104,3 +104,27 @@ class TestDataUpdate(object):
 
         s.refresh_from_db()
         assert s.name == old_name
+
+    def test_dataset_page_shows_picker_button(self, cbpicked):
+        r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
+
+        picker = r.lhtml.cssselect('.btn.picker')[0]
+
+        assert picker is not None
+        assert picker.attrib['href'] == sreverse('wizard:challenge:data.pick', pk=cbpicked.pk)
+
+    def test_once_picked_picking_another_update_page(self, cbpicked):
+        samples = make_samples_datasets()
+        s = samples[-1]
+
+        assert s != cbpicked.sample
+
+        cbpicked.post('wizard:challenge:data.pick', pk=cbpicked.pk,
+                      data={'kind': 'public', 'dataset': s.pk})
+
+        r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
+
+        context = r.context
+
+        assert 'form' in context
+        assert context['form'].initial['name'] == s.name

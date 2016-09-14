@@ -136,9 +136,6 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 def data_picker(request, pk):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
-    if c.dataset is not None:
-        return redirect('wizard:challenge:data', pk=pk)
-
     if request.method == 'POST':
         k = request.POST['kind']
         assert k == 'public'
@@ -164,9 +161,6 @@ def data_picker(request, pk):
 
 def metric_picker(request, pk):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
-
-    if c.metric is not None:
-        return redirect('wizard:challenge:metric', pk=pk)
 
     if request.method == 'POST':
         k = request.POST['kind']

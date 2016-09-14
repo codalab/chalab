@@ -28,7 +28,7 @@ build:
 dev:
 	docker-compose up -d db
 	docker-compose run web python manage.py migrate
-	docker-compose up web flower
+	docker-compose up web flower celery
 
 superuser:
 	@echo 'Run after `docker compose up`.'
