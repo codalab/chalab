@@ -368,6 +368,7 @@ class TaskModel(models.Model):
     target_train = OneToOneField(MatrixModel, null=True, related_name='model_trained_target')
     input_test = OneToOneField(MatrixModel, null=True, related_name='model_tested')
     input_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated')
+    target_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated_target')
 
     @property
     def template_mapping(self):
@@ -386,7 +387,8 @@ class TaskModel(models.Model):
         self.is_ready = (self.input_test is not None and
                          self.target_train is not None and
                          self.input_test is not None and
-                         self.input_valid is not None)
+                         self.input_valid is not None and
+                         self.target_valid is not None)
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
@@ -402,12 +404,15 @@ class TaskModel(models.Model):
 
         test = load_chalearn(path, '_test.data')
         valid = load_chalearn(path, '_valid.data')
+        valid_target = load_chalearn(path, '_valid.solution')
 
         return cls.objects.create(
             dataset=dataset,
             owner=None, is_public=True, name=name,
             input_train=train, target_train=train_target,
-            input_test=test, input_valid=valid
+            input_test=test,
+            input_valid=valid,
+            target_valid=valid_target
         )
 
 

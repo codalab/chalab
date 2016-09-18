@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 
 import yaml
 from celery import shared_task
+from django.conf import settings
 from django.core.files import File
 from django.utils import timezone
 
@@ -55,18 +56,38 @@ def gen_reference(output_dir, dataset, phase_id):
     pass
 
 
+def gen_phase(bt, output_dir, number, challenge, task, protocol, metric):
+    bt.add_log('Create phase %s' % number)
+
+    p = {'phasenumber': number,
+         'label': 'Phase %s' % number,
+         'description': '',
+         'is_scoring_only': True}
+
+    if protocol.max_submissions:
+        p['max_submissions'] = protocol.max_submissions
+    if protocol.max_submissions_per_day:
+        p['max_submissions_per_day'] = protocol.max_submissions_per_day
+
+    ref_data = 'reference_data_%s' % number
+    scoring_program = 'scoring_program_%s' % number
+
+    with TemporaryDirectory() as d:
+        copy_file_field(task.target_train.raw_content, path.join(d, '%s.solution' % number))
+        zipdir(bt, output_dir, ref_data, d)
+        p['reference_data'] = ref_data + '.zip'
+
+    with open(path.join(settings.MEDIA_ROOT, 'scoring_program.zip'), 'rb') as fin:
+        copy_file_field(fin, path.join(output_dir, scoring_program + '.zip'))
+        p['scoring_program'] = scoring_program + '.zip'
+
+    return p
+
+
 def gen_phases(bt, output_dir, challenge):
-    dataset = challenge.dataset
-
-    x = {'name': dataset.name}
-
-    if dataset.description is not None:
-        x['description'] = dataset.description
-    # x['reference']= gen_reference(output_dir, dataset, '1')
-
-    bt.add_log('Create phase 1')
-
-    return {1: {'datasets': {1: x}}}
+    return {1: gen_phase(bt, output_dir, 1,
+                         challenge.dataset, challenge.task,
+                         challenge.protocol, challenge.metric)}
 
 
 def gen_logo(bt, output_dir, challenge):
@@ -85,31 +106,61 @@ def gen_logo(bt, output_dir, challenge):
     return name
 
 
+def gen_leaderboard(challenge):
+    leaderboard_Results = {'label': 'Results', 'rank': 1}
+
+    leaderboard = {
+        'leaderboards': {
+            'Results': leaderboard_Results,
+        },
+        'columns': {
+            'set1_score':
+                {'leaderboard': leaderboard_Results,
+                 'label': 'Precision',
+                 'numeric_format': 4,
+                 'rank': 1}
+        }
+    }
+
+    return leaderboard
+
+
 def create_bundle(bt, output_dir, challenge):
     html = gen_documentation(bt, output_dir, challenge)
     phases = gen_phases(bt, output_dir, challenge)
+    leaderboard = gen_leaderboard(challenge)
 
     data = {
         'title': challenge.title,
         'description': challenge.description,
         'html': html,
-        'phases': phases
+        'phases': phases,
+        'leaderboard': leaderboard,
     }
 
     if challenge.logo:
         logo = gen_logo(bt, output_dir, challenge)
-        data['logo'] = logo
+        data['image'] = logo
+
+    protocol = challenge.protocol
+    if protocol.end_date:
+        data['end_date'] = protocol.end_date.strftime('%Y-%m-%d')
 
     bt.add_log('Dump the competition.yaml file')
     with open(path.join(output_dir, 'competition.yaml'), 'w') as f:
-        yaml.dump(data, f)
+        yaml.dump(data, f, default_flow_style=False)
+
+
+def zipdir(bt, output_dir, archive_name, data_dir):
+    bt.add_log('Creating archive: %s' % archive_name)
+    a = shutil.make_archive(path.join(output_dir, archive_name), 'zip',
+                            root_dir=data_dir, base_dir='.')
+    return a
 
 
 def create_archive(bt, data_dir, output_dir):
     bt.add_log('Package to bundle directory')
-    a = shutil.make_archive(path.join(output_dir, 'bundle'), 'zip',
-                            root_dir=data_dir, base_dir='.')
-    return a
+    return zipdir(bt, output_dir, 'bundle', data_dir)
 
 
 def save_archive(bt, archive, challenge, bundle_task):
