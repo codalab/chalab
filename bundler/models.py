@@ -1,6 +1,38 @@
+import os
+from time import gmtime, strftime
+
+from django.core.files.storage import DefaultStorage
 from django.db import models
+from django.utils.deconstruct import deconstructible
 
 from wizard.models import ChallengeModel
+
+storage = DefaultStorage()
+
+
+@deconstructible
+class StorageNameFactory(object):
+    """
+    A factory that will produce a unique filename,
+    prefixed by the suffix and the current year/month/day.
+
+    This function is to be used with the Django upload_to in FileField.
+
+    We define a deconstructible instance so that the object can be "serialized" by
+    the migration framework.
+    """
+
+    def __init__(self, *prefix):
+        self.prefix = prefix
+
+    def __call__(self, instance, filename):
+        try:
+            base = os.path.join(*self.prefix, str(instance.challenge.id), '%Y', '%m', '%d',
+                                filename)
+            base = strftime(base, gmtime())
+            return storage.get_available_name(base)
+        except TypeError as e:
+            raise TypeError("You probably forgot to define the local `name' field.") from e
 
 
 class LogModel(models.Model):
@@ -39,7 +71,7 @@ class BundleTaskModel(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     closed = models.DateTimeField(null=True)
 
-    output = models.FileField(null=True)
+    output = models.FileField(null=True, upload_to=StorageNameFactory('data', 'bundles'))
 
     def __str__(self):
         return "<%s: challenge=%s, state=%s>" \

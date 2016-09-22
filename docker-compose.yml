@@ -1,15 +1,27 @@
 version: '2'
+volumes:
+  dbvolume:
 services:
-  db_volume:
+  web:
     extends:
       file: docker-compose.base.yml
-      service: db_volume
+      service: web
+    command: /usr/local/bin/gunicorn chalab.wsgi:application -w 2 -b :8000 --reload
+    environment:
+      - "DJANGO_SETTINGS_MODULE=instances.local_docker"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - celery
   db:
     extends:
       file: docker-compose.base.yml
       service: db
-    volumes_from:
-      - db_volume
+    volumes:
+      - dbvolume:/var/lib/postgresql/data
   rabbitmq:
     extends:
       file: docker-compose.base.yml
@@ -33,17 +45,4 @@ services:
     depends_on:
       - celery
       - rabbitmq
-  web:
-    extends:
-      file: docker-compose.base.yml
-      service: web
-    command: /usr/local/bin/gunicorn chalab.wsgi:application -w 2 -b :8000 --reload
-    environment:
-      - "DJANGO_SETTINGS_MODULE=instances.local_docker"
-    volumes:
-      - .:/app
-      - ./static:/app/static
-      - ./media:/app/media
-    depends_on:
-      - db
-      - celery
+
