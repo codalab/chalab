@@ -73,9 +73,15 @@ def gen_phase(bt, output_dir, number, challenge, task, protocol, metric):
     scoring_program = 'scoring_program_%s' % number
 
     with TemporaryDirectory() as d:
-        copy_file_field(task.target_train.raw_content, path.join(d, '%s.solution' % number))
-        zipdir(bt, output_dir, ref_data, d)
-        p['reference_data'] = ref_data + '.zip'
+        try:
+            task.target_train.raw_content.open()
+            copy_file_field(task.target_train.raw_content, path.join(d, '%s.solution' % number))
+
+            zipdir(bt, output_dir, ref_data, d)
+            p['reference_data'] = ref_data + '.zip'
+
+        finally:
+            task.target_train.raw_content.close()
 
     with open(path.join(settings.MEDIA_ROOT, 'scoring_program.zip'), 'rb') as fin:
         copy_file_field(fin, path.join(output_dir, scoring_program + '.zip'))

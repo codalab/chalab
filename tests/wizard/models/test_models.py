@@ -56,12 +56,16 @@ class TestTaskModel:
                                           CHALEARN_SAMPLE + '/adult_train.solution')
 
         m_test = create_with_file(models.MatrixModel, CHALEARN_SAMPLE + '/adult_test.data')
+
         m_valid = create_with_file(models.MatrixModel,
                                    CHALEARN_SAMPLE + '/adult_valid.data')
+        m_valid_target = create_with_file(models.MatrixModel,
+                                          CHALEARN_SAMPLE + '/adult_valid.solution')
 
         t = models.TaskModel.objects.create(owner=None, is_public=True, name='A simple task',
                                             input_train=m_train, target_train=m_train_target,
-                                            input_test=m_test, input_valid=m_valid)
+                                            input_test=m_test,
+                                            input_valid=m_valid, target_valid=m_valid_target)
 
         assert t.is_ready
 

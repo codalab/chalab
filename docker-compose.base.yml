@@ -4,8 +4,6 @@ services:
     build: .
   db:
     image: postgres:9.5
-    ports:
-      - "127.0.0.1:5432:5432"
     environment:
       - "PGDATA=/var/lib/postgresql/data/pgdata"
   rabbitmq:

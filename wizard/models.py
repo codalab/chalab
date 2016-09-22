@@ -366,7 +366,9 @@ class TaskModel(models.Model):
     # Similar to what we do for the columnar storage model.
     input_train = OneToOneField(MatrixModel, null=True, related_name='model_trained')
     target_train = OneToOneField(MatrixModel, null=True, related_name='model_trained_target')
+
     input_test = OneToOneField(MatrixModel, null=True, related_name='model_tested')
+
     input_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated')
     target_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated_target')
 

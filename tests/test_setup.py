@@ -3,8 +3,6 @@ import pytest
 from chalab import chacelery
 from wizard import tasks as wizard
 
-pytestmark = pytest.mark.django_db
-
 
 @pytest.mark.timeout(5)
 def test_celery_setup():

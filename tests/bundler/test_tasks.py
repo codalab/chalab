@@ -25,14 +25,14 @@ class TestCreateBundle(object):
         with create_bundle(challenge_ready) as (output_path, yaml, ls):
             assert yaml['title'] == challenge_ready.challenge.title
 
-    def test_adds_dataset(self, challenge_ready):
+    def test_adds_reference_data(self, challenge_ready):
         with create_bundle(challenge_ready) as (output_path, yaml, ls):
-            assert has(yaml, ['phases', 1, 'datasets', 1])
+            assert has(yaml, ['phases', 1, 'reference_data'])
 
     def test_adds_logo(self, challenge_ready):
         with create_bundle(challenge_ready) as (output_path, yaml, ls):
-            assert 'logo' in yaml
-            assert yaml['logo'] in ls
+            assert 'image' in yaml
+            assert yaml['image'] in ls
 
     def test_no_logo_works(self, challenge_ready):
         remove_logo(challenge_ready)
