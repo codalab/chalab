@@ -1,6 +1,7 @@
 FROM python:3.5
 
 ENV PYTHONUNBUFFERED 1
+ENV C_FORCE_ROOT true # Allow celery to run as root (we're dockerized, should be ok)
 
 # Dockerfile based on the official Celery
 # https://github.com/docker-library/celery
@@ -10,15 +11,10 @@ RUN mkdir -p /app/ /app/static
 WORKDIR /app
 CMD ["celery", "-A", "chalab.chacelery", "worker", "--loglevel=info"]
 
-# Setup user (celery doesn't like being root)
-RUN groupadd user && \
-    useradd --home-dir /app -g user user
-
 # Install the dependencies (rarely change)
 ADD requirements.txt /app
 RUN pip install -r requirements.txt
 
 # Install the app code (change often)
-USER user
 ADD . /app
 
