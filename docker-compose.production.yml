@@ -1,16 +1,31 @@
 version: '2'
+volumes:
+  dbvolume:
+  staticvolume:
+  mediavolume:
 services:
-  db_volume:
+  web:
     extends:
       file: docker-compose.base.yml
-      service: db_volume
+      service: web
+    restart: always
+    env_file: .env
+    environment:
+      - "DJANGO_SETTINGS_MODULE=instances.production"
+    depends_on:
+      - db
+      - smtp
+    ports:
+      - "8742:8000"
+    volumes:
+      - mediavolume:/app/media
   db:
     extends:
       file: docker-compose.base.yml
       service: db
-    volumes_from:
-      - db_volume
     restart: always
+    volumes:
+      - dbvolume:/var/lib/postgresql/data
   smtp:
     image: namshi/smtp
     restart: always
@@ -23,40 +38,23 @@ services:
     extends:
       file: docker-compose.base.yml
       service: celery
+    restart: always
     env_file: .env
+    environment:
+      - "DJANGO_SETTINGS_MODULE=instances.production"
     depends_on:
       - rabbitmq
       - db
-    environment:
-      - "DJANGO_SETTINGS_MODULE=instances.production"
-    restart: always
-    volumes_from:
-      - web
-    # This part is a problem: web depends on celery to run,
-    # but celery depends on web volumes (uploads, medias/, etc).
-    # For now we avoid circular dependencies by avoiding web <- celery
-    # TODO(laurent): use volumes to avoid this situation
+    volumes:
+      - mediavolume:/app/media
   flower:
     extends:
       file: docker-compose.base.yml
       service: flower
+    restart: always
     depends_on:
       - celery
       - rabbitmq
-    restart: always
-  web:
-    extends:
-      file: docker-compose.base.yml
-      service: web
-    env_file: .env
-    restart: always
-    environment:
-      - "DJANGO_SETTINGS_MODULE=instances.production"
-    depends_on:
-      - db
-      - smtp
-    ports:
-      - "8742:8000"
   web_scripts:
     extends:
       file: docker-compose.base.yml
@@ -66,27 +64,23 @@ services:
       - "DJANGO_SETTINGS_MODULE=instances.production"
     depends_on:
       - db
-      - smtp
       - celery
     volumes:
       - .:/app
+      - mediavolume:/app/media
   media:
     image: lsenta/noconf-nginx
-    depends_on:
-      - web
     ports:
-      - 8843:80
+      - "8843:80"
     environment:
-      - "STATIC_FOLDER=/app/media"
-    volumes_from:
-      - web
+      - "STATIC_FOLDER=/media"
+    volumes:
+      - mediavolume:/media
   static:
     image: lsenta/noconf-nginx
-    depends_on:
-      - web
     ports:
       - "8842:80"
     environment:
-      - "STATIC_FOLDER=/app/static"
-    volumes_from:
-      - web
+      - "STATIC_FOLDER=/static"
+    volumes:
+      - staticvolume:/static

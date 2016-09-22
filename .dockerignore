@@ -1,6 +1,6 @@
 static
-media
-postgresql-data
+media/uploads
+
 datasets
 backups
 
