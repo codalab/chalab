@@ -2,6 +2,7 @@ import datetime
 
 import pytest
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 
 from tests.wizard.tools import (CHALEARN_SAMPLE,
                                 CHALEARN_SAMPLE_SPARSE)
@@ -87,6 +88,19 @@ class TestMetricModel:
 
         assert t is not None
         assert t.is_ready
+
+
+class TestProtocolModel:
+    def test_can_create(self):
+        m = models.ProtocolModel.objects.create(max_submissions_per_day=2)
+        assert m is not None
+
+    def test_cant_use_negative_values(self):
+        try:
+            m = models.ProtocolModel.objects.create(max_submissions_per_day=-2)
+            assert False, "should raise"
+        except IntegrityError:
+            assert True
 
 
 class TestChallengeModel:

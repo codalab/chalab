@@ -450,8 +450,8 @@ class ProtocolModel(models.Model):
     has_registration = models.BooleanField(default=False)
     ranked_submissions = models.BooleanField(default=False)
 
-    max_submissions_per_day = models.IntegerField(null=True, default=None, blank=True)
-    max_submissions = models.IntegerField(null=True, default=None, blank=True)
+    max_submissions_per_day = models.PositiveIntegerField(null=True, default=None, blank=True)
+    max_submissions = models.PositiveIntegerField(null=True, default=None, blank=True)
 
     @property
     def template_mapping(self):
