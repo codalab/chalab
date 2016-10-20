@@ -71,6 +71,10 @@ class BasicElementsMixin(object):
         return self.by_css('h3')
 
     @property
+    def p(self):
+        return self.by_css('p')
+
+    @property
     def content(self):
         return self.by_css(self.selector_content)
 

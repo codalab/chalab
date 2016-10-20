@@ -7,41 +7,44 @@
 {% block panel_name %}challenge{% endblock %}
 
 {% block content %}
-    <div class="jumbotron">
-        <a href="{% url 'wizard:challenge:edit' pk=challenge.pk %}" class="pull-right btn btn-edit">
-            <i class="fa fa-pencil" aria-hidden="true"></i>
-            Edit
-        </a>
-
-        <h1 class="text-center">{{ object.title }}</h1>
-
-        {% if object.logo %}
-            <img class="center-block img-rounded img-responsive" src="{{ object.logo.url }}">
-        {% endif %}
-
-        <h3 class="text-center text-muted">
-            <small>
-                <i class="fa fa-users" aria-hidden="true"></i>
-                {{ object.organization_name }}
-            </small>
-        </h3>
-    </div>
-
     <div class="description panel panel-default">
-        <div class="panel-heading">
-            Description
-        </div>
-        <div class="panel-body">
-            {{ object.description }}
+        <div class="row">
+            <div class="col-xs-2">
+                {% if object.logo %}
+                    <img class="center-block img-rounded img-responsive"
+                         src="{{ object.logo.url }}">
+                {% endif %}
+            </div>
+            <div class="col-xs-8">
+                <h1 class="">
+                    {{ object.title }}
+                </h1>
+
+                <h3 class="text-muted">
+                    <small>
+                        Organized by {{ object.organization_name }}
+                    </small>
+                </h3>
+
+                <p class="content">{{ object.description }}</p>
+            </div>
+            <div class="col-xs-2">
+                <a href="{% url 'wizard:challenge:edit' pk=challenge.pk %}"
+                   class="btn btn-edit small">
+                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                    Edit
+                </a>
+            </div>
         </div>
     </div>
+
 
     <div class="definition panel {% if object.is_ready %}ready panel-info{% else %}panel-warning{% endif %}">
         <div class="panel-heading">
             {% if not object.is_ready %}
                 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
             {% endif %}
-            Definition
+            Challenge Definition:
         </div>
         <div class="panel-body">
             {% include 'wizard/flow/_descr.html' %}
@@ -53,7 +56,7 @@
             {% if not object.is_ready %}
                 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
             {% endif %}
-            Complete
+            Packaging & Testing:
         </div>
         <div class="panel-body">
             <div class="row build text-center">

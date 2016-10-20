@@ -2,11 +2,10 @@ def test_flow_with_public_dataset(challenge):
     desc = challenge.challenge
 
     # I can see the description for my challenge
-    j = challenge.jumbotron
-    assert j.h1.text == desc.title
-    assert j.h3.text == desc.org_name
-
-    assert challenge.description.body.text == desc.description
+    d = challenge.description
+    assert d.h1.text == desc.title
+    assert desc.org_name in d.h3.text
+    assert d.content.text == desc.description
 
     p = challenge
     assert not p.definition.steps.get(clss='data').is_ready

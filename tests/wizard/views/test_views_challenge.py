@@ -43,7 +43,7 @@ class TestChallengePage(object):
     def test_shows_edit_button(self, cb):
         r = cb.get('wizard:challenge', pk=cb.pk)
 
-        link = r.html.select_one('.jumbotron a.btn-edit')
+        link = r.html.select_one('.description a.btn-edit')
         assert link['href'] == sreverse('wizard:challenge:edit', pk=cb.pk)
 
 

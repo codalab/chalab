@@ -88,7 +88,7 @@ class PanelBlock(Block):
         return self.by_css(self.selector_heading)
 
 
-class DescriptionBlock(PanelBlock):
+class DescriptionBlock(Block):
     selector = '.description'
 
 

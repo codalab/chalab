@@ -13,7 +13,7 @@ SELENIUM_REMOTE_DRIVER = os.environ.get('SELENIUM_REMOTE_DRIVER', 'firefox')
 _HERE = os.path.dirname(os.path.realpath(__file__))
 
 _DRIVERS = {
-    'chrome': lambda: Chrome(executable_path=os.path.join(_HERE, '..', 'chromedriver')),
+    'chrome': lambda: Chrome(executable_path=os.path.join(_HERE, 'chromedriver')),
     'firefox': Firefox,
     'phantomjs': PhantomJS,
     'remote': lambda: Remote(command_executor=SELENIUM_REMOTE_URL,

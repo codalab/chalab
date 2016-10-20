@@ -6,22 +6,42 @@
 
 {% block content %}
     <div class="hero">
-        <h1>Welcome to Chalab</h1>
+        <h1>Your challenges:</h1>
         <div class="details">
             <p>
-                Here you can create new Machine Learning Challenges.
             </p>
         </div>
     </div>
     <div class="challenges">
         {% for challenge in object_list %}
-            <div class="challenge">
-                <h3 class="title">{{ challenge.title }}</h3>
-                <a class="details btn btn-block btn-primary"
-                   href="{% url 'wizard:challenge' pk=challenge.pk %}">
-                    Details
-                </a>
-            </div>
+            <a href="{% url 'wizard:challenge' pk=challenge.pk %}">
+                <div class="row top10 challenge">
+                    <div class="col-xs-2 logo">
+                        {% if challenge.logo %}
+                            <img class="center-block img-rounded img-responsive"
+                                 src="{{ challenge.logo.url }}">
+                        {% else %}
+                            <div class="fake-logo">{{ challenge.title|first }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-xs-6 desc">
+                        <h3 class="title">{{ challenge.title }}</h3>
+                        <p class="org text-muted">Organized
+                            by: {{ challenge.organization_name }}</p>
+
+                        <p class="description">
+                            {{ challenge.description }}
+                        </p>
+                    </div>
+
+                    <div class="col-xs-4 infos">
+                        <p>
+                            Created: {{ challenge.created }};
+                            Last change: {{ challenge.updated }}
+                        </p>
+                    </div>
+                </div>
+            </a>
         {% empty %}
             <h3>Here you'll see your challenges.</h3>
         {% endfor %}
