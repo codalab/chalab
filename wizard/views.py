@@ -75,6 +75,7 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
         for f in self.fields:
             form.fields[f].disabled = True
+        form.disabled = True
 
         return form
 
@@ -191,6 +192,7 @@ class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
         for f in self.fields:
             form.fields[f].disabled = True
+        form.disabled = True
 
         return form
 

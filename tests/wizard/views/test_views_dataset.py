@@ -90,9 +90,13 @@ class TestDataUpdate(object):
         assert_redirects(response, reverse('wizard:challenge:data.pick', kwargs={'pk': pk}),
                          fetch_redirect_response=False)
 
-    def test_cant_update_public_datasets_i_dont_own_form(self, cbpicked):
+    def test_cant_change_fields_for_public_datasets_i_dont_own_form(self, cbpicked):
         r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
         assert 'disabled' in r.lhtml.cssselect('form #id_name')[0].attrib
+
+    def test_cant_update_public_datasets_i_dont_own_form(self, cbpicked):
+        r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
+        assert 'disabled' in r.lhtml.cssselect('form button[type="submit"]')[0].attrib
 
     def test_cant_update_public_ds_i_dont_own_post(self, cbpicked):
         s = cbpicked.sample

@@ -83,6 +83,10 @@ class TestMetricUpdate(object):
         r = cbpicked.get('wizard:challenge:metric', pk=cbpicked.pk)
         assert 'disabled' in r.lhtml.cssselect('form #id_name')[0].attrib
 
+    def test_edit_form_update_button_is_disabled_for_public_metrics(self, cbpicked):
+        r = cbpicked.get('wizard:challenge:metric', pk=cbpicked.pk)
+        assert 'disabled' in r.lhtml.cssselect('form button[type="submit"]')[0].attrib
+
     def test_cant_update_public_metrics_on_post(self, cbpicked):
         s = cbpicked.metric
         old_name = s.name
