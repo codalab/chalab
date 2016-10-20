@@ -95,3 +95,10 @@ class TestChallengeModel:
         t = models.ChallengeModel.objects.create(created_by=user)
 
         assert t.documentation is None
+
+    def test_challenge_model_has_created_an_updated_fields(self):
+        user = User.objects.create_user('username', None, 'password')
+        t = models.ChallengeModel.objects.create(created_by=user)
+
+        assert t.created_at is not None
+        assert t.updated_at is not None

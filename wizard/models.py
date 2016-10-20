@@ -572,6 +572,9 @@ class ChallengeModel(models.Model):
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     dataset = models.ForeignKey(DatasetModel, null=True, blank=True)
     task = models.ForeignKey(TaskModel, null=True, blank=True)
     metric = models.ForeignKey(MetricModel, null=True, blank=True)

@@ -15,7 +15,7 @@
                          src="{{ object.logo.url }}">
                 {% endif %}
             </div>
-            <div class="col-xs-8">
+            <div class="col-xs-7">
                 <h1 class="">
                     {{ object.title }}
                 </h1>
@@ -28,12 +28,18 @@
 
                 <p class="content">{{ object.description }}</p>
             </div>
-            <div class="col-xs-2">
+            <div class="col-xs-3">
                 <a href="{% url 'wizard:challenge:edit' pk=challenge.pk %}"
                    class="btn btn-edit small">
                     <i class="fa fa-pencil" aria-hidden="true"></i>
                     Edit
                 </a>
+                <p>
+                    Created: {{ challenge.created_at }}
+                </p>
+                <p>
+                    Last change: {{ challenge.updated_at }}
+                </p>
             </div>
         </div>
     </div>
@@ -44,7 +50,8 @@
             {% if not object.is_ready %}
                 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
             {% endif %}
-            Challenge Definition:
+            Challenge
+            Definition{% if not object.is_ready %} (incomplete){% endif %}:
         </div>
         <div class="panel-body">
             {% include 'wizard/flow/_descr.html' %}
@@ -59,78 +66,87 @@
             Packaging & Testing:
         </div>
         <div class="panel-body">
-            <div class="row build text-center">
-                <div class="col-xs-4">
-                    {% if bundler and not bundler.done %}
-                        <button class="btn disabled btn-block">
-                            <i class="fa fa-gears" aria-hidden="true"></i>
-                            Build
-                        </button>
-                    {% else %}
-                        <form action="{% url 'wizard:challenge:bundler:build' object.id %}">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="btn btn-block btn-warning">
+            {% if not object.is_ready %}
+                <div class="well text-center">
+                    Once you complete the challenge definition,
+                    this section will contains build & exports tools.
+                </div>
+            {% else %}
+                <div class="row build text-center">
+                    <div class="col-xs-4">
+                        {% if bundler and not bundler.done %}
+                            <button class="btn disabled btn-block">
                                 <i class="fa fa-gears" aria-hidden="true"></i>
                                 Build
                             </button>
-                        </form>
-                    {% endif %}
-                </div>
-                <div class="col-xs-4">
-                    {% if not bundler %}
-                        <button class="btn btn-default disabled btn-block">
-                            <i class="fa fa-gears" aria-hidden="true"></i>
-                            Logs
-                        </button>
-                    {% else %}
-                        <a class="btn btn-block btn-default"
-                           href="{% url 'wizard:challenge:bundler:logs' object.id %}">
-                            Logs
-                        </a>
-                    {% endif %}
-                </div>
-                <div class="col-xs-4">
-                    {% if bundler %}
-                        Build Status: <span class="status">{{ bundler.get_state_display }}</span>
-                        <br/>
-                        {% if bundler.done %}
-                            Last build: {{ bundler.closed | date:'Y-m-d H:i' }}
+                        {% else %}
+                            <form action="{% url 'wizard:challenge:bundler:build' object.id %}">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="btn btn-block btn-warning">
+                                    <i class="fa fa-gears" aria-hidden="true"></i>
+                                    Build
+                                </button>
+                            </form>
                         {% endif %}
-                    {% else %}
-                        Once your challenge is ready, press the build button to prepare the package.
-                    {% endif %}
+                    </div>
+                    <div class="col-xs-4">
+                        {% if not bundler %}
+                            <button class="btn btn-default disabled btn-block">
+                                <i class="fa fa-gears" aria-hidden="true"></i>
+                                Logs
+                            </button>
+                        {% else %}
+                            <a class="btn btn-block btn-default"
+                               href="{% url 'wizard:challenge:bundler:logs' object.id %}">
+                                Logs
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-xs-4">
+                        {% if bundler %}
+                            Build Status:
+                            <span class="status">{{ bundler.get_state_display }}</span>
+                            <br/>
+                            {% if bundler.done %}
+                                Last build: {{ bundler.closed | date:'Y-m-d H:i' }}
+                            {% endif %}
+                        {% else %}
+                            Once your challenge is ready, press the build button to prepare the
+                            package.
+                        {% endif %}
 
+                    </div>
                 </div>
-            </div>
-            <div class="row download top10 text-center">
-                <div class="col-xs-4">
-                    {% if bundler.is_download_ready %}
-                        <a href="{% url 'wizard:challenge:bundler:download' object.id %}"
-                           class="btn btn-success btn-block">
-                            <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                            Download
-                        </a>
-                    {% else %}
+                <div class="row download top10 text-center">
+                    <div class="col-xs-4">
+                        {% if bundler.is_download_ready %}
+                            <a href="{% url 'wizard:challenge:bundler:download' object.id %}"
+                               class="btn btn-success btn-block">
+                                <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                                Download
+                            </a>
+                        {% else %}
+                            <button type="submit" class="btn btn-block disabled">
+                                <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                                Download
+                            </button>
+                        {% endif %}
+                    </div>
+                    <div class="col-xs-4">
                         <button type="submit" class="btn btn-block disabled">
-                            <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                            Download
+                            <i class="fa fa-gears" aria-hidden="true"></i>
+                            Test
                         </button>
-                    {% endif %}
+                    </div>
+                    <div class="col-xs-4">
+                        <button type="submit" class="btn btn-block disabled">
+                            <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                            Publish
+                        </button>
+                    </div>
                 </div>
-                <div class="col-xs-4">
-                    <button type="submit" class="btn btn-block disabled">
-                        <i class="fa fa-gears" aria-hidden="true"></i>
-                        Test
-                    </button>
-                </div>
-                <div class="col-xs-4">
-                    <button type="submit" class="btn btn-block disabled">
-                        <i class="fa fa-paper-plane" aria-hidden="true"></i>
-                        Publish
-                    </button>
-                </div>
-            </div>
+            {% endif %}
             <div class="row delete top10 text-center">
                 <div class="col-xs-4 col-xs-offset-4">
                     <button type="submit" class="btn btn-block btn-danger disabled">
