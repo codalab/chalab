@@ -9,6 +9,7 @@ from django.core.files.storage import DefaultStorage
 from django.core.validators import validate_slug
 from django.db import models
 from django.db.models import OneToOneField
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
 from tinymce.models import HTMLField
@@ -261,6 +262,11 @@ class DatasetModel(models.Model):
 
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
+
+    @classmethod
+    def available(cls, user):
+        """Return datasets available to a given user."""
+        return list(cls.objects.filter(Q(is_public=True) | Q(owner=user)).all())
 
     @property
     def template_mapping(self):

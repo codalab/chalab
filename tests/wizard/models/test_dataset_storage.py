@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
 from tests.wizard.tools import (COLUMNS_5, COLUMNS_12, MATRIX_5_3, CHALEARN_SAMPLE,
@@ -90,6 +91,22 @@ class TestDatasetModel:
 
         assert d is not None
         assert not d.is_ready
+
+    def test_available_is_empty_by_default(self):
+        user = User.objects.create_user('username', None, 'password')
+        assert models.DatasetModel.available(user) == []
+
+    def test_create_a_dataset_shows_up_for_user(self):
+        user = User.objects.create_user('username', None, 'password')
+        d = models.DatasetModel.create('Some dataset', owner=user)
+
+        assert models.DatasetModel.available(user) == [d]
+
+    def test_public_dataset_shows_up_for_user(self):
+        user = User.objects.create_user('username', None, 'password')
+        d = models.DatasetModel.create('Some dataset', owner=None, is_public=True)
+
+        assert models.DatasetModel.available(user) == [d]
 
     def test_chalearn_dataset_creation(self):
         t = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
