@@ -4,29 +4,61 @@
 {% block module_name %}picker{% endblock %}
 
 {% block flow_content %}
-    <h3>Pick/Create a dataset</h3>
+    <div class="pick row">
+        <div class="col-sm-4 public">
+            <div class="form-block">
+                <h4>Use a Public Dataset:</h4>
 
-    <div class="pick">
-        <div class="public">
-            <h4>Use a Public Dataset</h4>
+                <form class="picker" method="POST" action="#">
+                    {% csrf_token %}
+                    <input type="hidden" name="kind" value="public"/>
 
-            <form class="picker" method="POST" action="#">
-                {% csrf_token %}
+                    <div class="form-group">
+                        <label for="datasetPublicPicker">Dataset</label>
+                        <select name="dataset" id="datasetPublicPicker">
+                            {% for dataset in public_datasets %}
+                                <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <input type="hidden" name="kind" value="public"/>
-
-                <select name="dataset">
-                    {% for dataset in public_datasets %}
-                        <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
-                    {% endfor %}
-                </select>
-
-                {% buttons %}
-                    <button class="primaryAction btn btn-primary"
-                            type="submit">Use
-                    </button>
-                {% endbuttons %}
-            </form>
+                    {% buttons %}
+                        <button class="primaryAction btn btn-primary"
+                                type="submit">Use
+                        </button>
+                    {% endbuttons %}
+                </form>
+            </div>
         </div>
+        <div class="col-sm-4 private">
+            <div class="form-block">
+                <h4>Use one of your Datasets</h4>
+
+                <h5 class="text-muted">No datasets yet...</h5>
+            </div>
+        </div>
+        <div class="col-sm-4 create">
+            <div class="form-block">
+                <h4>Create a Dataset:</h4>
+
+                <form class="creator" method="POST" action="#">
+                    {% csrf_token %}
+                    <input type="hidden" name="kind" value="create"/>
+
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" class="form-control" name="name"
+                               id="name" placeholder="Name">
+                    </div>
+
+                    {% buttons %}
+                        <button class="primaryAction btn btn-primary"
+                                type="submit">Create
+                        </button>
+                    {% endbuttons %}
+                </form>
+            </div>
+        </div>
+
     </div>
 {% endblock %}

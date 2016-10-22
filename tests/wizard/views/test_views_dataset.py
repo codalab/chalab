@@ -3,6 +3,7 @@ from django.urls import reverse
 
 from tests.tools import make_request, assert_redirects, html, sreverse
 from tests.wizard.models.tools import make_samples_datasets
+from wizard import models
 from wizard import views as wiz
 
 pytestmark = pytest.mark.django_db
@@ -30,7 +31,7 @@ class TestDataPicker(object):
         h = html(response)
 
         assert h.select_one('.module')['id'] == 'picker'
-        assert 'Pick' in h.select_one('.module h3').text
+        assert 'Public' in h.select_one('.module .pick h4').text
 
     def test_shows_public_datasets_empty(self, cb):
         r = cb.get('wizard:challenge:data.pick', pk=cb.pk)
@@ -77,6 +78,25 @@ class TestDataPicker(object):
                           data={'kind': 'public', 'dataset': s.pk})
 
         assert_redirects(r, sreverse('wizard:challenge:data', pk=cbpicked.pk))
+
+
+class TestDataCreator:
+    def test_when_create_dataset_returns_to_regular_data(self, cb):
+        r = cb.post('wizard:challenge:data.pick', pk=cb.pk,
+                    data={'kind': 'create', 'name': 'some dataset'})
+        assert_redirects(r, sreverse('wizard:challenge:data', pk=cb.pk))
+
+    def test_when_create_it_adds_the_dataset_name(self, cb):
+        cb.post('wizard:challenge:data.pick', pk=cb.pk,
+                data={'kind': 'create', 'name': 'some dataset'})
+
+        assert models.DatasetModel.objects.filter(name='some dataset').count() == 1
+
+    def test_when_create_it_sets_the_dataset_for_challenge(self, cb):
+        cb.post('wizard:challenge:data.pick', pk=cb.pk,
+                data={'kind': 'create', 'name': 'another magic dataset'})
+
+        assert models.ChallengeModel.get(cb.pk).dataset.name == 'another magic dataset'
 
 
 class TestDataUpdate(object):

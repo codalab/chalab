@@ -135,6 +135,15 @@ class PublicPickerDataForm(FormBlock):
         s.select_by_visible_text(name)
 
 
+class CreatorDataForm(FormBlock):
+    selector = '.pick .create form'
+    selector_name = 'input#name'
+
+    def set(self, name):
+        s = self.by_css(self.selector_name)
+        s.send_keys(name)
+
+
 class PublicPickerMetricForm(FormBlock):
     selector = '.pick .public form'
 
@@ -316,6 +325,9 @@ class ChallengeDataPage(ChallengeFlowPage):
 
     picker_module = 'picker'
     editor_module = 'editor'
+    creator_module = 'creator'
+
+    create_btn = '.create'
 
     next_clss = ChallengeTaskPage
 
@@ -328,8 +340,16 @@ class ChallengeDataPage(ChallengeFlowPage):
         return self.is_module(self.editor_module)
 
     @property
+    def is_creator(self):
+        return self.is_module(self.creator_module)
+
+    @property
     def picker_form_public(self):
         return PublicPickerDataForm(self)
+
+    @property
+    def creator_form(self):
+        return CreatorDataForm(self)
 
     def pick_dataset(self, public, name):
         if public:
@@ -338,6 +358,12 @@ class ChallengeDataPage(ChallengeFlowPage):
             f = None
 
         f.pick(name)
+        f.submit()
+        return self
+
+    def do_create(self, name):
+        f = self.creator_form
+        f.set(name)
         f.submit()
         return self
 

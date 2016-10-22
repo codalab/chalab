@@ -139,17 +139,23 @@ def data_picker(request, pk):
 
     if request.method == 'POST':
         k = request.POST['kind']
-        assert k == 'public'
 
-        ds = request.POST['dataset']
+        if k == 'public':
+            ds = request.POST['dataset']
 
-        d = get_object_or_404(DatasetModel, is_public=True, id=ds)
-        c.dataset = d
+            d = get_object_or_404(DatasetModel, is_public=True, id=ds)
+            c.dataset = d
 
-        t = get_object_or_404(TaskModel, dataset=d)
-        c.task = t
+            t = get_object_or_404(TaskModel, dataset=d)
+            c.task = t
 
-        c.save()
+            c.save()
+        elif k == 'create':
+            name = request.POST['name']
+            c.dataset = DatasetModel.create(name, request.user)
+            c.save()
+        else:
+            assert False, "unsupported k=%s" % k
 
         return redirect('wizard:challenge:data', pk=pk)
     else:
