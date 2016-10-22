@@ -428,6 +428,7 @@ class MetricModel(models.Model):
     name = models.CharField(max_length=256, null=False)
     owner = models.ForeignKey(User, null=True)
 
+    is_default = models.BooleanField(default=False, null=False)
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
 
@@ -593,6 +594,15 @@ class ChallengeModel(models.Model):
     def is_ready(self):
         return len(self.missings) == 0
 
+    def generate_default_phases(self):
+        self.append_phase('development')
+        self.append_phase('final')
+
+    def append_phase(self, name):
+        p = PhaseModel.create(name=name, challenge=self,
+                              position=self.phases.count())
+        return p
+
     @property
     def missings(self):
         missing = []
@@ -627,3 +637,12 @@ class ChallengeModel(models.Model):
     @classmethod
     def get(cls, pk):
         return cls.objects.get(pk=pk)
+
+
+class PhaseModel(models.Model):
+    name = models.CharField(max_length=60)
+    challenge = models.ForeignKey(ChallengeModel, related_name='phases')
+
+    @classmethod
+    def create(cls, name, challenge, position):
+        return cls.objects.create(name=name, challenge=challenge)

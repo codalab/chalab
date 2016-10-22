@@ -103,6 +103,22 @@ class TestProtocolModel:
             assert True
 
 
+class TestPhaseModel:
+    def test_phase_model_has_name(self):
+        user = User.objects.create_user('username', None, 'password')
+        t = models.ChallengeModel.objects.create(created_by=user)
+
+        p = t.append_phase(name='my phase x')
+        assert p.name == 'my phase x'
+
+    def test_phase_can_be_retrieved(self):
+        user = User.objects.create_user('username', None, 'password')
+        t = models.ChallengeModel.objects.create(created_by=user)
+
+        p = t.append_phase(name='my phase x')
+        assert list(t.phases.all()) == [p]
+
+
 class TestChallengeModel:
     def test_challenge_model_has_documentation_field(self):
         user = User.objects.create_user('username', None, 'password')
@@ -116,3 +132,11 @@ class TestChallengeModel:
 
         assert t.created_at is not None
         assert t.updated_at is not None
+
+    def test_challenge_model_has_phases_field_defaults(self):
+        user = User.objects.create_user('username', None, 'password')
+        t = models.ChallengeModel.objects.create(created_by=user)
+
+        t.generate_default_phases()
+
+        assert t.phases.all().count() == 2

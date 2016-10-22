@@ -35,7 +35,9 @@ class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
-        return super(ChallengeDescriptionCreate, self).form_valid(form)
+        r = super(ChallengeDescriptionCreate, self).form_valid(form)
+        self.object.generate_default_phases()
+        return r
 
 
 class ChallengeDescriptionUpdate(UpdateView, LoginRequiredMixin):

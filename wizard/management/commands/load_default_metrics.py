@@ -7,27 +7,37 @@ from wizard import models
 log = logging.getLogger('wizard.commands.load_default_metrics')
 
 METRICS = {
-    'accuracy_score': {
+    'bac_metric': {
+        'description': """Normalized balanced accuracy""",
+        'is_default': True,
         'classification': True
     },
-    'log_loss': {
+    'pac_metric': {
+        'description': """Probabilistic Accuracy based on log_loss""",
+        'is_default': True,
         'classification': True
     },
-    'roc_auc_score': {
+    'f1_metric': {
+        'description': """Normalized f1 measure""",
+        'is_default': True,
         'classification': True
     },
-    'confusion_matrix': {
+    'auc_metric': {
+        'description': """Normalized Area under ROC curve""",
+        'is_default': True,
         'classification': True
     },
-    'mean_absolute_error': {
+
+    'r2_metric': {
+        'description': """Mean squared error divided by variance""",
+        'is_default': True,
         'regression': True
     },
-    'mean_squared_error': {
+    'a_metric': {
+        'description': """Mean absolute error divided by mean absolute deviation""",
+        'is_default': True,
         'regression': True
     },
-    'r2_score': {
-        'regression': True
-    }
 }
 
 
@@ -54,6 +64,7 @@ class Command(BaseCommand):
                 owner=None,
                 is_public=True,
                 is_ready=True,
+                is_default=content.get('is_default', False),
                 classification=content.get('classification', False),
                 regression=content.get('regression', False),
             )

@@ -27,6 +27,18 @@ class TestCreateChallenge(object):
         last_challenge = models.ChallengeModel.objects.filter(created_by=user).last()
         assert_redirects(r, reverse('wizard:challenge', kwargs={'pk': last_challenge.pk}))
 
+    def test_create_challenge_novice_generates_phases(self, random_user):
+        client, user = random_user.client, random_user.user
+
+        client.post(reverse('wizard:create'),
+                    {'title': 'A challenge',
+                     'organization_name': 'an organization',
+                     'description': 'the description'})
+
+        last_challenge = models.ChallengeModel.objects.filter(created_by=user).last()
+
+        assert last_challenge.phases.count() == 2
+
 
 class TestChallengePage(object):
     @pytest.mark.parametrize("flow_name", [
