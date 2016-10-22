@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client
 
 from tests.tools import make_request, random_user_desc, html, register, make_user, file_dir
-from tests.wizard.models.tools import make_challenge
+from tests.wizard.models.tools import make_challenge, make_samples_datasets
 from tests.wizard.tools import CHALEARN_SAMPLE
 from wizard import models
 from wizard import views as wizard_views
@@ -44,7 +44,7 @@ def challenge_ready(random_challenge):
     # TODO(laurent): This code should be in the model part, like random_challenge
     c = random_challenge.challenge
     c.documentation = models.DocumentationModel.create(render_for=c)
-    c.dataset = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
+    c.dataset = models.DatasetModel.create_from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
     c.task = models.TaskModel.from_chalearn(c.dataset, CHALEARN_SAMPLE, 'chalearn - task sample')
 
     c.logo = SimpleUploadedFile(name='my_logo.png',
@@ -68,3 +68,21 @@ def challenge_ready(random_challenge):
 from tests.shortcuts import cb
 
 cb = cb
+
+
+@pytest.fixture(scope='function')
+def cb_and_public_data(cb):
+    samples = make_samples_datasets()
+    s = samples[0]
+    cb.post('wizard:challenge:data.pick', pk=cb.pk,
+            data={'kind': 'public', 'dataset': s.pk})
+    cb.sample = s
+
+    yield cb
+
+
+@pytest.fixture(scope='function')
+def cb_and_my_data(cb):
+    cb.post('wizard:challenge:data.pick', pk=cb.pk,
+            data={'kind': 'create', 'name': "my dataset"})
+    yield cb

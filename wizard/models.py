@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils.deconstruct import deconstructible
 from tinymce.models import HTMLField
 
+from chalab.tools import archives, fs
 from . import docs
 
 log = logging.getLogger('wizard/models')
@@ -226,9 +227,9 @@ class MatrixModel(models.Model):
         cols = columns_count_first_line(self.raw_content)
 
         if self.cols is None:
-            self.cols = AxisDescriptionModel()
+            self.cols = AxisDescriptionModel.objects.create()
         if self.rows is None:
-            self.rows = AxisDescriptionModel()
+            self.rows = AxisDescriptionModel.objects.create()
 
         if not self.is_sparse:
             self.cols.count = cols
@@ -276,28 +277,48 @@ class DatasetModel(models.Model):
     def template_doc(self):
         return {'dataset_name': ""}
 
+    def update_from_chalearn(self, fp_zip):
+        with archives.unzip_fp(fp_zip) as d:
+            root = fs.sole_path(d)
+            input, target = self.load_from_automl(root, any_prefix=True)
+
+            self.input = input
+            self.target = target
+            self.save()
+
     @classmethod
-    def from_chalearn(cls, path, name, owner=None, is_public=True):
+    def create_from_chalearn(cls, path, name, owner=None, is_public=True):
+        input, target = cls.load_from_automl(path, any_prefix=False)
+        return cls.create(owner=owner,
+                          is_public=is_public,
+                          name=name,
+                          input=input, target=target)
+
+    @classmethod
+    def load_from_automl(cls, path, any_prefix=False):
         try:
             i = load_info_file(chalearn_path(path, '_public.info'))
             is_sparse = i.getboolean('is_sparse')
         except FileNotFoundError:
             is_sparse = False
 
-        input = load_chalearn(path, '.data', is_sparse=is_sparse)
+        input = load_chalearn(path, '.data',
+                              is_sparse=is_sparse, any_prefix=any_prefix)
 
         try:
-            cols_type = load_chalearn(path, '_feat.type', clss=ColumnarTypesDefinition)
+            cols_type = load_chalearn(path, '_feat.type',
+                                      clss=ColumnarTypesDefinition,
+                                      any_prefix=any_prefix)
             input.cols.types = cols_type
-            input.save()
         except FileNotFoundError:
             pass  # It's fine, feat specs are not mandatory.
 
-        return cls.create(
-            owner=owner, is_public=is_public, name=name,
-            input=input,
-            target=load_chalearn(path, '.solution')
-        )
+        target = load_chalearn(path, '.solution', any_prefix=any_prefix)
+
+        input.save()
+        target.save()
+
+        return input, target
 
     @classmethod
     def create(cls, name, owner=None, is_public=False, input=None, target=None):
@@ -350,14 +371,24 @@ def create_with_file(clss, file_path, **kwargs):
         raise e
 
 
-def chalearn_path(path, suffix):
-    name = path.split('/')[-1]
-    p = os.path.join(path, '%s%s' % (name, suffix))
-    return p
+def chalearn_path(path, suffix, any_prefix=False):
+    if any_prefix:
+        l = fs.ls(path, '*%s' % suffix, glob=True)
+
+        if len(l) != 1:
+            raise FileNotFoundError("""Expected a match for: %s/*%s, got no/multiple results: %s"""
+                                    % (path, suffix, l))
+        return l[0]
+    else:
+        name = path.split('/')[-1]
+        p = os.path.join(path, '%s%s' % (name, suffix))
+        return p
 
 
-def load_chalearn(path, suffix, clss=MatrixModel, **kwargs):
-    return create_with_file(clss, chalearn_path(path, suffix), **kwargs)
+def load_chalearn(path, suffix, clss=MatrixModel, any_prefix=False, **kwargs):
+    return create_with_file(clss,
+                            chalearn_path(path, suffix, any_prefix=any_prefix),
+                            **kwargs)
 
 
 class TaskModel(models.Model):
@@ -367,16 +398,31 @@ class TaskModel(models.Model):
     name = models.CharField(max_length=256, null=False)
     dataset = models.ForeignKey(DatasetModel, null=True)
 
-    # TODO(laurent): This pattern of having a sinble model reference by many fields
+    train_ratio = models.FloatField(null=True)
+    valid_ratio = models.FloatField(null=True)
+    test_ratio = models.FloatField(null=True)
+
+    # TODO(laurent): This pattern of having a single model reference by many fields
     # is not viable. We should define a model instance per use case (training, etc).
     # Similar to what we do for the columnar storage model.
     input_train = OneToOneField(MatrixModel, null=True, related_name='model_trained')
     target_train = OneToOneField(MatrixModel, null=True, related_name='model_trained_target')
 
     input_test = OneToOneField(MatrixModel, null=True, related_name='model_tested')
+    target_test = OneToOneField(MatrixModel, null=True, related_name='model_tested_target')
 
     input_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated')
     target_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated_target')
+
+    @property
+    def has_content(self):
+        return not None in [
+            self.input_train, self.target_train,
+            self.input_test,
+            # self.target_test,
+            #  TODO: we skip this case because in current testing cases we don't have the data.
+            self.input_valid, self.target_valid
+        ]
 
     @property
     def template_mapping(self):
@@ -389,6 +435,12 @@ class TaskModel(models.Model):
     def clean(self):
         super().clean()
 
+        if self.test_ratio is not None and self.train_ratio is not None and self.valid_ratio is not None:
+            s = self.test_ratio + self.train_ratio + self.valid_ratio
+
+            if s != 1:
+                raise ValidationError('invalid rations: sum = %s != 1' % s)
+
         # TODO(laurent): there are some subtleties on the validation
         # regarding nested fields. We also do not need to duplicate
         # the metadata for the columns between each input.
@@ -398,6 +450,12 @@ class TaskModel(models.Model):
                          self.input_valid is not None and
                          self.target_valid is not None)
 
+        self.is_ready = self.is_ready or (self.test_ratio is not None and
+                                          self.train_ratio is not None and
+                                          self.valid_ratio is not None)
+
+        print("READY=", self.is_ready)
+
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
@@ -405,22 +463,38 @@ class TaskModel(models.Model):
     def __str__(self):
         return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
 
+    def update_from_chalearn(self, path):
+        loaded = self.load_from_chalearn(path)
+        for k, v in loaded.items():
+            setattr(self, k, v)
+        self.save()
+
     @classmethod
-    def from_chalearn(cls, dataset, path, name):
+    def load_from_chalearn(cls, path):
         train = load_chalearn(path, '_train.data')
         train_target = load_chalearn(path, '_train.solution')
 
         test = load_chalearn(path, '_test.data')
+
+        try:
+            test_target = load_chalearn(path, '_test.solution')
+        except Exception as e:
+            test_target = None
+            log.error("Failed loading test solution: %r", e)
+
         valid = load_chalearn(path, '_valid.data')
         valid_target = load_chalearn(path, '_valid.solution')
 
+        return dict(input_train=train, target_train=train_target,
+                    input_test=test, target_test=test_target,
+                    input_valid=valid, target_valid=valid_target)
+
+    @classmethod
+    def from_chalearn(cls, dataset, path, name):
         return cls.objects.create(
             dataset=dataset,
             owner=None, is_public=True, name=name,
-            input_train=train, target_train=train_target,
-            input_test=test,
-            input_valid=valid,
-            target_valid=valid_target
+            **cls.load_from_chalearn(path)
         )
 
 
@@ -593,6 +667,15 @@ class ChallengeModel(models.Model):
     @property
     def is_ready(self):
         return len(self.missings) == 0
+
+    def create_initial_task(self):
+        self.task = TaskModel.objects.create(
+            owner=self.created_by,
+            is_public=False,
+            name='task for %s' % self.dataset.name,
+            dataset=self.dataset
+        )
+        self.save()
 
     def generate_default_phases(self):
         self.append_phase('development')

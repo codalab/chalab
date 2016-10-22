@@ -1,4 +1,5 @@
 import os
+import random
 import shutil
 import traceback
 from contextlib import contextmanager
@@ -11,6 +12,7 @@ from django.conf import settings
 from django.core.files import File
 from django.utils import timezone
 
+from chalab.tools import fs
 from wizard.models import challenge_to_mappings
 
 
@@ -175,6 +177,63 @@ def save_archive(bt, archive, challenge, bundle_task):
         bundle_task.output.save('bundle_%s_%s.zip' % (challenge.pk, bundle_task.pk), File(f))
 
 
+def generate_task_data(bundle_task, challenge):
+    task = challenge.task
+    data = challenge.dataset
+
+    bundle_task.add_log(data.pk)
+
+    if task.has_content:
+        bundle_task.add_log('Skipping task data generation, already present')
+        return
+
+    bundle_task.add_log('Starting task data generation')
+    train, valid, test = task.train_ratio, task.valid_ratio, task.test_ratio
+
+    bundle_task.add_log('Generating content for task: %s(%s)' % (task.name, task.pk))
+
+    size = data.input.rows.count
+
+    train_size = int(train * size)
+    valid_size = int(valid * size)
+    test_size = int(test * size)
+
+    xs = list(range(size))
+    random.shuffle(xs)
+
+    train, rest = xs[:train_size], xs[train_size:]
+    valid, test = rest[:valid_size], rest[valid_size:]
+
+    input = data.input.raw_content
+    target = data.target.raw_content
+
+    input.open(), target.open()
+    with fs.tmp_dir() as output:
+        gen = os.path.join(output, 'gen')
+        fs.mkdir(gen)
+        with open(os.path.join(gen, 'gen_train.data'), 'wb') as ti, \
+                open(os.path.join(gen, 'gen_train.solution'), 'wb') as tt, \
+                open(os.path.join(gen, 'gen_valid.data'), 'wb') as vi, \
+                open(os.path.join(gen, 'gen_valid.solution'), 'wb') as vt, \
+                open(os.path.join(gen, 'gen_test.data'), 'wb') as si, \
+                open(os.path.join(gen, 'gen_test.solution'), 'wb') as st:
+            for i in range(size):
+                li = input.readline()
+                lt = target.readline()
+
+                if i in train:
+                    ti.write(li)
+                    tt.write(lt)
+                elif i in valid:
+                    vi.write(li)
+                    vt.write(lt)
+                else:
+                    si.write(li)
+                    st.write(lt)
+        task.update_from_chalearn(gen)
+    input.close(), target.close()
+
+
 @shared_task
 def bundle(bundle_task):
     try:
@@ -186,6 +245,7 @@ def bundle(bundle_task):
             bundle_task.state = bundle_task.STARTED
             bundle_task.save()
 
+            generate_task_data(bundle_task, challenge)
             create_bundle(bundle_task, data, challenge)
             a = create_archive(bundle_task, data, output)
             save_archive(bundle_task, a, challenge, bundle_task)

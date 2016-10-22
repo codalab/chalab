@@ -6,6 +6,7 @@ import pytest
 from bundler import models
 from bundler import tasks
 from tests.bundler.tools import has, zip, remove_logo, create_bundle, bundle, mock_bundle
+from wizard import models as wizard
 
 pytestmark = pytest.mark.django_db
 
@@ -107,3 +108,45 @@ class TestBundler(object):
                 files = z.namelist()
 
                 assert 'bundle.zip' not in files
+
+
+class TestTaskGeneration:
+    def test_simple_case_works(self, challenge_ready):
+        c = challenge_ready.challenge
+        c.task = wizard.TaskModel.objects.create(
+            owner=c.created_by,
+            name=c.dataset.name,
+            dataset=c.dataset,
+            train_ratio=0.6,
+            valid_ratio=0.2,
+            test_ratio=0.2
+        )
+        c.save()
+
+        tasks.generate_task_data(mock_bundle, c)
+
+        assert c.task.input_train is not None
+
+    def test_from_automl_upload_works(self, challenge_ready):
+        c = challenge_ready.challenge
+
+        c.dataset = wizard.DatasetModel.create('some_dataset', owner=c.created_by)
+
+        with open('tests/wizard/resources/uploadable/automl_example.zip', 'rb') as f:
+            c.dataset.update_from_chalearn(f)
+
+        c.task = wizard.TaskModel.objects.create(
+            owner=c.created_by,
+            name='some task',
+            dataset=c.dataset,
+            train_ratio=0.6,
+            valid_ratio=0.2,
+            test_ratio=0.2
+        )
+        c.save()
+
+        assert c.dataset.input.rows.count > 1
+
+        tasks.generate_task_data(mock_bundle, c)
+
+        assert c.task.input_train is not None

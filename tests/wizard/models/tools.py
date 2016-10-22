@@ -26,8 +26,8 @@ def create_with_file(clss, file_path, **kwargs):
 
 
 def make_samples_datasets():
-    d1 = models.DatasetModel.from_chalearn(tools.CHALEARN_SAMPLE, 'chalearn - sample')
-    d2 = models.DatasetModel.from_chalearn(tools.CHALEARN_SAMPLE_SPARSE, 'chalearn.sparse - sample')
+    d1 = models.DatasetModel.create_from_chalearn(tools.CHALEARN_SAMPLE, 'chalearn - sample')
+    d2 = models.DatasetModel.create_from_chalearn(tools.CHALEARN_SAMPLE_SPARSE, 'chalearn.sparse - sample')
 
     t1 = models.TaskModel.from_chalearn(d1, tools.CHALEARN_SAMPLE,
                                         'chalearn - sample - base')

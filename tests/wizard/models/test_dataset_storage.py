@@ -65,7 +65,7 @@ class TestMatrixStorage:
 
     def test_matrix_with_invalid_columns_fails(self):
         c = create_with_file(models.ColumnarTypesDefinition, COLUMNS_12)
-        a = models.AxisDescriptionModel(types=c)
+        a = models.AxisDescriptionModel.create(types=c)
 
         try:
             create_with_file(models.MatrixModel, MATRIX_5_3, cols=a)
@@ -76,7 +76,7 @@ class TestMatrixStorage:
     def test_sparse_matrix_doesnt_fail_when_columns_count_do_not_match(self):
         c = create_with_file(models.ColumnarTypesDefinition,
                              CHALEARN_SAMPLE_SPARSE + '/sparse_feat.type')
-        a = models.AxisDescriptionModel(types=c)
+        a = models.AxisDescriptionModel.create(types=c)
 
         m = create_with_file(models.MatrixModel, CHALEARN_SAMPLE_SPARSE + '/sparse.data',
                              cols=a, is_sparse=True)
@@ -91,6 +91,14 @@ class TestDatasetModel:
 
         assert d is not None
         assert not d.is_ready
+
+    def update_with_automl_file(self):
+        d = models.DatasetModel.create('An empty dataset', is_public=True)
+
+        with open('tests/wizard/resources/uploadable/automl_example.zip', 'rb') as fp:
+            d.update_from_chalearn(fp)
+
+        assert d.is_ready
 
     def test_available_is_empty_by_default(self):
         user = User.objects.create_user('username', None, 'password')
@@ -109,7 +117,7 @@ class TestDatasetModel:
         assert models.DatasetModel.available(user) == [d]
 
     def test_chalearn_dataset_creation(self):
-        t = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
+        t = models.DatasetModel.create_from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
 
         assert t is not None
         assert t.is_ready
@@ -118,7 +126,7 @@ class TestDatasetModel:
 
     def test_chalearn_wrong_rows_fails(self):
         try:
-            models.DatasetModel.from_chalearn(CHALEARN_SAMPLE_WRONG_ROWS,
+            models.DatasetModel.create_from_chalearn(CHALEARN_SAMPLE_WRONG_ROWS,
                                               'chalearn - sample wrong rows')
             assert False, "This should be invalid"
         except ValidationError:
@@ -126,19 +134,19 @@ class TestDatasetModel:
 
     def test_chalearn_wrong_feat_spec_fails(self):
         try:
-            models.DatasetModel.from_chalearn(CHALEARN_SAMPLE_WRONG_FEAT_SPEC,
+            models.DatasetModel.create_from_chalearn(CHALEARN_SAMPLE_WRONG_FEAT_SPEC,
                                               'chalearn - sample wrong feat spec')
             assert False, "This should be invalid"
         except ValidationError:
             assert True
 
     def test_chalearn_without_feat_spec_fails(self):
-        t = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE_WITHOUT_FEAT_SPEC,
+        t = models.DatasetModel.create_from_chalearn(CHALEARN_SAMPLE_WITHOUT_FEAT_SPEC,
                                               'chalearn - sample without feat spec')
 
         assert t.is_ready
 
     def test_chalearn_with_sparse_doesnt_fail(self):
-        t = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE_SPARSE,
+        t = models.DatasetModel.create_from_chalearn(CHALEARN_SAMPLE_SPARSE,
                                               'chalearn - sample sparse')
         assert t.is_ready

@@ -1,6 +1,6 @@
-from django.forms import ModelForm, DateInput
+from django.forms import ModelForm, DateInput, FileField
 
-from .models import ProtocolModel
+from .models import ProtocolModel, DatasetModel
 
 
 class ProtocolForm(ModelForm):
@@ -12,3 +12,19 @@ class ProtocolForm(ModelForm):
         widgets = {
             'end_date': DateInput(attrs={'class': 'date-picker'})
         }
+
+
+class DataUpdateForm(ModelForm):
+    class Meta:
+        model = DatasetModel
+        fields = ['name']
+
+
+class DataUpdateAndUploadForm(DataUpdateForm):
+    automl_upload = FileField(required=False)
+
+    class Meta(DataUpdateForm.Meta):
+        fields = DataUpdateForm.Meta.fields + [
+            'automl_upload'
+
+        ]

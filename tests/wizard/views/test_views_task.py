@@ -34,3 +34,9 @@ def test_pick_public_dataset_automatically_sets_task(cb):
     r = cb.get('wizard:challenge:task', pk=cb.pk)
     x = models.TaskModel.objects.get(dataset=s)
     assert r.context['task'] == x
+
+
+def test_create_my_dataset_allows_task_selection(cb_and_my_data):
+    r = cb_and_my_data.get('wizard:challenge:task',
+                           pk=cb_and_my_data.pk)
+    assert r.status_code == 302

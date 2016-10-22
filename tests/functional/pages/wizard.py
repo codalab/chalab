@@ -144,6 +144,22 @@ class CreatorDataForm(FormBlock):
         s.send_keys(name)
 
 
+class EditorDataForm(FormBlock):
+    selector = '#editor .update form'
+    selector_name = 'input#id_name'
+    selector_automl_upload = 'input#id_automl_upload'
+
+    @property
+    def name(self):
+        return self.by_css(self.selector_name)
+
+    def submit(self, automl_upload=None):
+        if automl_upload:
+            e = self.by_css(self.selector_automl_upload)
+            e.send_keys(automl_upload)
+        super().submit()
+
+
 class PublicPickerMetricForm(FormBlock):
     selector = '.pick .public form'
 
@@ -328,8 +344,13 @@ class ChallengeDataPage(ChallengeFlowPage):
     creator_module = 'creator'
 
     create_btn = '.create'
+    selector_status_ready = '.status.ready'
 
     next_clss = ChallengeTaskPage
+
+    @property
+    def is_ready(self):
+        return self.by_css(self.selector_status_ready, on_missing=None) is not None
 
     @property
     def is_picker(self):
@@ -350,6 +371,14 @@ class ChallengeDataPage(ChallengeFlowPage):
     @property
     def creator_form(self):
         return CreatorDataForm(self)
+
+    @property
+    def editor_form(self):
+        return EditorDataForm(self)
+
+    @property
+    def name(self):
+        return self.editor_form.name.get_attribute('value')
 
     def pick_dataset(self, public, name):
         if public:

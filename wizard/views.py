@@ -12,7 +12,7 @@ from django.views.generic import UpdateView
 from chalab import errors
 from . import models, flow
 from .flow import FlowOperationMixin
-from .forms import ProtocolForm
+from .forms import ProtocolForm, DataUpdateAndUploadForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
     DocumentationModel, DocumentationPageModel
 from .models import challenge_to_mappings, challenge_to_mappings_doc
@@ -68,23 +68,40 @@ class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMi
 class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     template_name = 'wizard/data/editor.html'
     model = DatasetModel
+    form_class = DataUpdateAndUploadForm
 
-    fields = ['name']
     current_flow = flow.DataFlowItem
+
+    @property
+    def disabled(self):
+        return self.object.owner != self.request.user
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class=form_class)
 
-        for f in self.fields:
-            form.fields[f].disabled = True
-        form.disabled = True
+        for f in form.fields.keys():
+            form.fields[f].disabled = self.disabled
+        form.disabled = self.disabled
 
         return form
 
     def form_valid(self, form):
-        raise errors.HTTP400Exception('wizard/challenge/error.html',
-                                      "Forbidden edit on a dataset",
-                                      """You can't edit a dataset that you do not own.""")
+        if self.disabled:
+            raise errors.HTTP400Exception('wizard/challenge/error.html',
+                                          "Forbidden edit on a dataset",
+                                          """You can't edit a dataset that you do not own.""")
+        else:
+
+            if not self.disabled and self.request.FILES:
+                u = self.request.FILES.get('automl_upload', None)
+                self.object.update_from_chalearn(u)
+
+            r = super().form_valid(form)
+
+            return r
+
+    def get_success_url(self):
+        return reverse('wizard:challenge:data', kwargs={'pk': self.pk})
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
@@ -92,10 +109,12 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
         context = super().get_context_data(challenge=c, **kwargs)
         context['challenge'] = c
+        context['is_ready'] = self.object.is_ready
         return context
 
     def get_object(self, **kwargs):
         pk = self.kwargs['pk']
+        self.pk = pk
 
         challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
         return challenge.dataset
@@ -112,28 +131,62 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     model = TaskModel
     context_object_name = 'task'
 
-    fields = ['name']
+    fields = ['name', 'train_ratio', 'test_ratio', 'valid_ratio']
     current_flow = flow.TaskFlowItem
 
-    def get_context_data(self, **kwargs):
-        pk = self.kwargs['pk']
-        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+    @property
+    def disabled(self):
+        return self.object.owner != self.request.user
 
-        context = super().get_context_data(challenge=c, **kwargs)
-        context['challenge'] = c
-        return context
+    def get_success_url(self):
+        return reverse('wizard:challenge:task',
+                       kwargs={'pk': self.kwargs['pk']})
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class=form_class)
+
+        for f in form.fields.keys():
+            form.fields[f].disabled = self.disabled
+        form.disabled = self.disabled
+
+        return form
+
+    def form_valid(self, form):
+        if self.disabled:
+            raise errors.HTTP400Exception('wizard/challenge/error.html',
+                                          "Forbidden edit on a dataset",
+                                          """You can't edit a dataset that you do not own.""")
+        else:
+            r = super().form_valid(form)
+            return r
+
+    def get_challenge(self, pk=None, **_):
+        pk = self.kwargs['pk']
+        return ChallengeModel.objects.get(id=pk, created_by=self.request.user)
 
     def get_object(self, **kwargs):
-        pk = self.kwargs['pk']
+        o = self.get_challenge(**kwargs).task
+        self.object = o
+        return o
 
-        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
-        return challenge.task
+    def get_context_data(self, **kwargs):
+        c = self.get_challenge(**kwargs)
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
+        context['is_ready'] = self.object.is_ready
+        return context
 
     def dispatch(self, request, *args, **kwargs):
         if self.get_object(**kwargs) is None:
-            return redirect('wizard:challenge:data.pick', pk=kwargs['pk'])
-        else:
-            return super().dispatch(request, *args, **kwargs)
+            challenge = self.get_challenge(**kwargs)
+
+            if challenge.dataset is None:
+                return redirect('wizard:challenge:data.pick', pk=kwargs['pk'])
+            else:
+                challenge.create_initial_task()
+                return redirect('wizard:challenge:task', pk=kwargs['pk'])
+
+        return super().dispatch(request, *args, **kwargs)
 
 
 def data_picker(request, pk):

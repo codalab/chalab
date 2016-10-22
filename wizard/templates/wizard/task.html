@@ -2,5 +2,28 @@
 {% load bootstrap3 %}
 
 {% block flow_content %}
-    <h3>Task Name: {{ task.name }}</h3>
+    <div class="update">
+        {% if is_ready %}
+            <div class="status ready">
+                Ready
+            </div>
+        {% else %}
+            <div class="status not-ready">
+                Not Ready
+            </div>
+        {% endif %}
+
+        <form class='editor' action="#" method="post"
+              enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+
+            {% buttons %}
+                <button type="submit" class="btn btn-primary"
+                        {% if form.disabled %}disabled{% endif %}>
+                    {% bootstrap_icon "star" %} Update
+                </button>
+            {% endbuttons %}
+        </form>
+    </div>
 {% endblock %}

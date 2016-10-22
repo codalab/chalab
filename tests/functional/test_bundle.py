@@ -10,7 +10,7 @@ def test_bundle_builder(challenge):
     p = (challenge.to_data().pick_dataset(public=True, name='Chalearn - adult')
          .next()
          .next()
-         .pick_metric(public=True, name='log_loss')
+         .pick_metric(public=True, name='r2_metric')
          .next()
          .set({'end_date': '2024-01-01',
                'allow_reuse': True,

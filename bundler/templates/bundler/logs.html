@@ -10,7 +10,9 @@
     <h1>Logs</h1>
     {% for log in task.logs %}
         <div class="row">
+        <pre>
             {{ log.message }}
+        </pre>
         </div>
     {% endfor %}
 {% endblock %}

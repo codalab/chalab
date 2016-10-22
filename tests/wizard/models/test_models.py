@@ -71,7 +71,7 @@ class TestTaskModel:
         assert t.is_ready
 
     def test_chalearn_task_creation(self):
-        dataset = models.DatasetModel.from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
+        dataset = models.DatasetModel.create_from_chalearn(CHALEARN_SAMPLE, 'chalearn - sample')
         task = models.TaskModel.from_chalearn(dataset, CHALEARN_SAMPLE, 'chalearn - task sample')
 
         assert task.is_ready

@@ -9,17 +9,6 @@ from wizard import views as wiz
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture(scope='function')
-def cbpicked(cb):
-    samples = make_samples_datasets()
-    s = samples[0]
-    cb.post('wizard:challenge:data.pick', pk=cb.pk,
-            data={'kind': 'public', 'dataset': s.pk})
-    cb.sample = s
-
-    yield cb
-
-
 class TestDataPicker(object):
     def test_shows_public_dataset(self, random_challenge):
         pk = random_challenge.challenge.pk
@@ -68,16 +57,16 @@ class TestDataPicker(object):
                     data={'kind': 'public', 'dataset': s.pk})
         assert_redirects(r, sreverse('wizard:challenge:data', pk=cb.pk))
 
-    def test_once_picked_returning_to_picker_allows_you_to_pick_another(self, cbpicked):
+    def test_once_picked_returning_to_picker_allows_you_to_pick_another(self, cb_and_public_data):
         samples = make_samples_datasets()
         s = samples[-1]
 
-        assert s != cbpicked.sample
+        assert s != cb_and_public_data.sample
 
-        r = cbpicked.post('wizard:challenge:data.pick', pk=cbpicked.pk,
-                          data={'kind': 'public', 'dataset': s.pk})
+        r = cb_and_public_data.post('wizard:challenge:data.pick', pk=cb_and_public_data.pk,
+                                    data={'kind': 'public', 'dataset': s.pk})
 
-        assert_redirects(r, sreverse('wizard:challenge:data', pk=cbpicked.pk))
+        assert_redirects(r, sreverse('wizard:challenge:data', pk=cb_and_public_data.pk))
 
 
 class TestDataCreator:
@@ -110,43 +99,99 @@ class TestDataUpdate(object):
         assert_redirects(response, reverse('wizard:challenge:data.pick', kwargs={'pk': pk}),
                          fetch_redirect_response=False)
 
-    def test_cant_change_fields_for_public_datasets_i_dont_own_form(self, cbpicked):
-        r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
+    def test_cant_change_fields_for_public_datasets_i_dont_own_form(self, cb_and_public_data):
+        r = cb_and_public_data.get('wizard:challenge:data', pk=cb_and_public_data.pk)
         assert 'disabled' in r.lhtml.cssselect('form #id_name')[0].attrib
 
-    def test_cant_update_public_datasets_i_dont_own_form(self, cbpicked):
-        r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
+    def test_cant_update_public_datasets_i_dont_own_form(self, cb_and_public_data):
+        r = cb_and_public_data.get('wizard:challenge:data', pk=cb_and_public_data.pk)
         assert 'disabled' in r.lhtml.cssselect('form button[type="submit"]')[0].attrib
 
-    def test_cant_update_public_ds_i_dont_own_post(self, cbpicked):
-        s = cbpicked.sample
+    def test_cant_update_public_ds_i_dont_own_post(self, cb_and_public_data):
+        s = cb_and_public_data.sample
         old_name = s.name
 
-        r = cbpicked.post('wizard:challenge:data', pk=cbpicked.pk,
-                          data={'title': 'something new'})
+        r = cb_and_public_data.post('wizard:challenge:data', pk=cb_and_public_data.pk,
+                                    data={'title': 'something new'})
         assert r.status_code == 400
 
         s.refresh_from_db()
         assert s.name == old_name
 
-    def test_dataset_page_shows_picker_button(self, cbpicked):
-        r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
+    def test_can_change_fields_for_my_dataset(self, cb_and_my_data):
+        r = cb_and_my_data.get('wizard:challenge:data', pk=cb_and_my_data.pk)
+        assert 'disabled' not in r.lhtml.cssselect('form #id_name')[0].attrib
+
+    def test_can_update_datasets_i_own_form(self, cb_and_my_data):
+        r = cb_and_my_data.get('wizard:challenge:data', pk=cb_and_my_data.pk)
+        assert 'disabled' not in r.lhtml.cssselect('form button[type="submit"]')[0].attrib
+
+    def test_can_update_name_dataset_i_own(self, cb_and_my_data):
+        r = cb_and_my_data.post('wizard:challenge:data', pk=cb_and_my_data.pk,
+                                data={'name': 'something new'})
+        c = cb_and_my_data.challenge
+        c.refresh_from_db()
+        ds = c.dataset
+        assert ds.name == 'something new'
+
+    def test_editor_page_shows_upload_automl_button(self, cb_and_my_data):
+        r = cb_and_my_data.get('wizard:challenge:data', pk=cb_and_my_data.pk)
+
+        uploader = r.lhtml.cssselect('input[type="file"]#id_automl_upload')[0]
+        assert uploader is not None
+
+    def test_editor_page_can_upload_automl(self, cb_and_my_data):
+        with open('tests/wizard/resources/uploadable/automl_example.zip', 'rb') as fp:
+            r = cb_and_my_data.post('wizard:challenge:data', pk=cb_and_my_data.pk,
+                                    data={
+                                        'name': 'updated dataset',
+                                        'automl_upload': fp
+                                    })
+        assert r.status_code == 302
+
+    def test_editor_page_can_upload_automl_sets_dataset_ready(self, cb_and_my_data):
+        with open('tests/wizard/resources/uploadable/automl_example.zip', 'rb') as fp:
+            r = cb_and_my_data.post('wizard:challenge:data', pk=cb_and_my_data.pk,
+                                    data={
+                                        'name': 'updated dataset',
+                                        'automl_upload': fp
+                                    })
+        c = cb_and_my_data.challenge
+        c.refresh_from_db()
+        ds = c.dataset
+        assert ds.is_ready
+
+    def test_dataset_page_shows_picker_button(self, cb_and_public_data):
+        r = cb_and_public_data.get('wizard:challenge:data', pk=cb_and_public_data.pk)
 
         picker = r.lhtml.cssselect('.btn.picker')[0]
 
         assert picker is not None
-        assert picker.attrib['href'] == sreverse('wizard:challenge:data.pick', pk=cbpicked.pk)
+        assert picker.attrib['href'] == sreverse('wizard:challenge:data.pick',
+                                                 pk=cb_and_public_data.pk)
 
-    def test_once_picked_picking_another_update_page(self, cbpicked):
+    def test_dataset_page_shows_ready_ok_for_public(self, cb_and_public_data):
+        r = cb_and_public_data.get('wizard:challenge:data', pk=cb_and_public_data.pk)
+
+        status = r.lhtml.cssselect('.status.ready')[0]
+        assert status is not None
+
+    def test_dataset_page_shows_not_ready_for_my_just_created(self, cb_and_my_data):
+        r = cb_and_my_data.get('wizard:challenge:data', pk=cb_and_my_data.pk)
+
+        status = r.lhtml.cssselect('.status.not-ready')[0]
+        assert status is not None
+
+    def test_once_picked_picking_another_update_page(self, cb_and_public_data):
         samples = make_samples_datasets()
         s = samples[-1]
 
-        assert s != cbpicked.sample
+        assert s != cb_and_public_data.sample
 
-        cbpicked.post('wizard:challenge:data.pick', pk=cbpicked.pk,
-                      data={'kind': 'public', 'dataset': s.pk})
+        cb_and_public_data.post('wizard:challenge:data.pick', pk=cb_and_public_data.pk,
+                                data={'kind': 'public', 'dataset': s.pk})
 
-        r = cbpicked.get('wizard:challenge:data', pk=cbpicked.pk)
+        r = cb_and_public_data.get('wizard:challenge:data', pk=cb_and_public_data.pk)
 
         context = r.context
 

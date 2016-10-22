@@ -42,7 +42,7 @@ def test_flow_pick_metrics(challenge):
 
     # move to metrics
     p = p.to_metric()
-    p = p.pick_metric(public=True, name='log_loss')
+    p = p.pick_metric(public=True, name='r2_metric')
     p = p.up()
 
     assert p.definition.steps.get(clss='metric').is_ready
@@ -109,7 +109,7 @@ def test_complete_flow(challenge):
     p = (p.to_data().pick_dataset(public=True, name='Chalearn - adult')
          .next()
          .next()
-         .pick_metric(public=True, name='log_loss')
+         .pick_metric(public=True, name='r2_metric')
          .next()
          .set({'end_date': '2024-01-01',
                'allow_reuse': True,

@@ -5,11 +5,22 @@
 
 {% block flow_content %}
     <div class="update">
+        {% if is_ready %}
+            <div class="status ready">
+                Ready
+            </div>
+        {% else %}
+            <div class="status not-ready">
+                Not Ready
+            </div>
+        {% endif %}
+
         <a href="{% url 'wizard:challenge:data.pick' pk=challenge.pk %}"
            class="btn btn-default picker">
             Pick another dataset
         </a>
-        <form class='editor' action="#" method="post">
+        <form class='editor' action="#" method="post"
+              enctype="multipart/form-data">
             {% csrf_token %}
             {% bootstrap_form form %}
 
