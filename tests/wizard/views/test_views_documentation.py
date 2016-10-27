@@ -5,7 +5,7 @@ from wizard.models import DocumentationPageModel, DocumentationModel
 
 pytestmark = pytest.mark.django_db
 
-PAGES = sorted(['overview', 'evaluation', 'data', 'terms_and_conditions'])
+PAGES = sorted(['overview', 'evaluation', 'data', 'terms'])
 
 
 def test_documentation_returns_200(cb):

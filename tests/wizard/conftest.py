@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import date
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -54,7 +55,9 @@ def challenge_ready(random_challenge):
     c.metric = models.MetricModel.objects.create(owner=None, is_public=True,
                                                  name='some metric', is_ready=True,
                                                  classification=True)
-    c.protocol = models.ProtocolModel.objects.create(is_ready=True)
+    c.protocol = models.ProtocolModel.objects.create(is_ready=True,
+                                                     dev_start_date=date.today(),
+                                                     final_start_date=date.today())
 
     c.save()
 

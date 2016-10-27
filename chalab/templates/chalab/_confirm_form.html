@@ -1,0 +1,32 @@
+<script type="text/javascript">
+    $(document).ready(function () {
+        var form = $('form');
+        var original = form.serialize();
+
+        var has_changed = function () {
+            return (form.serialize() != original);
+        };
+
+        var update_submit = function () {
+            var btn = form.find('button[type="submit"]');
+            if (has_changed()) {
+                btn.addClass('btn-primary').removeClass('btn-default');
+            } else {
+                btn.removeClass('btn-primary').addClass('btn-default');
+            }
+        };
+
+        form.submit(function () {
+            window.onbeforeunload = null
+        });
+
+        $("form :input").change(function () {
+            update_submit();
+        });
+
+        window.onbeforeunload = function () {
+            if (has_changed())
+                return 'Are you sure you want to leave?'
+        }
+    });
+</script>

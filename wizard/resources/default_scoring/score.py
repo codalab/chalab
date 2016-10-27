@@ -20,19 +20,21 @@ from subprocess import call
 
 from . import libscores as l
 
-# Default I/O directories:
-root_dir = "/Users/isabelleguyon/Documents/Projects/Codalab/AutoMLcompetition/StartingKit/"
-default_input_dir = root_dir + "scoring_input5"
-default_output_dir = root_dir + "scoring_output5"
-
-# Debug flag 0: no debug, 1: show all scores, 2: also show version amd listing of dir
+# Debug flag 0: no debug, 1: show all scores, 2: also show version and listing of dir
 debug_mode = 1
 
 # Constant used for a missing score
 missing_score = -0.999999
 
 # Version number
-scoring_version = 0.9
+scoring_version = '0.9.2'
+
+HERE = os.path.basename(__file__)
+
+
+def current_metric():
+    with open(os.path.join(HERE, 'metric.info'), 'r')as f:
+        return f.readline().strip()
 
 
 def generate_result(name, input_dir, output_dir):

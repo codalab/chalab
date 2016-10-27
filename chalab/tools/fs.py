@@ -1,4 +1,5 @@
 import os
+import shutil
 from contextlib import contextmanager
 from glob import glob as globbing
 from tempfile import TemporaryDirectory
@@ -17,6 +18,15 @@ def ls(*paths, glob=False):
         return globbing(p)
     else:
         return os.listdir(p)
+
+
+def here(__file__, *rest):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        *rest)
+
+
+def copy_dir_content(dir, dest):
+    shutil.copytree(dir, dest)
 
 
 @contextmanager

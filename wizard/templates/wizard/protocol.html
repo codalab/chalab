@@ -4,10 +4,12 @@
 {% block flow_content %}
     <div class="protocol">
         <form class='edit' action="#" method="post">
+            {% confirm_form %}
+
             {% csrf_token %}
             {% bootstrap_form form %}
             {% buttons %}
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-default">
                     {% bootstrap_icon "star" %} Update
                 </button>
             {% endbuttons %}

@@ -522,9 +522,14 @@ class MetricModel(models.Model):
 
 
 class ProtocolModel(models.Model):
-    is_ready = models.BooleanField(default=True, null=False)
+    is_ready = models.BooleanField(default=False, null=False)
 
-    end_date = models.DateField(null=True, default=None, blank=True)
+    dev_start_date = models.DateField(null=True, default=None, blank=True)
+    dev_end_date = models.DateField(null=True, default=None, blank=True)
+
+    final_start_date = models.DateField(null=True, default=None, blank=True)
+    final_end_date = models.DateField(null=True, default=None, blank=True)
+
     allow_reuse = models.BooleanField(default=False)
     publicly_available = models.BooleanField(default=False)
 
@@ -533,6 +538,14 @@ class ProtocolModel(models.Model):
 
     max_submissions_per_day = models.PositiveIntegerField(null=True, default=None, blank=True)
     max_submissions = models.PositiveIntegerField(null=True, default=None, blank=True)
+
+    def clean(self):
+        super().clean()
+        self.is_ready = self.dev_start_date is not None and self.final_start_date is not None
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Force clean on save
+        super().save(*args, **kwargs)
 
     @property
     def template_mapping(self):

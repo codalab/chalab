@@ -6,11 +6,16 @@ from .models import ProtocolModel, DatasetModel
 class ProtocolForm(ModelForm):
     class Meta:
         model = ProtocolModel
-        fields = ['end_date', 'allow_reuse', 'publicly_available',
+        fields = ['dev_start_date', 'dev_end_date',
+                  'final_start_date', 'final_end_date',
+                  'allow_reuse', 'publicly_available',
                   'has_registration', 'ranked_submissions',
                   'max_submissions_per_day', 'max_submissions']
         widgets = {
-            'end_date': DateInput(attrs={'class': 'date-picker'})
+            'dev_start_date': DateInput(attrs={'class': 'date-picker'}),
+            'dev_end_date': DateInput(attrs={'class': 'date-picker'}),
+            'final_start_date': DateInput(attrs={'class': 'date-picker'}),
+            'final_end_date': DateInput(attrs={'class': 'date-picker'})
         }
 
 
@@ -26,5 +31,4 @@ class DataUpdateAndUploadForm(DataUpdateForm):
     class Meta(DataUpdateForm.Meta):
         fields = DataUpdateForm.Meta.fields + [
             'automl_upload'
-
         ]

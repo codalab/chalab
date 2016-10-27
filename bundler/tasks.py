@@ -8,11 +8,11 @@ from tempfile import TemporaryDirectory
 
 import yaml
 from celery import shared_task
-from django.conf import settings
 from django.core.files import File
 from django.utils import timezone
 
 from chalab.tools import fs
+from wizard import resources
 from wizard.models import challenge_to_mappings
 
 
@@ -58,7 +58,9 @@ def gen_reference(output_dir, dataset, phase_id):
     pass
 
 
-def gen_phase(bt, output_dir, number, challenge, task, protocol, metric):
+def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
+    number = 1
+
     bt.add_log('Create phase %s' % number)
 
     p = {'phasenumber': number,
@@ -76,8 +78,8 @@ def gen_phase(bt, output_dir, number, challenge, task, protocol, metric):
 
     with TemporaryDirectory() as d:
         try:
-            task.target_train.raw_content.open()
-            copy_file_field(task.target_train.raw_content, path.join(d, '%s.solution' % number))
+            task.target_valid.raw_content.open()
+            copy_file_field(task.target_valid.raw_content, path.join(d, '%s.solution' % number))
 
             zipdir(bt, output_dir, ref_data, d)
             p['reference_data'] = ref_data + '.zip'
@@ -85,17 +87,71 @@ def gen_phase(bt, output_dir, number, challenge, task, protocol, metric):
         finally:
             task.target_train.raw_content.close()
 
-    with open(path.join(settings.MEDIA_ROOT, 'scoring_program.zip'), 'rb') as fin:
-        copy_file_field(fin, path.join(output_dir, scoring_program + '.zip'))
-        p['scoring_program'] = scoring_program + '.zip'
+    with fs.tmp_dir() as d:
+        scoring_dir = os.path.join(d, scoring_program)
+        resources.build_default_scoring(metric.name, scoring_dir)
+
+        archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
+        p['scoring_program'] = os.path.basename(archive_path)
+
+    p['start_date'] = protocol.dev_start_date
+    if protocol.dev_end_date:
+        p['end_date'] = protocol.dev_end_date
+
+    return p
+
+
+def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
+    number = 2
+
+    bt.add_log('Create phase %s' % number)
+
+    p = {'phasenumber': number,
+         'label': 'Phase %s' % number,
+         'description': '',
+         'is_scoring_only': True}
+
+    if protocol.max_submissions:
+        p['max_submissions'] = protocol.max_submissions
+    if protocol.max_submissions_per_day:
+        p['max_submissions_per_day'] = protocol.max_submissions_per_day
+
+    ref_data = 'reference_data_%s' % number
+    scoring_program = 'scoring_program_%s' % number
+
+    with TemporaryDirectory() as d:
+        try:
+            task.target_test.raw_content.open()
+            copy_file_field(task.target_test.raw_content, path.join(d, '%s.solution' % number))
+
+            zipdir(bt, output_dir, ref_data, d)
+            p['reference_data'] = ref_data + '.zip'
+
+        finally:
+            task.target_test.raw_content.close()
+
+    with fs.tmp_dir() as d:
+        scoring_dir = os.path.join(d, scoring_program)
+        resources.build_default_scoring(metric.name, scoring_dir)
+
+        archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
+        p['scoring_program'] = os.path.basename(archive_path)
+
+    p['start_date'] = protocol.final_start_date
+    if protocol.final_end_date:
+        p['end_date'] = protocol.final_end_date
 
     return p
 
 
 def gen_phases(bt, output_dir, challenge):
-    return {1: gen_phase(bt, output_dir, 1,
-                         challenge.dataset, challenge.task,
-                         challenge.protocol, challenge.metric)}
+    dev_p = gen_dev_phase(bt, output_dir, challenge, challenge.task,
+                          challenge.protocol, challenge.metric)
+
+    final_p = gen_final_phase(bt, output_dir, challenge, challenge.task,
+                              challenge.protocol, challenge.metric)
+
+    return {1: dev_p, 2: final_p}
 
 
 def gen_logo(bt, output_dir, challenge):
@@ -149,10 +205,6 @@ def create_bundle(bt, output_dir, challenge):
     if challenge.logo:
         logo = gen_logo(bt, output_dir, challenge)
         data['image'] = logo
-
-    protocol = challenge.protocol
-    if protocol.end_date:
-        data['end_date'] = protocol.end_date.strftime('%Y-%m-%d')
 
     bt.add_log('Dump the competition.yaml file')
     with open(path.join(output_dir, 'competition.yaml'), 'w') as f:

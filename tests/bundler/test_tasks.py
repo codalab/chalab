@@ -10,7 +10,7 @@ from wizard import models as wizard
 
 pytestmark = pytest.mark.django_db
 
-DEFAULT_DOCS = {'overview.html', 'evaluation.html', 'data.html', 'terms_and_conditions.html'}
+DEFAULT_DOCS = {'overview.html', 'evaluation.html', 'data.html', 'terms.html'}
 
 
 class TestCreateBundle(object):

@@ -12,7 +12,8 @@ def test_bundle_builder(challenge):
          .next()
          .pick_metric(public=True, name='r2_metric')
          .next()
-         .set({'end_date': '2024-01-01',
+         .set({'dev_start_date': '2024-01-01\n',
+               'final_start_date': '2028-01-01\n',
                'allow_reuse': True,
                'max_submissions_per_day': 2})
          .next()
@@ -27,6 +28,7 @@ def test_bundle_builder(challenge):
     time.sleep(5)
 
     p = p.refresh()
+
     assert p.complete.build_status == 'Finished'
 
     url = p.complete.download_url

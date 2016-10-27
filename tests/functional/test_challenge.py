@@ -54,7 +54,8 @@ def test_flow_pick_protocol(challenge):
 
     # move to protocol
     p = p.to_protocol()
-    p = p.set({'end_date': '2024-01-01',
+    p = p.set({'dev_start_date': '2024-01-01',
+               'final_start_date': '2022-01-01',
                'allow_reuse': True,
                'publicly_available': True,
                'has_registration': True,
@@ -111,7 +112,8 @@ def test_complete_flow(challenge):
          .next()
          .pick_metric(public=True, name='r2_metric')
          .next()
-         .set({'end_date': '2024-01-01',
+         .set({'dev_start_date': '2024-01-01',
+               'final_start_date': '2028-01-01',
                'allow_reuse': True,
                'max_submissions_per_day': 2})
          .next()
