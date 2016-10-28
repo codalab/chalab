@@ -70,6 +70,7 @@ services:
     volumes:
       - .:/app
       - mediavolume:/app/media
+      - staticvolume:/app/static
   media:
     image: lsenta/noconf-nginx
     ports:

@@ -38,6 +38,7 @@ prod:
 	docker-compose -f 'docker-compose.production.yml' up -d db
 	docker-compose -f 'docker-compose.production.yml' build
 	docker-compose -f 'docker-compose.production.yml' run --rm web python manage.py migrate
+	docker-compose -f 'docker-compose.production.yml' run web_scripts python manage.py collectstatic
 	docker-compose -f 'docker-compose.production.yml' up -d web static media flower celery
 
 preload_db_prod:
