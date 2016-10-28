@@ -1,32 +1,27 @@
-<div class="flow">
-    <div class="row crumbs text-center">
-        {% include 'wizard/flow/_breadcrumb.html' %}
-    </div>
-    <div class="row nav text-center">
-        <div class="previous col-xs-2">
-            {% if flow.previous %}
-                <a class=""
-                   href="{% url flow.previous.url pk=challenge.id %}">
-                    <i class="fa fa-arrow-left" aria-hidden="true"></i>
-                    Previous
-                </a>
-            {% endif %}
-        </div>
-        <div class="up col-xs-2 col-xs-offset-3">
+<div class="row flow-nav text-center">
+    <div class="previous col-xs-2">
+        {% if flow.previous %}
             <a class=""
-               href="{% url 'wizard:challenge' challenge.id %}">
-                <i class="fa fa-arrow-up" aria-hidden="true"></i>
-                Challenge
+               href="{% url flow.previous.url pk=challenge.id %}">
+                <i class="fa fa-arrow-left" aria-hidden="true"></i>
+                Previous
             </a>
-        </div>
-        <div class="next col-xs-2 col-xs-offset-3">
-            {% if flow.next %}
-                <a class=""
-                   href="{% url flow.next.url pk=challenge.id %}">
-                    <i class="fa fa-arrow-right" aria-hidden="true"></i>
-                    Next
-                </a>
-            {% endif %}
-        </div>
+        {% endif %}
+    </div>
+    <div class="up col-xs-2 col-xs-offset-3">
+        <a class=""
+           href="{% url 'wizard:challenge' challenge.id %}">
+            <i class="fa fa-arrow-up" aria-hidden="true"></i>
+            Challenge
+        </a>
+    </div>
+    <div class="next col-xs-2 col-xs-offset-3">
+        {% if flow.next %}
+            <a class=""
+               href="{% url flow.next.url pk=challenge.id %}">
+                <i class="fa fa-arrow-right" aria-hidden="true"></i>
+                Next
+            </a>
+        {% endif %}
     </div>
 </div>

@@ -9,8 +9,15 @@
 {% block panel_name %}challenge-{{ flow.slug }}{% endblock %}
 
 {% block content %}
-    <h1>{{ challenge.title }}</h1>
-    <h2>{{ flow.id }}. {{ flow.name }}</h2>
+    <h1 class="challenge-title">{{ challenge.title }}</h1>
+
+    <div class="row flow-crumbs text-center">
+        {% include 'wizard/flow/_breadcrumb.html' %}
+    </div>
+
+    <h2>{{ flow.id }}. {{ flow.name }} Definition
+        {% include 'wizard/_status.html' %}
+    </h2>
 
     {% block flow_content %}
     {% endblock %}

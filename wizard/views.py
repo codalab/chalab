@@ -268,6 +268,7 @@ class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
         context = super().get_context_data(challenge=c, **kwargs)
         context['challenge'] = c
+        context['is_ready'] = self.object.is_ready
         return context
 
     def get_object(self, **kwargs):
@@ -303,6 +304,7 @@ class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
 
         context = super().get_context_data(challenge=c, **kwargs)
         context['challenge'] = c
+        context['is_ready'] = self.object.is_ready
         return context
 
     def get_object(self, **kwargs):

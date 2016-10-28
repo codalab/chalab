@@ -168,8 +168,8 @@ class PublicPickerMetricForm(FormBlock):
         s.select_by_visible_text(name)
 
 
-class FlowBlock(Block):
-    selector = '.flow'
+class FlowNavBlock(Block):
+    selector = '.flow-nav'
 
     selector_next = '.next a'
     selector_up = '.up a'
@@ -189,7 +189,7 @@ class ChallengeFlowPage(LoggedPage):
 
     @property
     def flow(self):
-        return FlowBlock(self)
+        return FlowNavBlock(self)
 
     def next(self):
         self.flow.next.click()

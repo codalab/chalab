@@ -1,6 +1,7 @@
 import logging
 import os
 import string
+from datetime import datetime
 from time import gmtime, strftime
 
 from django.contrib.auth.models import User
@@ -454,8 +455,6 @@ class TaskModel(models.Model):
                                           self.train_ratio is not None and
                                           self.valid_ratio is not None)
 
-        print("READY=", self.is_ready)
-
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
@@ -545,6 +544,7 @@ class ProtocolModel(models.Model):
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save
+        self.challenge.updated_at = datetime.now()
         super().save(*args, **kwargs)
 
     @property
@@ -572,6 +572,7 @@ class DocumentationModel(models.Model):
 
     def save(self, *args, **kwargs):
         self.is_ready = all(page.is_rendered for page in self.pages)
+        self.challenge.updated_at = datetime.now()
         super().save(*args, **kwargs)
 
     @classmethod
