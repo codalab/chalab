@@ -64,6 +64,7 @@
 }
 
 /**
+ * Tools
 **/
 
 .fa {
@@ -78,6 +79,9 @@
     margin-bottom: 20px;
 }
 
+/**
+ * Header
+ */
 header #logo h1 {
     font-family: 'Raleway', sans-serif;
     margin-bottom: 4px;
@@ -99,21 +103,24 @@ header #logo a:hover {
     text-decoration: none;
 }
 
-.nav {
+nav .nav {
     background-color: #D9E8F5;
     border-radius: 0.2em;
 }
 
-.nav > li > a, .nav > li > a:visited {
+nav .nav > li > a, .nav > li > a:visited {
     color: #304269;
     border-radius: 0.2em;
 }
 
-.nav > li > a:focus, .nav > li > a:hover {
+nav .nav > li > a:focus, .nav > li > a:hover {
     color: #FFFFFF;
     background-color: rgb(235, 138, 82);
 }
 
+/**
+ * Footer
+ */
 footer {
     padding-top: 40px;
     padding-bottom: 40px;
@@ -124,7 +131,6 @@ footer {
 /**
  * Challenge Home
  */
-
 .logo {
     display: inline-block;
     height: 90%;
@@ -165,6 +171,53 @@ footer {
 }
 
 /**
+ * Challenge Wizard
+ */
+.flow-crumbs {
+
+}
+
+.flow-crumbs .nav li a {
+    background-color: #D9E8F5;
+}
+
+.flow-crumbs .nav li.active a {
+    background-color: #9bcbf5;
+}
+
+.flow-crumbs .nav li a:hover {
+    color: #FFFFFF;
+    background-color: rgb(235, 138, 82);
+}
+
+.flow-crumbs ol.nav {
+    display: inline-block;
+}
+
+.challenge-title {
+    text-align: center;
+}
+
+.flow-nav {
+    margin-top: 80px;
+    background-color: #D9E8F5;
+    padding: 0.5em;
+    border-radius: 15px;
+}
+
+.status.ready {
+    background-color: #27bf50;
+}
+
+.status.not-ready {
+    background-color: #bf3d27;
+}
+
+.update form .buttons {
+    text-align: center;
+}
+
+/**
  * Dataset Picker
  */
 .form-block {
@@ -172,11 +225,4 @@ footer {
     padding: 1em;
     border: 1px solid #EEEEEE;
     border-radius: 10px;
-
-}
-
-.flow .nav {
-    background-color: #D9E8F5;
-    padding: 0.5em;
-    border-radius: 15px;
 }
