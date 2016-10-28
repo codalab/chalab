@@ -64,7 +64,7 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
     bt.add_log('Create phase %s' % number)
 
     p = {'phasenumber': number,
-         'label': 'Phase %s' % number,
+         'label': 'Development Phase',
          'description': '',
          'is_scoring_only': True}
 
@@ -75,6 +75,7 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
     ref_data = 'reference_data_%s' % number
     scoring_program = 'scoring_program_%s' % number
+    input_data = 'input_data_%s' % number
 
     with TemporaryDirectory() as d:
         try:
@@ -83,9 +84,18 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
             zipdir(bt, output_dir, ref_data, d)
             p['reference_data'] = ref_data + '.zip'
-
         finally:
-            task.target_train.raw_content.close()
+            task.target_valid.raw_content.close()
+
+    with TemporaryDirectory() as d:
+        try:
+            task.input_valid.raw_content.open()
+            copy_file_field(task.input_valid.raw_content,
+                            path.join(d, '%s.data' % number))
+            zipdir(bt, output_dir, input_data, d)
+            p['input_data'] = input_data + '.zip'
+        finally:
+            task.input_valid.raw_content.close()
 
     with fs.tmp_dir() as d:
         scoring_dir = os.path.join(d, scoring_program)
@@ -95,10 +105,24 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         p['scoring_program'] = os.path.basename(archive_path)
 
     p['start_date'] = protocol.dev_start_date
-    if protocol.dev_end_date:
-        p['end_date'] = protocol.dev_end_date
 
     return p
+
+
+def typed(value):
+    if isinstance(value, str):
+        return "'%s'" % value
+    elif isinstance(value, bool):
+        return 'true' if value else 'false'
+    else:
+        return '%s' % value
+
+
+def gen_info_file(path, content):
+    lines = ['%s = %s\n' % (k, typed(v)) for k, v in content.items()]
+
+    with open(path, 'w') as f:
+        f.writelines(lines)
 
 
 def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
@@ -107,7 +131,7 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
     bt.add_log('Create phase %s' % number)
 
     p = {'phasenumber': number,
-         'label': 'Phase %s' % number,
+         'label': 'Final Phase',
          'description': '',
          'is_scoring_only': True}
 
@@ -117,6 +141,7 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
         p['max_submissions_per_day'] = protocol.max_submissions_per_day
 
     ref_data = 'reference_data_%s' % number
+    input_data = 'input_data_%s' % number
     scoring_program = 'scoring_program_%s' % number
 
     with TemporaryDirectory() as d:
@@ -124,8 +149,24 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
             task.target_test.raw_content.open()
             copy_file_field(task.target_test.raw_content, path.join(d, '%s.solution' % number))
 
+            gen_info_file(path.join(d, '%s_public.info' % number),
+                          {'metric': metric.name,
+                           'task': 'classification' if metric.classification else 'regression'})
+
             zipdir(bt, output_dir, ref_data, d)
             p['reference_data'] = ref_data + '.zip'
+
+        finally:
+            task.target_test.raw_content.close()
+
+    with TemporaryDirectory() as d:
+        try:
+            task.input_test.raw_content.open()
+            copy_file_field(task.input_test.raw_content,
+                            path.join(d, '%s.data' % number))
+
+            zipdir(bt, output_dir, input_data, d)
+            p['input_data'] = input_data + '.zip'
 
         finally:
             task.target_test.raw_content.close()
@@ -138,8 +179,6 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
         p['scoring_program'] = os.path.basename(archive_path)
 
     p['start_date'] = protocol.final_start_date
-    if protocol.final_end_date:
-        p['end_date'] = protocol.final_end_date
 
     return p
 

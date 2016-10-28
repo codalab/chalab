@@ -15,10 +15,11 @@
 
 # Some libraries and options
 import os
+import stat
 import sys
 from subprocess import call
 
-from . import libscores as l
+import libscores as l
 
 # Debug flag 0: no debug, 1: show all scores, 2: also show version and listing of dir
 debug_mode = 1
@@ -32,11 +33,6 @@ scoring_version = '0.9.2'
 HERE = os.path.basename(__file__)
 
 
-def current_metric():
-    with open(os.path.join(HERE, 'metric.info'), 'r')as f:
-        return f.readline().strip()
-
-
 def generate_result(name, input_dir, output_dir):
     submission = os.path.join(input_dir, 'res', '%s.predict' % name)
 
@@ -44,7 +40,15 @@ def generate_result(name, input_dir, output_dir):
         return submission
 
     program = os.path.join(input_dir, 'res', '%s.program' % name)
-    call([program, submission])
+    py_program = os.path.join(input_dir, 'res', '%s.py' % name)
+
+    if os.path.exists(program):
+        st = os.stat(program)
+        os.chmod(program, st.st_mode | stat.S_IEXEC)
+        call([program, submission], cwd=os.path.join(input_dir, 'res'))
+    if os.path.exists(py_program):
+        call(['python', py_program, submission],
+             cwd=os.path.join(input_dir, 'res'))
 
     return submission
 
@@ -72,7 +76,8 @@ def evaluate_submission(name, input_dir, output_dir):
 
 
 def main(input_dir, output_dir):
-    os.makedirs(output_dir, exist_ok=True)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     # Get all the solution files from the solution directory
     solution_files = sorted(l.ls(os.path.join(input_dir, 'ref', '*.solution')))
