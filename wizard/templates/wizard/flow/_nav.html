@@ -1,5 +1,8 @@
 <div class="flow">
-    <div class="row text-center">
+    <div class="row crumbs text-center">
+        {% include 'wizard/flow/_breadcrumb.html' %}
+    </div>
+    <div class="row nav text-center">
         <div class="previous col-xs-2">
             {% if flow.previous %}
                 <a class=""
@@ -25,8 +28,5 @@
                 </a>
             {% endif %}
         </div>
-    </div>
-    <div class="row text-center">
-        {% include 'wizard/flow/_breadcrumb.html' %}
     </div>
 </div>
