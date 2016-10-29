@@ -23,7 +23,7 @@ challenge_wizard = [
     url(r'^documentation/(?P<page_id>\d+)/edit$', views.DocumentationPageUpdate.as_view(),
         name='documentation.page.edit'),
 
-    url(r'^baseline/$', views.ChallengeDataEdit.as_view(), name='baseline'),
+    url(r'^baseline/$', views.ChallengeBaselineEdit.as_view(), name='baseline'),
     url(r'^rules/$', views.ChallengeDataEdit.as_view(), name='rules'),
 
     url(r'^bundler/', include(bundler_urls, namespace='bundler'))

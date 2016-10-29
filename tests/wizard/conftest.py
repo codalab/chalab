@@ -59,6 +59,9 @@ def challenge_ready(random_challenge):
                                                      dev_start_date=date.today(),
                                                      final_start_date=date.today())
 
+    c.baseline = models.BaselineModel.objects.create(submission=SimpleUploadedFile(name='some_file',
+                                                                                   content=b'0000'))
+
     c.save()
 
     assert c.missings == []

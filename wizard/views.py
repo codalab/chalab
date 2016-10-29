@@ -14,7 +14,7 @@ from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm, DataUpdateAndUploadForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
-    DocumentationModel, DocumentationPageModel
+    DocumentationModel, DocumentationPageModel, BaselineModel
 from .models import challenge_to_mappings, challenge_to_mappings_doc
 
 log = logging.getLogger('wizard.views')
@@ -63,6 +63,42 @@ class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMi
             pass
 
         return context
+
+
+class ChallengeBaselineEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+    template_name = 'wizard/baseline.html'
+    model = BaselineModel
+    fields = ['submission']
+
+    current_flow = flow.BaselineFlowItem
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs['pk']
+        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
+        context['is_ready'] = self.object.is_ready
+        return context
+
+    def get_success_url(self):
+        pk = self.kwargs['pk']
+        return reverse('wizard:challenge:baseline', kwargs={'pk': pk})
+
+    def get_object(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        self._runtime_challenge = challenge
+
+        baseline = challenge.baseline
+
+        if baseline is None:
+            baseline = BaselineModel.objects.create()
+            challenge.baseline = baseline
+            challenge.save()
+
+        return baseline
 
 
 class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):

@@ -5,6 +5,9 @@ from contextlib import contextmanager
 from os import path
 from tempfile import TemporaryDirectory
 
+# Not a submission but we don't check its content yet.
+DEFAULT_BASELINE_SUBMISSION = path.abspath('tests/wizard/resources/uploadable/automl_example.zip')
+
 
 def test_bundle_builder(challenge):
     p = (challenge.to_data().pick_dataset(public=True, name='Chalearn - adult')
@@ -16,6 +19,8 @@ def test_bundle_builder(challenge):
                'final_start_date': '2028-01-01\n',
                'allow_reuse': True,
                'max_submissions_per_day': 2})
+         .next()
+         .set({'submission': DEFAULT_BASELINE_SUBMISSION})
          .next()
          .edit().submit()
          .up())

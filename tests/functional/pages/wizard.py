@@ -241,10 +241,29 @@ class ChallengeDocumentationPage(ChallengeFlowPage):
         return ChallengeDocumentationPage(self).checked()
 
 
+class BaselineFormBlock(FormBlock):
+    selector = 'form'
+
+
+class ChallengeBaselinePage(ChallengeFlowPage):
+    panel = 'challenge-baseline'
+
+    next_clss = ChallengeDocumentationPage
+
+    @property
+    def form(self):
+        return BaselineFormBlock(self)
+
+    def set(self, values):
+        self.form.fill(**values)
+        self.form.submit()
+        return self
+
+
 class ChallengeProtocolPage(ChallengeFlowPage):
     panel = 'challenge-protocol'
 
-    next_clss = ChallengeDocumentationPage
+    next_clss = ChallengeBaselinePage
 
     @property
     def form(self):
@@ -454,6 +473,10 @@ class DetailChallengePage(LoggedPage):
     def to_protocol(self):
         self.click_step('protocol')
         return ChallengeProtocolPage(self).checked()
+
+    def to_baseline(self):
+        self.click_step('baseline')
+        return ChallengeBaselinePage(self).checked()
 
     def to_documentation(self):
         self.click_step('documentation')

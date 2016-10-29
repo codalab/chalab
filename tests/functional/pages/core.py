@@ -2,7 +2,7 @@ import logging
 import time
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, \
-    NoSuchFrameException
+    NoSuchFrameException, InvalidElementStateException
 
 log = logging.getLogger('functional.pages')
 log.setLevel(logging.DEBUG)
@@ -120,7 +120,10 @@ class FormBlock(Block):
                 tinyMCE.activeEditor.setContent('%s');
                 """ % str(v))
             else:
-                e.clear()
+                try:
+                    e.clear()
+                except InvalidElementStateException:
+                    pass
                 e.send_keys(str(v))
 
         return self

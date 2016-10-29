@@ -5,6 +5,7 @@ from datetime import datetime
 from time import gmtime, strftime
 
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.core.files.storage import DefaultStorage
 from django.core.validators import validate_slug
@@ -21,6 +22,12 @@ from . import docs
 log = logging.getLogger('wizard/models')
 
 storage = DefaultStorage()
+
+
+def build_absolute_uri(path):
+    site = Site.objects.get_current().domain
+    url = 'http://{site}{path}'.format(site=site, path=path)
+    return url
 
 
 @deconstructible
@@ -611,7 +618,7 @@ class DocumentationModel(models.Model):
 
 def challenge_to_mappings(challenge):
     c = challenge
-    ls = [x for x in (c, c.dataset, c.task, c.metric, c.protocol, c.documentation)
+    ls = [x for x in (c, c.dataset, c.task, c.metric, c.protocol, c.documentation, c.baseline)
           if x is not None]
 
     mappings = {}
@@ -677,6 +684,34 @@ class DocumentationPageModel(models.Model):
         ordering = ['pos']
 
 
+class BaselineModel(models.Model):
+    submission = models.FileField(upload_to="data/baseline/%Y/%m/%d/",
+                                  verbose_name='baseline submission',
+                                  blank=True, null=True)
+
+    @property
+    def absolute_uri(self):
+        if self.submission:
+            url = self.submission.url
+            url = build_absolute_uri(url)
+        else:
+            url = "UNDEFINED"
+
+        return url
+
+    @property
+    def is_ready(self):
+        return bool(self.submission)
+
+    @property
+    def template_mapping(self):
+        return {'baseline_submission_url': self.absolute_uri}
+
+    @property
+    def template_doc(self):
+        return {'baseline_submission_url': "URL to download the baseline submission zip."}
+
+
 class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80)
@@ -693,6 +728,8 @@ class ChallengeModel(models.Model):
     metric = models.ForeignKey(MetricModel, null=True, blank=True)
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
                                  related_name='challenge')
+    baseline = models.OneToOneField(BaselineModel, null=True, blank=True,
+                                    related_name='challenge')
     documentation = models.ForeignKey(DocumentationModel, null=True, blank=True,
                                       related_name='challenge')
 
@@ -722,7 +759,7 @@ class ChallengeModel(models.Model):
     def missings(self):
         missing = []
 
-        required = ['dataset', 'task', 'metric', 'protocol', 'documentation']
+        required = ['dataset', 'task', 'metric', 'protocol', 'baseline', 'documentation']
         for x in required:
             v = getattr(self, x)
 

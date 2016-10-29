@@ -24,6 +24,11 @@ DEFAULT_DATA = """
 <p>
 This challenge relies on the ${dataset_name} dataset.
 </p>
+
+<p>
+You can download the baseline submission at:
+<a href="${baseline_submission_url}">${baseline_submission_url}</a>.
+</p>
 """
 
 DEFAULT_RULES = """

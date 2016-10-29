@@ -70,7 +70,7 @@ class BaselineFlowItem(FlowItem):
     name = 'Baseline'
 
     def _is_ready(self, c):
-        return True
+        return c.baseline.is_ready
 
 
 class DocumentationFlowItem(FlowItem):
@@ -82,8 +82,7 @@ class DocumentationFlowItem(FlowItem):
 
 class Flow(object):
     FLOW = [DataFlowItem, TaskFlowItem, MetricFlowItem, ProtocolFlowItem,
-            # BaselineFlowItem,
-            DocumentationFlowItem]
+            BaselineFlowItem, DocumentationFlowItem]
 
     def __init__(self, current_clss, challenge):
         self._current_clss = current_clss
