@@ -5,9 +5,31 @@
 
 {% block flow_content %}
     <div class="update">
-
-
         <h3>Current Dataset:</h3>
+
+        <div class="desc">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Rows</th>
+                    <th>Columns</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Input</td>
+                    <td>{{ object.input.rows.count }}</td>
+                    <td>{{ object.input.cols.count }}</td>
+                </tr>
+                <tr>
+                    <td>Target</td>
+                    <td>{{ object.target.rows.count }}</td>
+                    <td>{{ object.target.cols.count }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
         <form class='editor' action="#" method="post"
               enctype="multipart/form-data">
