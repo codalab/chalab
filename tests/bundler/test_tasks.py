@@ -117,9 +117,9 @@ class TestTaskGeneration:
             owner=c.created_by,
             name=c.dataset.name,
             dataset=c.dataset,
-            train_ratio=0.6,
-            valid_ratio=0.2,
-            test_ratio=0.2
+            train_ratio=60,
+            valid_ratio=20,
+            test_ratio=20
         )
         c.save()
 
@@ -139,9 +139,9 @@ class TestTaskGeneration:
             owner=c.created_by,
             name='some task',
             dataset=c.dataset,
-            train_ratio=0.6,
-            valid_ratio=0.2,
-            test_ratio=0.2
+            train_ratio=60,
+            valid_ratio=20,
+            test_ratio=20
         )
         c.save()
 

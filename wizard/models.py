@@ -641,7 +641,7 @@ class DocumentationPageModel(models.Model):
     documentation = models.ForeignKey(DocumentationModel)
 
     def __str__(self):
-        return '<DocumentationPage[%s, %s]: %s>' % (self.documentation.challenge.name,
+        return '<DocumentationPage[%s, %s]: %s>' % (self.documentation.challenge.title,
                                                     self.pos,
                                                     self.name)
 
