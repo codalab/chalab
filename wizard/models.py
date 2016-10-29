@@ -523,11 +523,15 @@ class MetricModel(models.Model):
 class ProtocolModel(models.Model):
     is_ready = models.BooleanField(default=False, null=False)
 
-    dev_start_date = models.DateField(null=True, default=None, blank=True)
-    dev_end_date = models.DateField(null=True, default=None, blank=True)
+    dev_start_date = models.DateTimeField(null=True, default=None, blank=True,
+                                          verbose_name='Development phase start date')
+    dev_end_date = models.DateTimeField(null=True, default=None, blank=True,
+                                        verbose_name='Development phase end date')
 
-    final_start_date = models.DateField(null=True, default=None, blank=True)
-    final_end_date = models.DateField(null=True, default=None, blank=True)
+    final_start_date = models.DateTimeField(null=True, default=None, blank=True,
+                                            verbose_name='Final phase start date')
+    final_end_date = models.DateTimeField(null=True, default=None, blank=True,
+                                          verbose_name='Final phase end date')
 
     allow_reuse = models.BooleanField(default=False)
     publicly_available = models.BooleanField(default=False)
@@ -535,8 +539,8 @@ class ProtocolModel(models.Model):
     has_registration = models.BooleanField(default=False)
     ranked_submissions = models.BooleanField(default=False)
 
-    max_submissions_per_day = models.PositiveIntegerField(null=True, default=None, blank=True)
-    max_submissions = models.PositiveIntegerField(null=True, default=None, blank=True)
+    max_submissions_per_day = models.PositiveIntegerField(null=True, default=5, blank=True)
+    max_submissions = models.PositiveIntegerField(null=True, default=10, blank=True)
 
     def clean(self):
         super().clean()
@@ -583,8 +587,9 @@ class DocumentationModel(models.Model):
         else:
             mapping = None
 
-        for p in cls.default_pages:
+        for i, p in enumerate(cls.default_pages):
             pm = DocumentationPageModel.create(doc=c,
+                                               pos=i,
                                                name=p['name'],
                                                content=p['content'])
             if mapping:
@@ -625,6 +630,7 @@ def challenge_to_mappings_doc(challenge):
 
 class DocumentationPageModel(models.Model):
     name = models.CharField(max_length=80, validators=[validate_slug])
+    pos = models.IntegerField()
 
     content = HTMLField()
     rendered = HTMLField(null=True, blank=True)
@@ -653,10 +659,14 @@ class DocumentationPageModel(models.Model):
         return self.rendered is not None
 
     @classmethod
-    def create(cls, doc, name, content):
+    def create(cls, doc, name, content, pos=0):
         return cls.objects.create(documentation=doc,
+                                  pos=pos,
                                   name=name,
                                   content=content)
+
+    class Meta:
+        ordering = ['pos']
 
 
 class ChallengeModel(models.Model):

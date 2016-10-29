@@ -58,7 +58,8 @@
         </div>
     </div>
 
-    <div class="complete panel {% if object.is_ready %}ready panel-info{% else %}panel-warning{% endif %}">
+    <div class="complete panel {% if object.is_ready %}ready panel-info{% else %}panel-warning{% endif %}"
+         id="complete-panel">
         <div class="panel-heading">
             {% if not object.is_ready %}
                 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>

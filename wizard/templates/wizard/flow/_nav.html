@@ -22,6 +22,12 @@
                 <i class="fa fa-arrow-right" aria-hidden="true"></i>
                 Next
             </a>
+        {% else %}
+            <a class=""
+               href="{% url 'wizard:challenge' challenge.id %}#complete-panel">
+                <i class="fa fa-cubes" aria-hidden="true"></i>
+                Packaging & Testing
+            </a>
         {% endif %}
     </div>
 </div>

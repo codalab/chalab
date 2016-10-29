@@ -15,6 +15,9 @@
     <link rel="stylesheet" type="text/css" href="{% static 'chalab/style.css' %}"/>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+          href="{% static 'datetimepicker/jquery.datetimepicker.min.css' %}"/>
+    <script src="{% static 'datetimepicker/jquery.datetimepicker.full.min.js' %}"></script>
 
     {% block extra_head %}
     {% endblock %}
@@ -72,17 +75,17 @@
 
 <script>
     $(function () {
-        $('.date-picker').datepicker({
-            dateFormat: 'yy-mm-dd'
-        })
+        $('.datetime-picker').datetimepicker({
+            format:'Y-m-d H:i',
+        });
     });
 </script>
 <script src="//cdn.tinymce.com/4/tinymce.min.js"></script>
 <script>
     tinymce.init({
         selector: '.tinymce',
-        plugins: "code",
-        toolbar: "undo , redo | formatselect | bold, italic | alignleft, aligncenter, alignright | bullist, numlist | outdent, indent | removeformat , code",
+        plugins: "code link autolink",
+        toolbar: "undo , redo | formatselect | bold, italic | alignleft, aligncenter, alignright | bullist, numlist | outdent, indent | link, removeformat, code",
     });
 </script>
 </body>

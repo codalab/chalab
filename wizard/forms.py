@@ -1,4 +1,4 @@
-from django.forms import ModelForm, DateInput, FileField
+from django.forms import ModelForm, FileField, DateTimeInput
 
 from .models import ProtocolModel, DatasetModel
 
@@ -12,10 +12,10 @@ class ProtocolForm(ModelForm):
                   'has_registration', 'ranked_submissions',
                   'max_submissions_per_day', 'max_submissions']
         widgets = {
-            'dev_start_date': DateInput(attrs={'class': 'date-picker'}),
-            'dev_end_date': DateInput(attrs={'class': 'date-picker'}),
-            'final_start_date': DateInput(attrs={'class': 'date-picker'}),
-            'final_end_date': DateInput(attrs={'class': 'date-picker'})
+            'dev_start_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
+            'dev_end_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
+            'final_start_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
+            'final_end_date': DateTimeInput(attrs={'class': 'datetime-picker'})
         }
 
 
