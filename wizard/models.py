@@ -399,9 +399,12 @@ class TaskModel(models.Model):
     name = models.CharField(max_length=256, null=False)
     dataset = models.ForeignKey(DatasetModel, null=True)
 
-    train_ratio = models.FloatField(null=True)
-    valid_ratio = models.FloatField(null=True)
-    test_ratio = models.FloatField(null=True)
+    train_ratio = models.FloatField(null=True,
+                                    verbose_name='Ratio for train data (percents)')
+    valid_ratio = models.FloatField(null=True,
+                                    verbose_name='Ratio for valid data (percents)')
+    test_ratio = models.FloatField(null=True,
+                                   verbose_name='Ratio for test data (percents)')
 
     # TODO(laurent): This pattern of having a single model reference by many fields
     # is not viable. We should define a model instance per use case (training, etc).
@@ -439,8 +442,8 @@ class TaskModel(models.Model):
         if self.test_ratio is not None and self.train_ratio is not None and self.valid_ratio is not None:
             s = self.test_ratio + self.train_ratio + self.valid_ratio
 
-            if s != 1:
-                raise ValidationError('invalid rations: sum = %s != 1' % s)
+            if s != 100:
+                raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
         # regarding nested fields. We also do not need to duplicate
@@ -636,6 +639,11 @@ class DocumentationPageModel(models.Model):
     rendered = HTMLField(null=True, blank=True)
 
     documentation = models.ForeignKey(DocumentationModel)
+
+    def __str__(self):
+        return '<DocumentationPage[%s, %s]: %s>' % (self.documentation.challenge.name,
+                                                    self.pos,
+                                                    self.name)
 
     def render(self, mapping_values):
         template = string.Template(self.content)

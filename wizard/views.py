@@ -208,6 +208,7 @@ def data_picker(request, pk):
         elif k == 'create':
             name = request.POST['name']
             c.dataset = DatasetModel.create(name, request.user)
+            c.task = None
             c.save()
         else:
             assert False, "unsupported k=%s" % k

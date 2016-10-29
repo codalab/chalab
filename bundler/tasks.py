@@ -285,9 +285,9 @@ def generate_task_data(bundle_task, challenge):
 
     size = data.input.rows.count
 
-    train_size = int(train * size)
-    valid_size = int(valid * size)
-    test_size = int(test * size)
+    train_size = int(train / 100.0 * size)
+    valid_size = int(valid / 100.0 * size)
+    test_size = int(test / 100.0 * size)
 
     xs = list(range(size))
     random.shuffle(xs)
