@@ -19,6 +19,7 @@ services:
       - "8742:8000"
     volumes:
       - mediavolume:/app/media
+      - staticvolume:/app/static
   db:
     extends:
       file: docker-compose.base.yml
@@ -76,14 +77,14 @@ services:
     ports:
       - "8843:80"
     environment:
-      - "STATIC_FOLDER=/media"
+      - "STATIC_FOLDER=/app/media"
     volumes:
-      - mediavolume:/media
+      - mediavolume:/app/media
   static:
     image: lsenta/noconf-nginx
     ports:
       - "8842:80"
     environment:
-      - "STATIC_FOLDER=/static"
+      - "STATIC_FOLDER=/app/static"
     volumes:
-      - staticvolume:/static
+      - staticvolume:/app/static
