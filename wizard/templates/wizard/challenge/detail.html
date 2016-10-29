@@ -58,6 +58,29 @@
         </div>
     </div>
 
+    <script type="text/javascript">
+        {% if bundler and not bundler.done %}
+            var F = function () {
+                var jqxhr = $.get("{% url 'wizard:challenge:bundler:status_json' pk=object.pk %}")
+                        .done(function (data) {
+                            if (data.state == "finished") {
+                                console.log("Bundle finished");
+                                $('#building-btn').html(window.BUILT_BTN);
+                            }
+                            else {
+                                console.log("Still building");
+                                window.setTimeout(F, 4000);
+                            }
+                        })
+                        .fail(function (data) {
+                            console.log("Failed AJAX status call:" + data)
+                        });
+            };
+
+            F();
+        {% endif %}
+    </script>
+
     <div class="complete panel {% if object.is_ready %}ready panel-info{% else %}panel-warning{% endif %}"
          id="complete-panel">
         <div class="panel-heading">
@@ -76,10 +99,19 @@
                 <div class="row build text-center">
                     <div class="col-xs-4">
                         {% if bundler and not bundler.done %}
+                            <script type="text/javascript">
+                                window.BUILT_BTN = ""
+                                        + "<a href=\"{% url 'wizard:challenge' pk=object.pk %}\""
+                                        + "class=\"btn btn-block btn-success\">"
+                                        + "<i class=\"fa fa-refresh\"></i>"
+                                        + "Build Completed! Refresh the page</a>";
+                            </script>
+                            <span id="building-btn">
                             <button class="btn disabled btn-block">
-                                <i class="fa fa-gears" aria-hidden="true"></i>
-                                Build
+                                <i class="fa fa-cog fa-spin fa-fx" aria-hidden="true"></i>
+                                Building...
                             </button>
+                            </span>
                         {% else %}
                             <form action="{% url 'wizard:challenge:bundler:build' object.id %}">
                                 {% csrf_token %}

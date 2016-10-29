@@ -23,7 +23,7 @@
                 <div class="title">
                     <h3>
                         <a href="{% url f.url object.id %}">
-                            {{ f.name }}
+                            {{ forloop.counter }}. {{ f.name }}
                         </a>
                     </h3>
                 </div>

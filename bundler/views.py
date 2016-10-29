@@ -2,6 +2,7 @@ from wsgiref.util import FileWrapper
 
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
+from django.http import JsonResponse
 from django.http import StreamingHttpResponse
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse
@@ -47,7 +48,9 @@ def download(request, pk):
         raise Http404('No bundle successfully built available for download')
 
     return redirect(
-        reverse('wizard:challenge:bundler:download_zip', kwargs={'pk': pk, 'task_id': b.pk}))
+        reverse('wizard:challenge:bundler:download_zip',
+                kwargs={'pk': pk, 'task_id': b.pk})
+        + "#complete-panel")
 
 
 @login_required
@@ -72,3 +75,13 @@ def logs(request, pk):
         raise Http404('Bundler not found')
 
     return render(request, 'bundler/logs.html', dict(task=b))
+
+
+@login_required
+def status_json(request, pk):
+    c = get_object_or_404(ChallengeModel, created_by=request.user, pk=pk)
+    b = BundleTaskModel.objects.filter(challenge=c).first()
+
+    return JsonResponse({'state': b.state,
+                         'created': b.created,
+                         'closed': b.closed})
