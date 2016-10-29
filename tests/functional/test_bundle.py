@@ -25,9 +25,14 @@ def test_bundle_builder(challenge):
     p = p.build()
     assert p.complete.build_status in ['Scheduled', 'Started', 'Finished']
 
-    time.sleep(5)
-
-    p = p.refresh()
+    for i in range(5):
+        try:
+            time.sleep(5)
+            p = p.refresh()
+            assert p.complete.build_status == 'Finished'
+            break
+        except AssertionError:
+            continue
 
     assert p.complete.build_status == 'Finished'
 
