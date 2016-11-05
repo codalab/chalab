@@ -14,12 +14,33 @@ from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm, DataUpdateAndUploadForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
-    DocumentationModel, DocumentationPageModel, BaselineModel
+    DocumentationModel, DocumentationPageModel, BaselineModel, InvalidAutomlFormatException
 from .models import challenge_to_mappings, challenge_to_mappings_doc
 
 log = logging.getLogger('wizard.views')
 log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
+
+AUTOML_ERROR = \
+    """
+<p>
+Processing of the archive failed because of:
+<pre>
+%s
+</pre>
+</p>
+
+<p>
+The expected automl archive is of the form:
+<pre>
+dataset_name/
+    dataset_name.data
+    dataset_name.solution
+</pre>
+
+You can check the archive actual content using <code>`unzip -l ./my_archive.zip'</code>.
+<p>
+    """
 
 
 @login_required
@@ -130,7 +151,12 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
             if not self.disabled and self.request.FILES:
                 u = self.request.FILES.get('automl_upload', None)
-                self.object.update_from_chalearn(u)
+                try:
+                    self.object.update_from_chalearn(u)
+                except InvalidAutomlFormatException as e:
+                    raise errors.HTTP400Exception('wizard/challenge/error.html',
+                                                  "Invalid Automl archive",
+                                                  AUTOML_ERROR % (e,))
 
             r = super().form_valid(form)
 

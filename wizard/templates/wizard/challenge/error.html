@@ -8,6 +8,6 @@
 
 {% block content %}
     <h1>Something went wrong:</h1>
-    <h2>Error {{ status_code }}</h2>
-    <p>{{ long_message }}</p>
+    <h2>Error {{ status_code }}: {{ message }}</h2>
+    <p>{{ long_message | safe }}</p>
 {% endblock %}

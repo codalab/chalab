@@ -5,9 +5,20 @@ from glob import glob as globbing
 from tempfile import TemporaryDirectory
 
 
+class InvalidDirectoryException(Exception):
+    def __init__(self, msg):
+        self.message = msg
+
+
+
 def sole_path(path):
     l = ls(path)
-    assert len(l) == 1
+
+    if len(l) != 1:
+        raise InvalidDirectoryException(
+            "Expected a single file/folder in path, got multiple: %s" % l
+        )
+
     return os.path.join(path, l[0])
 
 

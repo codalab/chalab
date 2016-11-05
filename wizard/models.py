@@ -252,6 +252,12 @@ class MatrixModel(models.Model):
         super().save(*args, **kwargs)
 
 
+class InvalidAutomlFormatException(Exception):
+    def __init__(self, cause):
+        self.cause = cause
+        self.message = "Expected an Automl Format archive: " + str(cause)
+
+
 class DatasetModel(models.Model):
     owner = models.ForeignKey(User, null=True)
     is_public = models.BooleanField(default=False, null=False)
@@ -287,7 +293,11 @@ class DatasetModel(models.Model):
 
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
-            root = fs.sole_path(d)
+            try:
+                root = fs.sole_path(d)
+            except fs.InvalidDirectoryException as e:
+                raise InvalidAutomlFormatException(e) from e
+
             input, target = self.load_from_automl(root, any_prefix=True)
 
             self.input = input
