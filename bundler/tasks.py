@@ -65,8 +65,8 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
     p = {'phasenumber': number,
          'label': 'Development Phase',
-         'description': '',
-         'is_scoring_only': True}
+         'description': protocol.dev_phase_description,
+         'is_scoring_only': False}
 
     if protocol.max_submissions:
         p['max_submissions'] = protocol.max_submissions
@@ -105,6 +105,18 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         p['scoring_program'] = os.path.basename(archive_path)
 
     p['start_date'] = protocol.dev_start_date
+    if protocol.dev_end_date:
+        p['end_date'] = protocol.dev_end_date
+
+    p['color'] = 'green'
+
+    p['datasets'] = {
+        1: {
+            'name': 'baseline',
+            'url': challenge.baseline.absolute_uri,
+            'description': 'The challenge baseline'
+        }
+    }
 
     return p
 
@@ -132,8 +144,8 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
 
     p = {'phasenumber': number,
          'label': 'Final Phase',
-         'description': '',
-         'is_scoring_only': True}
+         'description': protocol.final_phase_description,
+         'is_scoring_only': False}
 
     if protocol.max_submissions:
         p['max_submissions'] = protocol.max_submissions
@@ -179,6 +191,10 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
         p['scoring_program'] = os.path.basename(archive_path)
 
     p['start_date'] = protocol.final_start_date
+    if protocol.final_end_date:
+        p['end_date'] = protocol.final_end_date
+
+    p['color'] = 'purple'
 
     return p
 

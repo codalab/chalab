@@ -543,21 +543,23 @@ class MetricModel(models.Model):
 class ProtocolModel(models.Model):
     is_ready = models.BooleanField(default=False, null=False)
 
+    dev_phase_description = models.CharField(max_length=256,
+                                             default="Development Phase")
     dev_start_date = models.DateTimeField(null=True, default=None, blank=True,
                                           verbose_name='Development phase start date')
     dev_end_date = models.DateTimeField(null=True, default=None, blank=True,
                                         verbose_name='Development phase end date')
+    dev_execution_time_limit = models.PositiveIntegerField(null=True, default=None, blank=True,
+                                                           verbose_name='Development phase execution time limit (seconds)')
 
+    final_phase_description = models.CharField(max_length=256,
+                                               default="Final Phase")
     final_start_date = models.DateTimeField(null=True, default=None, blank=True,
                                             verbose_name='Final phase start date')
     final_end_date = models.DateTimeField(null=True, default=None, blank=True,
                                           verbose_name='Final phase end date')
-
-    allow_reuse = models.BooleanField(default=False)
-    publicly_available = models.BooleanField(default=False)
-
-    has_registration = models.BooleanField(default=False)
-    ranked_submissions = models.BooleanField(default=False)
+    final_execution_time_limit = models.PositiveIntegerField(null=True, default=None, blank=True,
+                                                             verbose_name='Final phase execution time limit (seconds)')
 
     max_submissions_per_day = models.PositiveIntegerField(null=True, default=5, blank=True)
     max_submissions = models.PositiveIntegerField(null=True, default=10, blank=True)
@@ -574,16 +576,12 @@ class ProtocolModel(models.Model):
     @property
     def template_mapping(self):
         return {'protocol_max_submissions_per_day': self.max_submissions_per_day,
-                'protocol_max_submissions': self.max_submissions,
-                'protocol_allow_reuse': self.allow_reuse,
-                'protocol_publicly_available': self.publicly_available}
+                'protocol_max_submissions': self.max_submissions}
 
     @property
     def template_doc(self):
         return {'protocol_max_submissions_per_day': '',
-                'protocol_max_submissions': '',
-                'protocol_allow_reuse': '',
-                'protocol_publicly_avaiable': ''}
+                'protocol_max_submissions': ''}
 
 
 class DocumentationModel(models.Model):

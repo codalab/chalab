@@ -6,11 +6,16 @@ from .models import ProtocolModel, DatasetModel
 class ProtocolForm(ModelForm):
     class Meta:
         model = ProtocolModel
-        fields = ['dev_start_date', 'dev_end_date',
-                  'final_start_date', 'final_end_date',
-                  'allow_reuse', 'publicly_available',
-                  'has_registration', 'ranked_submissions',
-                  'max_submissions_per_day', 'max_submissions']
+        fields = [
+            'dev_phase_description',
+            'dev_start_date', 'dev_end_date',
+            'dev_execution_time_limit',
+
+            'final_phase_description',
+            'final_start_date', 'final_end_date',
+            'final_execution_time_limit',
+
+            'max_submissions_per_day', 'max_submissions']
         widgets = {
             'dev_start_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
             'dev_end_date': DateTimeInput(attrs={'class': 'datetime-picker'}),

@@ -17,7 +17,6 @@ def test_bundle_builder(challenge):
          .next()
          .set({'dev_start_date': '2024-01-01\n',
                'final_start_date': '2028-01-01\n',
-               'allow_reuse': True,
                'max_submissions_per_day': 2})
          .next()
          .set({'submission': DEFAULT_BASELINE_SUBMISSION})

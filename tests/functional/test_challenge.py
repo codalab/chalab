@@ -59,12 +59,8 @@ def test_flow_pick_protocol(challenge):
     p = p.to_protocol()
     p = p.set({'dev_start_date': '2024-01-01\n',
                'final_start_date': '2022-01-01\n',
-               'allow_reuse': True,
-               'publicly_available': True,
-               'has_registration': True,
                'max_submissions_per_day': 5,
-               'max_submissions': 10,
-               'ranked_submissions': True})
+               'max_submissions': 10})
     p = p.up()
 
     assert p.definition.steps.get(clss='protocol').is_ready
@@ -117,7 +113,6 @@ def test_complete_flow(challenge):
          .next()
          .set({'dev_start_date': '2024-01-01\n',
                'final_start_date': '2028-01-01\n',
-               'allow_reuse': True,
                'max_submissions_per_day': 2})
          .next()
          .set({'submission': DEFAULT_BASELINE_SUBMISSION})
