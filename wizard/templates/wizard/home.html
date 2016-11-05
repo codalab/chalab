@@ -12,6 +12,17 @@
             </p>
         </div>
     </div>
+
+    <div class="row top10">
+        <div class="col-md-4 col-md-offset-4">
+            <a class="create-challenge btn btn-block btn-primary"
+               href="{% url 'wizard:create' %}">
+                <i class="fa fa-plus" aria-hidden="true"></i>
+                Create a New Challenge
+            </a>
+        </div>
+    </div>
+
     <div class="challenges">
         {% for challenge in object_list %}
             <a href="{% url 'wizard:challenge' pk=challenge.pk %}">
@@ -47,16 +58,6 @@
         {% empty %}
             <h3>Here you'll see your challenges.</h3>
         {% endfor %}
-    </div>
-
-    <div class="row top10">
-        <div class="col-md-4 col-md-offset-4">
-            <a class="create-challenge btn btn-block btn-primary"
-               href="{% url 'wizard:create' %}">
-                <i class="fa fa-plus" aria-hidden="true"></i>
-                Create a New Challenge
-            </a>
-        </div>
     </div>
 
 
