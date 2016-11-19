@@ -6,7 +6,7 @@ from os import path
 from tempfile import TemporaryDirectory
 
 # Not a submission but we don't check its content yet.
-DEFAULT_BASELINE_SUBMISSION = path.abspath('tests/wizard/resources/uploadable/automl_example.zip')
+DEFAULT_BASELINE_SUBMISSION = path.abspath('tests/wizard/resources/uploadable/automl_dataset.zip')
 
 
 def test_bundle_builder(challenge):
@@ -16,8 +16,7 @@ def test_bundle_builder(challenge):
          .pick_metric(public=True, name='r2_metric')
          .next()
          .set({'dev_start_date': '2024-01-01\n',
-               'final_start_date': '2028-01-01\n',
-               'max_submissions_per_day': 2})
+               'final_start_date': '2028-01-01\n'})
          .next()
          .set({'submission': DEFAULT_BASELINE_SUBMISSION})
          .next()

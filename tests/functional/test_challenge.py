@@ -58,9 +58,7 @@ def test_flow_pick_protocol(challenge):
     # move to protocol
     p = p.to_protocol()
     p = p.set({'dev_start_date': '2024-01-01\n',
-               'final_start_date': '2022-01-01\n',
-               'max_submissions_per_day': 5,
-               'max_submissions': 10})
+               'final_start_date': '2022-01-01\n'})
     p = p.up()
 
     assert p.definition.steps.get(clss='protocol').is_ready
@@ -112,8 +110,7 @@ def test_complete_flow(challenge):
          .pick_metric(public=True, name='r2_metric')
          .next()
          .set({'dev_start_date': '2024-01-01\n',
-               'final_start_date': '2028-01-01\n',
-               'max_submissions_per_day': 2})
+               'final_start_date': '2028-01-01\n'})
          .next()
          .set({'submission': DEFAULT_BASELINE_SUBMISSION})
          .next()

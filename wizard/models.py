@@ -295,11 +295,26 @@ class DatasetModel(models.Model):
         with archives.unzip_fp(fp_zip) as d:
             try:
                 root = fs.sole_path(d)
+                name = os.path.basename(root)
+
+                content = set(x for x in os.listdir(root)
+                              if not 'DS_Store' in x and not '__MACOS' in x)
+                expected_suffixes = {'.data', '.solution', '_feat.name',
+                                     '_info.m', '_label.name', '_sample.name'}
+                expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
+                expected_files |= {'README', 'README.txt', 'README.md'}
+
+                unexpected = content - expected_files
+
+                if len(unexpected) > 0:
+                    raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
+
             except fs.InvalidDirectoryException as e:
                 raise InvalidAutomlFormatException(e) from e
 
             input, target = self.load_from_automl(root, any_prefix=True)
 
+            self.name = name
             self.input = input
             self.target = target
             self.save()
@@ -456,6 +471,9 @@ class TaskModel(models.Model):
     def clean(self):
         super().clean()
 
+        if self.dataset is not None:
+            self.name = self.dataset.name
+
         if self.test_ratio is not None and self.train_ratio is not None and self.valid_ratio is not None:
             s = self.test_ratio + self.train_ratio + self.valid_ratio
 
@@ -540,26 +558,24 @@ class MetricModel(models.Model):
         return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
 
 
+DEV_PHASE_DESC = """Development phase: create your models and submit them or submit results on validation or test data; feed-back provided on validation set only."""
+FINAL_PHASE_DESC = """Final phase: non new submission, results on test set will be revealed when the organizers make them available."""
+
+
 class ProtocolModel(models.Model):
     is_ready = models.BooleanField(default=False, null=False)
 
-    dev_phase_description = models.CharField(max_length=256,
-                                             default="Development Phase")
+    dev_phase_label = models.CharField(max_length=128, default="Development", verbose_name="Label")
+    dev_phase_description = models.TextField(max_length=2048, verbose_name="Description",
+                                             default=DEV_PHASE_DESC)
     dev_start_date = models.DateTimeField(null=True, default=None, blank=True,
-                                          verbose_name='Development phase start date')
-    dev_end_date = models.DateTimeField(null=True, default=None, blank=True,
-                                        verbose_name='Development phase end date')
-    dev_execution_time_limit = models.PositiveIntegerField(null=True, default=None, blank=True,
-                                                           verbose_name='Development phase execution time limit (seconds)')
+                                          verbose_name='Start date')
 
-    final_phase_description = models.CharField(max_length=256,
-                                               default="Final Phase")
+    final_phase_label = models.CharField(max_length=128, default="Final", verbose_name="Label")
+    final_phase_description = models.TextField(max_length=2048, verbose_name="Description",
+                                               default=FINAL_PHASE_DESC)
     final_start_date = models.DateTimeField(null=True, default=None, blank=True,
-                                            verbose_name='Final phase start date')
-    final_end_date = models.DateTimeField(null=True, default=None, blank=True,
-                                          verbose_name='Final phase end date')
-    final_execution_time_limit = models.PositiveIntegerField(null=True, default=None, blank=True,
-                                                             verbose_name='Final phase execution time limit (seconds)')
+                                            verbose_name='Start date')
 
     max_submissions_per_day = models.PositiveIntegerField(null=True, default=5, blank=True)
     max_submissions = models.PositiveIntegerField(null=True, default=10, blank=True)

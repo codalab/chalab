@@ -15,6 +15,10 @@ from chalab.tools import fs
 from wizard import resources
 from wizard.models import challenge_to_mappings
 
+PROTOCOL_MAX_SUBMISSIONS = 100
+PROTOCOL_MAX_SUBMISSIONS_PER_DAY = 5
+PROTOCOL_EXECUTION_TIME_LIMIT = 500
+
 
 @contextmanager
 def tmp_dirs(challenge):
@@ -64,23 +68,28 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
     bt.add_log('Create phase %s' % number)
 
     p = {'phasenumber': number,
-         'label': 'Development Phase',
+         'label': protocol.dev_phase_label,
          'description': protocol.dev_phase_description,
-         'is_scoring_only': False}
-
-    if protocol.max_submissions:
-        p['max_submissions'] = protocol.max_submissions
-    if protocol.max_submissions_per_day:
-        p['max_submissions_per_day'] = protocol.max_submissions_per_day
+         'start_date': protocol.dev_start_date,
+         'is_scoring_only': False,
+         'color': 'green',
+         'execution_time_limit': PROTOCOL_EXECUTION_TIME_LIMIT,
+         'max_submissions': PROTOCOL_MAX_SUBMISSIONS,
+         'max_submissions_per_day': PROTOCOL_MAX_SUBMISSIONS_PER_DAY}
 
     ref_data = 'reference_data_%s' % number
-    scoring_program = 'scoring_program_%s' % number
-    input_data = 'input_data_%s' % number
+
+    name = task.name
+
+    # Input data is generated here, used by both phases
+    input_data = 'input_data_1_2'
+    # Scoring program is fixed too
+    scoring_program = 'scoring_program_1_2'
 
     with TemporaryDirectory() as d:
         try:
             task.target_valid.raw_content.open()
-            copy_file_field(task.target_valid.raw_content, path.join(d, '%s.solution' % number))
+            copy_file_field(task.target_valid.raw_content, path.join(d, '%s_valid.solution' % name))
 
             zipdir(bt, output_dir, ref_data, d)
             p['reference_data'] = ref_data + '.zip'
@@ -89,13 +98,29 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
     with TemporaryDirectory() as d:
         try:
+            task.input_train.raw_content.open()
+            copy_file_field(task.input_train.raw_content,
+                            path.join(d, '%s_train.data' % name))
+
             task.input_valid.raw_content.open()
             copy_file_field(task.input_valid.raw_content,
-                            path.join(d, '%s.data' % number))
+                            path.join(d, '%s_valid.data' % name))
+
+            task.input_test.raw_content.open()
+            copy_file_field(task.input_test.raw_content,
+                            path.join(d, '%s_test.data' % name))
+
+            task.target_train.raw_content.open()
+            copy_file_field(task.target_train.raw_content,
+                            path.join(d, '%s_train.solution' % name))
+
             zipdir(bt, output_dir, input_data, d)
             p['input_data'] = input_data + '.zip'
         finally:
+            task.input_train.raw_content.close()
             task.input_valid.raw_content.close()
+            task.input_test.raw_content.close()
+            task.target_train.raw_content.close()
 
     with fs.tmp_dir() as d:
         scoring_dir = os.path.join(d, scoring_program)
@@ -104,17 +129,11 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
         p['scoring_program'] = os.path.basename(archive_path)
 
-    p['start_date'] = protocol.dev_start_date
-    if protocol.dev_end_date:
-        p['end_date'] = protocol.dev_end_date
-
-    p['color'] = 'green'
-
     p['datasets'] = {
         1: {
             'name': 'baseline',
             'url': challenge.baseline.absolute_uri,
-            'description': 'The challenge baseline'
+            'description': 'Everything needed to gets started, except eventually the training data'
         }
     }
 
@@ -143,58 +162,40 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
     bt.add_log('Create phase %s' % number)
 
     p = {'phasenumber': number,
-         'label': 'Final Phase',
+         'label': protocol.final_phase_label,
          'description': protocol.final_phase_description,
-         'is_scoring_only': False}
-
-    if protocol.max_submissions:
-        p['max_submissions'] = protocol.max_submissions
-    if protocol.max_submissions_per_day:
-        p['max_submissions_per_day'] = protocol.max_submissions_per_day
+         'start_date': protocol.final_start_date,
+         'is_scoring_only': False,
+         'auto_migration': True,
+         'color': 'purple',
+         'execution_time_limit': PROTOCOL_EXECUTION_TIME_LIMIT,
+         'max_submissions': PROTOCOL_MAX_SUBMISSIONS,
+         'max_submissions_per_day': PROTOCOL_MAX_SUBMISSIONS_PER_DAY}
 
     ref_data = 'reference_data_%s' % number
-    input_data = 'input_data_%s' % number
-    scoring_program = 'scoring_program_%s' % number
+    name = task.name
+
+    # Input data is generated in dev phase
+    input_data = 'input_data_1_2.zip'
+    # Scoring program is fixed too
+    scoring_program = 'scoring_program_1_2.zip'
+
+    p['input_data'] = input_data
+    p['scoring_program'] = scoring_program
 
     with TemporaryDirectory() as d:
         try:
             task.target_test.raw_content.open()
-            copy_file_field(task.target_test.raw_content, path.join(d, '%s.solution' % number))
+            copy_file_field(task.target_test.raw_content, path.join(d, '%s_test.solution' % name))
 
-            gen_info_file(path.join(d, '%s_public.info' % number),
+            gen_info_file(path.join(d, '%s_public.info' % name),
                           {'metric': metric.name,
                            'task': 'classification' if metric.classification else 'regression'})
 
             zipdir(bt, output_dir, ref_data, d)
             p['reference_data'] = ref_data + '.zip'
-
         finally:
             task.target_test.raw_content.close()
-
-    with TemporaryDirectory() as d:
-        try:
-            task.input_test.raw_content.open()
-            copy_file_field(task.input_test.raw_content,
-                            path.join(d, '%s.data' % number))
-
-            zipdir(bt, output_dir, input_data, d)
-            p['input_data'] = input_data + '.zip'
-
-        finally:
-            task.target_test.raw_content.close()
-
-    with fs.tmp_dir() as d:
-        scoring_dir = os.path.join(d, scoring_program)
-        resources.build_default_scoring(metric.name, scoring_dir)
-
-        archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
-        p['scoring_program'] = os.path.basename(archive_path)
-
-    p['start_date'] = protocol.final_start_date
-    if protocol.final_end_date:
-        p['end_date'] = protocol.final_end_date
-
-    p['color'] = 'purple'
 
     return p
 
@@ -255,6 +256,16 @@ def create_bundle(bt, output_dir, challenge):
         'html': html,
         'phases': phases,
         'leaderboard': leaderboard,
+        'has_registration': False,
+        'force_submission_to_leaderboard': True,
+        'disallow_leaderboard_modifying': True,
+        'enable_detailed_results': True,
+        'show_datasets_from_yaml': True,
+        'allow_public_submissions': True,
+        'anonymous_leaderboard': False,
+        'enable_per_submission_metadata': True,
+        'enable_forum': True,
+        'end_date': None,
     }
 
     if challenge.logo:

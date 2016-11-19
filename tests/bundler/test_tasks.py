@@ -132,7 +132,7 @@ class TestTaskGeneration:
 
         c.dataset = wizard.DatasetModel.create('some_dataset', owner=c.created_by)
 
-        with open('tests/wizard/resources/uploadable/automl_example.zip', 'rb') as f:
+        with open('tests/wizard/resources/uploadable/automl_dataset.zip', 'rb') as f:
             c.dataset.update_from_chalearn(f)
 
         c.task = wizard.TaskModel.objects.create(

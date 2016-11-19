@@ -140,6 +140,9 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             form.fields[f].disabled = self.disabled
         form.disabled = self.disabled
 
+        if 'name' in form.fields:
+            form.fields['name'].disabled = True
+
         return form
 
     def form_valid(self, form):
@@ -193,7 +196,7 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     model = TaskModel
     context_object_name = 'task'
 
-    fields = ['name', 'train_ratio', 'test_ratio', 'valid_ratio']
+    fields = ['train_ratio', 'test_ratio', 'valid_ratio']
     current_flow = flow.TaskFlowItem
 
     @property
@@ -384,6 +387,14 @@ class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
             challenge.save()
 
         return protocol
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class=form_class)
+
+        for f in form.fields.keys():
+            form.fields[f].phase_num = 1 if f.startswith('dev') else 2
+
+        return form
 
 
 def documentation(request, pk):

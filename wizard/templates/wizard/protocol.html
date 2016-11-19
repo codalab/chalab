@@ -7,7 +7,24 @@
             {% confirm_form %}
 
             {% csrf_token %}
-            {% bootstrap_form form %}
+
+            <h1>Phase 1:</h1>
+
+            <div class="group group_{{ group.grouper }}">
+                {% for field in form.phase_1 %}
+                    {% bootstrap_field field %}
+                {% endfor %}
+            </div>
+
+            <h1>Phase 2:</h1>
+
+            <div class="group group_{{ group.grouper }}">
+                {% for field in form.phase_2 %}
+                    {% bootstrap_field field %}
+                {% endfor %}
+            </div>
+
+
             {% buttons %}
                 <button type="submit" class="btn btn-default">
                     {% bootstrap_icon "star" %} Update

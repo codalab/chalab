@@ -118,21 +118,9 @@ class TestDataUpdate(object):
         s.refresh_from_db()
         assert s.name == old_name
 
-    def test_can_change_fields_for_my_dataset(self, cb_and_my_data):
-        r = cb_and_my_data.get('wizard:challenge:data', pk=cb_and_my_data.pk)
-        assert 'disabled' not in r.lhtml.cssselect('form #id_name')[0].attrib
-
     def test_can_update_datasets_i_own_form(self, cb_and_my_data):
         r = cb_and_my_data.get('wizard:challenge:data', pk=cb_and_my_data.pk)
         assert 'disabled' not in r.lhtml.cssselect('form button[type="submit"]')[0].attrib
-
-    def test_can_update_name_dataset_i_own(self, cb_and_my_data):
-        r = cb_and_my_data.post('wizard:challenge:data', pk=cb_and_my_data.pk,
-                                data={'name': 'something new'})
-        c = cb_and_my_data.challenge
-        c.refresh_from_db()
-        ds = c.dataset
-        assert ds.name == 'something new'
 
     def test_editor_page_shows_upload_automl_button(self, cb_and_my_data):
         r = cb_and_my_data.get('wizard:challenge:data', pk=cb_and_my_data.pk)
@@ -141,7 +129,7 @@ class TestDataUpdate(object):
         assert uploader is not None
 
     def test_editor_page_can_upload_automl(self, cb_and_my_data):
-        with open('tests/wizard/resources/uploadable/automl_example.zip', 'rb') as fp:
+        with open('tests/wizard/resources/uploadable/automl_dataset.zip', 'rb') as fp:
             r = cb_and_my_data.post('wizard:challenge:data', pk=cb_and_my_data.pk,
                                     data={
                                         'name': 'updated dataset',
@@ -150,7 +138,7 @@ class TestDataUpdate(object):
         assert r.status_code == 302
 
     def test_editor_page_can_upload_automl_sets_dataset_ready(self, cb_and_my_data):
-        with open('tests/wizard/resources/uploadable/automl_example.zip', 'rb') as fp:
+        with open('tests/wizard/resources/uploadable/automl_dataset.zip', 'rb') as fp:
             r = cb_and_my_data.post('wizard:challenge:data', pk=cb_and_my_data.pk,
                                     data={
                                         'name': 'updated dataset',

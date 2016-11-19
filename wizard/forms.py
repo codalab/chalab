@@ -4,18 +4,25 @@ from .models import ProtocolModel, DatasetModel
 
 
 class ProtocolForm(ModelForm):
+    def phase_1(self):
+        return [x for x in self
+                if x.name.startswith('dev')]
+
+    def phase_2(self):
+        return [x for x in self
+                if x.name.startswith('final')]
+
     class Meta:
         model = ProtocolModel
         fields = [
+            'dev_phase_label',
             'dev_phase_description',
-            'dev_start_date', 'dev_end_date',
-            'dev_execution_time_limit',
+            'dev_start_date',
 
+            'final_phase_label',
             'final_phase_description',
-            'final_start_date', 'final_end_date',
-            'final_execution_time_limit',
-
-            'max_submissions_per_day', 'max_submissions']
+            'final_start_date'
+        ]
         widgets = {
             'dev_start_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
             'dev_end_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
