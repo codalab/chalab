@@ -296,14 +296,13 @@ def save_archive(bt, archive, challenge, bundle_task):
 
 
 def generate_task_data(bundle_task, challenge):
+    # TODO: check last modified time & last generated time
+    # -> build only when necessary
+
     task = challenge.task
     data = challenge.dataset
 
     bundle_task.add_log(data.pk)
-
-    if task.has_content:
-        bundle_task.add_log('Skipping task data generation, already present')
-        return
 
     bundle_task.add_log('Starting task data generation')
     train, valid, test = task.train_ratio, task.valid_ratio, task.test_ratio
