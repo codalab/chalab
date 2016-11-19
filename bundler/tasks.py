@@ -303,9 +303,11 @@ def generate_task_data(bundle_task, challenge):
     task = challenge.task
     data = challenge.dataset
 
-    bundle_task.add_log(data.pk)
+    if task.has_content and task.is_public:
+        bundle_task.add_log('Skipping task data generation, already present')
+        return
 
-    bundle_task.add_log('Starting task data generation')
+    bundle_task.add_log('Starting task data generation, based on dataset: %s' % (data.pk))
     train, valid, test = task.train_ratio, task.valid_ratio, task.test_ratio
 
     bundle_task.add_log('Generating content for task: %s(%s)' % (task.name, task.pk))
