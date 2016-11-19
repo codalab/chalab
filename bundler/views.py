@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.http import StreamingHttpResponse
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse
+from django.utils.text import slugify
 
 from chalab import errors
 from wizard.models import ChallengeModel
@@ -56,13 +57,17 @@ def download(request, pk):
 @login_required
 def download_zip(request, pk, task_id):
     c = get_object_or_404(ChallengeModel, created_by=request.user, pk=pk)
+
     b = get_object_or_404(BundleTaskModel, challenge=c, pk=task_id)
+    closed = b.closed
 
     chunk_size = 8192
     response = StreamingHttpResponse(FileWrapper(b.output, chunk_size),
                                      content_type='application/zip')
     response['Content-Length'] = b.output.size
-    response['Content-Disposition'] = "attachment; filename=%s" % 'bundle.zip'
+
+    name = 'bundle_%s_%s.zip' % (slugify(c.title), closed.strftime('%Y-%m-%d_%H:%M'))
+    response['Content-Disposition'] = "attachment; filename=%s" % name
     return response
 
 
