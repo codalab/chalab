@@ -1,4 +1,5 @@
 {% extends 'wizard/base.html' %}
+{% load static %}
 {% load bootstrap3 %}
 
 {% block module_name %}editor{% endblock %}
@@ -31,11 +32,22 @@
             </table>
         </div>
 
+        <h3>Edit the dataset:</h3>
+
+        {% if not object.is_public %}
+            <p>
+                Use the <code>Choose File</code> button to upload a dataset
+                archive. Only <code>automl</code> archives are currently supported:
+                <a href="{% static 'chalab/resource/iris.zip' %}">example iris dataset</a>.
+            </p>
+        {% endif %}
+
         <form class='editor' action="#" method="post"
               enctype="multipart/form-data">
             {% confirm_form %}
             {% csrf_token %}
             {% bootstrap_form form %}
+
 
             {% buttons %}
                 <div class="buttons">
