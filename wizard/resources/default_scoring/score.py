@@ -44,7 +44,7 @@ def _HERE(*args):
 def _load_scoring_function():
     with open(_HERE('metric.txt'), 'r') as f:
         metric_name = f.readline().strip()
-        return getattr(libscores, metric_name)
+        return metric_name, getattr(libscores, metric_name)
 
 
 # =============================== MAIN ========================================
@@ -64,7 +64,7 @@ if __name__=="__main__":
     html_file = open(os.path.join(output_dir, 'scores.html'), 'wb')
     
     # Get the metric
-    scoring_function = _load_scoring_function()
+    score_name, scoring_function = _load_scoring_function()
     
     # Get all the solution files from the solution directory
     solution_names = sorted(ls(os.path.join(input_dir, 'ref', '*.solution')))
