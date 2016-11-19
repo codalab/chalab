@@ -7,37 +7,56 @@ from wizard import models
 log = logging.getLogger('wizard.commands.load_default_metrics')
 
 METRICS = {
-    'bac_metric': {
-        'description': """Normalized balanced accuracy""",
+    'bac_binary': {'description': """Normalized balanced accuracy for binary data""",
+                   'is_default': True,
+                   'classification': True,
+                   },
+    'bac_multiclass': {'description': """Normalized balanced accuracy for multi-class data""",
+                       'is_default': True,
+                       'classification': True,
+                       },
+    'bac_multilabel': {'description': """Normalized balanced accuracy for multi-labeled data""",
+                       'is_default': True,
+                       'classification': True,
+                       },
+    'auc_binary': {'description': """Normalized Area under ROC curve for binary data""",
+                   'is_default': True,
+                   'classification': True,
+                   },
+    'auc_multilabel': {'description': """Normalized Area under ROC curve for multi-labeled data""",
+                       'is_default': True,
+                       'classification': True,
+                       },
+    'pac_binary': {'description': """Probabilistic Accuracy based on log_loss for binary data""",
+                   'is_default': True,
+                   'classification': False,
+                   },
+    'pac_multiclass': {
+        'description': """Probabilistic Accuracy based on log_loss for multi-class data""",
         'is_default': True,
-        'classification': True
+        'classification': True,
     },
-    'pac_metric': {
-        'description': """Probabilistic Accuracy based on log_loss""",
+    'pac_multilabel': {
+        'description': """Probabilistic Accuracy based on log_loss for multi-label data""",
         'is_default': True,
-        'classification': True
+        'classification': True,
     },
-    'f1_metric': {
-        'description': """Normalized f1 measure""",
-        'is_default': True,
-        'classification': True
-    },
-    'auc_metric': {
-        'description': """Normalized Area under ROC curve""",
-        'is_default': True,
-        'classification': True
-    },
-
-    'r2_metric': {
-        'description': """Mean squared error divided by variance""",
-        'is_default': True,
-        'regression': True
-    },
-    'a_metric': {
-        'description': """Mean absolute error divided by mean absolute deviation""",
-        'is_default': True,
-        'regression': True
-    },
+    'f1_binary': {'description': """Normalized f1 measure for binary data""",
+                  'is_default': True,
+                  'classification': True,
+                  },
+    'f1_multilabel': {'description': """Normalized f1 measure for multi-labeled data""",
+                      'is_default': True,
+                      'classification': True,
+                      },
+    'abs_regression': {'description': """Mean absolute error divided by mean absolute deviation""",
+                       'is_default': True,
+                       'regression': True
+                       },
+    'r2_regression': {'description': """Mean squared error divided by variance""",
+                      'is_default': True,
+                      'regression': True
+                      },
 }
 
 
