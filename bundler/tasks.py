@@ -170,7 +170,7 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
          'color': 'purple',
          'execution_time_limit': PROTOCOL_EXECUTION_TIME_LIMIT,
          'max_submissions': PROTOCOL_MAX_SUBMISSIONS,
-         'max_submissions_per_day': PROTOCOL_MAX_SUBMISSIONS_PER_DAY}
+         'max_submissions_per_day': 0}
 
     ref_data = 'reference_data_%s' % number
     name = task.name
