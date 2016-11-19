@@ -188,9 +188,9 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
             task.target_test.raw_content.open()
             copy_file_field(task.target_test.raw_content, path.join(d, '%s_test.solution' % name))
 
-            gen_info_file(path.join(d, '%s_public.info' % name),
-                          {'metric': metric.name,
-                           'task': 'classification' if metric.classification else 'regression'})
+            # gen_info_file(path.join(d, '%s_public.info' % name),
+            #               {'metric': metric.name,
+            #                'task': 'classification' if metric.classification else 'regression'})
 
             zipdir(bt, output_dir, ref_data, d)
             p['reference_data'] = ref_data + '.zip'

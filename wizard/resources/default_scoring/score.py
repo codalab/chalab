@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# Default scoring program for the Chalab wizard.
-# Isabelle Guyon and Arthur Pesah, ChaLearn, August-November 2014
+# Scoring program for the AutoML challenge
+# Isabelle Guyon and Arthur Pesah, ChaLearn, August 2014-November 2016
 
 # ALL INFORMATION, SOFTWARE, DOCUMENTATION, AND DATA ARE PROVIDED "AS-IS". 
 # ISABELLE GUYON, CHALEARN, AND/OR OTHER ORGANIZERS OR CODE AUTHORS DISCLAIM
@@ -15,81 +15,116 @@
 
 # Some libraries and options
 import os
-import stat
-import sys
-from subprocess import call
 
-import libscores as l
+from sys import argv
+import yaml
+import libscore
+from libscores import ls, filesep, mkdir, read_array, compute_all_scores, write_scores
 
-# Debug flag 0: no debug, 1: show all scores, 2: also show version and listing of dir
+
+# Default I/O directories:      
+root_dir = "/Users/isabelleguyon/Documents/Projects/ParisSaclay/Projects/ChaLab/Examples/iris/"
+default_input_dir = root_dir + "scoring_input_1_2" 
+default_output_dir = root_dir + "scoring_output"  
+
+# Debug flag 0: no debug, 1: show all scores, 2: also show version amd listing of dir
 debug_mode = 1
 
 # Constant used for a missing score
 missing_score = -0.999999
 
 # Version number
-scoring_version = '0.9.2'
-
-HERE = os.path.basename(__file__)
+scoring_version = 1.0
 
 
-def generate_result(name, input_dir, output_dir):
-    submission = os.path.join(input_dir, 'res', '%s.predict' % name)
+def _HERE(*args):
+    h = os.path.dirname(os.path.realpath(__file__))
+    return os.path.join(h, *args)
 
-    if os.path.exists(submission):
-        return submission
-
-    program = os.path.join(input_dir, 'res', '%s.program' % name)
-    py_program = os.path.join(input_dir, 'res', '%s.py' % name)
-
-    if os.path.exists(program):
-        st = os.stat(program)
-        os.chmod(program, st.st_mode | stat.S_IEXEC)
-        call([program, submission], cwd=os.path.join(input_dir, 'res'))
-    if os.path.exists(py_program):
-        call(['python', py_program, submission],
-             cwd=os.path.join(input_dir, 'res'))
-
-    return submission
+def _load_scoring_function():
+    with open(_HERE('metric.txt'), 'r') as f:
+        metric_name = f.readline().strip()
+        return getattr(libscore, metric_name)
 
 
-def evaluate_submission(name, input_dir, output_dir):
-    submission_file = os.path.join(input_dir, 'res', '%s.predict' % name)
-    solution_file = os.path.join(input_dir, 'ref', '%s.solution' % name)
-    info_file = os.path.join(input_dir, 'ref', '%s_public.info' % name)
+# =============================== MAIN ========================================
+    
+if __name__=="__main__":
 
-    info = l.get_info(info_file)
-    task_name, metric_name = info['task'], info['metric']
-
-    solution = l.read_array(solution_file)
-    prediction = l.read_array(submission_file)
-
-    # Prepare the data
-    if info['metric'] == 'r2_metric' or info['metric'] == 'a_metric':
-        solution, prediction = l.sanitize_arrays(solution, prediction)
+    #### INPUT/OUTPUT: Get input and output directory names
+    if len(argv)==1: # Use the default input and output directories if no arguments are provided
+        input_dir = default_input_dir
+        output_dir = default_output_dir
     else:
-        [solution, prediction] = l.normalize_array(solution, prediction)
-
-    score = getattr(l, info['metric'])(solution, prediction, task_name)
-
-    return score
-
-
-def main(input_dir, output_dir):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
+        input_dir = argv[1]
+        output_dir = argv[2] 
+    # Create the output directory, if it does not already exist and open output files  
+    mkdir(output_dir) 
+    score_file = open(os.path.join(output_dir, 'scores.txt'), 'wb')
+    html_file = open(os.path.join(output_dir, 'scores.html'), 'wb')
+    
+    # Get the metric
+    scoring_function = _load_scoring_function()
+    
     # Get all the solution files from the solution directory
-    solution_files = sorted(l.ls(os.path.join(input_dir, 'ref', '*.solution')))
-    solution_names = [os.path.splitext(os.path.basename(x))[0] for x in solution_files]
+    solution_names = sorted(ls(os.path.join(input_dir, 'ref', '*.solution')))
 
-    generated = [generate_result(x, input_dir, output_dir) for x in solution_names]
-    scores = [evaluate_submission(x, input_dir, output_dir) for x in solution_names]
+    # Loop over files in solution directory and search for predictions with extension .predict having the same basename
+    set_num = 1
+    for solution_file in solution_names:
+        # Extract the dataset name from the file name
+        basename = solution_file[-solution_file[::-1].index(filesep):-solution_file[::-1].index('.')-1]
+        try:
+            # Get the last prediction from the res subdirectory (must end with '.predict')
+            predict_file = ls(os.path.join(input_dir, 'res', basename + '*.predict'))[-1]
+            if (predict_file == []): raise IOError('Missing prediction file {}'.format(basename))
+            predict_name = predict_file[-predict_file[::-1].index(filesep):-predict_file[::-1].index('.')-1]
+            # Read the solution and prediction values into numpy arrays
+            solution = read_array(solution_file)
+            prediction = read_array(predict_file)
+            if(solution.shape!=prediction.shape): raise ValueError("Bad prediction shape {}".format(prediction.shape))
 
-    with open(os.path.join(output_dir, 'scores.txt'), 'wb') as score_f:
-        score_f.writelines(['set%d_score: %0.12f' % (i + 1, score)
-                            for i, score in enumerate(scores)])
+            try:
+                # Compute the score prescribed by the metric file 
+                score = scoring_function(solution, prediction)
+                print("======= Set %d" % set_num + " (" + predict_name.capitalize() + "): score(" + score_name + ")=%0.12f =======" % score)                
+                html_file.write("======= Set %d" % set_num + " (" + predict_name.capitalize() + "): score(" + score_name + ")=%0.12f =======\n" % score)
+            except:
+                raise Exception('Error in calculation of the specific score of the task')
+                
+            if debug_mode>0: 
+                scores = compute_all_scores(solution, prediction)
+                write_scores(html_file, scores)
+                    
+        except Exception as inst:
+            score = missing_score 
+            print("======= Set %d" % set_num + " (" + basename.capitalize() + "): score(" + score_name + ")=ERROR =======")
+            html_file.write("======= Set %d" % set_num + " (" + basename.capitalize() + "): score(" + score_name + ")=ERROR =======\n")            
+            print inst
+            
+        # Write score corresponding to selected task and metric to the output file
+        score_file.write(score_name + ": %0.12f\n" % score)
+        set_num=set_num+1            
+    # End loop for solution_file in solution_names
+
+    # Read the execution time and add it to the scores:
+    try:
+        metadata = yaml.load(open(os.path.join(input_dir, 'res', 'metadata'), 'r'))
+        score_file.write("Duration: %0.6f\n" % metadata['elapsedTime'])
+    except:
+        score_file.write("Duration: 0\n")
+		
+	html_file.close()
+    score_file.close()
+
+    # Lots of debug stuff
+    if debug_mode>1:
+        swrite('\n*** SCORING PROGRAM: PLATFORM SPECIFICATIONS ***\n\n')
+        show_platform()
+        show_io(input_dir, output_dir)
+        show_version(scoring_version)
+		
+    #exit(0)
 
 
-if __name__ == '__main__':
-    main(*sys.argv[1:])
+
