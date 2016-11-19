@@ -9,6 +9,6 @@ def test_flow_create_dataset(challenge):
     assert p.name == 'my first created dataset by hand'
 
     # TODO
-    p.editor_form.submit(automl_upload='./tests/wizard/resources/uploadable/automl_example.zip')
+    p.editor_form.submit(automl_upload='./tests/wizard/resources/uploadable/automl_dataset.zip')
     assert p.is_editor
     assert p.is_ready
