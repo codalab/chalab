@@ -559,7 +559,7 @@ class MetricModel(models.Model):
 
 
 DEV_PHASE_DESC = """Development phase: create your models and submit them or submit results on validation or test data; feed-back provided on validation set only."""
-FINAL_PHASE_DESC = """Final phase: non new submission, results on test set will be revealed when the organizers make them available."""
+FINAL_PHASE_DESC = """Final phase: no new submission, results on test set will be revealed when the organizers make them available."""
 
 
 class ProtocolModel(models.Model):
