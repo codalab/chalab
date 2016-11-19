@@ -32,16 +32,25 @@
             </table>
         </div>
 
-        <h3>Edit the dataset:</h3>
-
         {% if not object.is_public %}
+            <h3>Dataset Format:</h3>
             <p>
                 Use the <code>Choose File</code> button to upload a dataset
-                archive. Only <code>automl</code> archives are currently supported:
-                <a href="{% static 'chalab/resource/iris.zip' %}">example iris dataset</a>.
+                archive.
+            </p>
+
+            <p>
+                Only <code>automl</code> archives are currently supported. They are defined as a zip
+                file containing at least:
+            <pre>dataset_name/
+   dataset_name.data
+   dataset_name.solution</pre>
+            Please check the <a href="{% static 'chalab/resource/iris.zip' %}">Iris Dataset</a>
+            for an example.
             </p>
         {% endif %}
 
+        <h3>Edit the dataset:</h3>
         <form class='editor' action="#" method="post"
               enctype="multipart/form-data">
             {% confirm_form %}
