@@ -18,7 +18,7 @@ import os
 
 from sys import argv
 import yaml
-import libscore
+import libscores
 from libscores import ls, filesep, mkdir, read_array, compute_all_scores, write_scores
 
 
@@ -44,7 +44,7 @@ def _HERE(*args):
 def _load_scoring_function():
     with open(_HERE('metric.txt'), 'r') as f:
         metric_name = f.readline().strip()
-        return getattr(libscore, metric_name)
+        return getattr(libscores, metric_name)
 
 
 # =============================== MAIN ========================================
