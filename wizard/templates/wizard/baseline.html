@@ -1,8 +1,18 @@
 {% extends 'wizard/base.html' %}
 {% load bootstrap3 %}
+{% load static %}
 
 {% block flow_content %}
     <div class="update">
+        <div class="into text-muted">
+            <p>
+                Provide a baseline that participants will be able to download
+                and use to build their own solution. Please check the
+                <a href="{% static 'chalab/resource/starting_kit.zip' %}">Iris Starting
+                    Kit</a> for an example.
+            </p>
+        </div>
+
         <form class='editor' action="#" method="post"
               enctype="multipart/form-data">
             {% confirm_form %}
