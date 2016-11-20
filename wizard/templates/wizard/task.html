@@ -28,6 +28,18 @@
             </tr>
 
             <tr>
+                <td rowspan="2">Valid</td>
+                <td>Input</td>
+                <td>{{ object.input_valid.rows.count }}</td>
+                <td>{{ object.input_valid.cols.count }}</td>
+            </tr>
+            <tr>
+                <td>Target</td>
+                <td>{{ object.target_valid.rows.count }}</td>
+                <td>{{ object.target_valid.cols.count }}</td>
+            </tr>
+
+            <tr>
                 <td rowspan="2">Test</td>
                 <td>Input</td>
                 <td>{{ object.input_test.rows.count }}</td>
@@ -39,22 +51,11 @@
                 <td>{{ object.target_test.cols.count }}</td>
             </tr>
 
-            <tr>
-                <td rowspan="2">Valid</td>
-                <td>Input</td>
-                <td>{{ object.input_valid.rows.count }}</td>
-                <td>{{ object.input_valid.cols.count }}</td>
-            </tr>
-            <tr>
-                <td>Target</td>
-                <td>{{ object.target_valid.rows.count }}</td>
-                <td>{{ object.target_valid.cols.count }}</td>
-            </tr>
             </tbody>
         </table>
 
-    	<p class="text-muted text-center">Counts are computed when the bundle
-	is built and its task data is generated.</p>
+        <p class="text-muted text-center">Counts are computed when the bundle
+            is built and its task data is generated.</p>
     </div>
 
     <div class="update">
