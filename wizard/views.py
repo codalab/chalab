@@ -272,7 +272,7 @@ def data_picker(request, pk):
 
             c.save()
         elif k == 'create':
-            name = request.POST['name']
+            name = request.POST['name'] or "empty dataset"
             c.dataset = DatasetModel.create(name, request.user)
             c.task = None
             c.save()
