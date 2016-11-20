@@ -165,7 +165,9 @@ class PublicPickerMetricForm(FormBlock):
 
     def pick(self, name):
         s = Select(self.by_css('select[name="metric"]'))
-        s.select_by_visible_text(name)
+
+        txt = self.by_css('option[data-name="%s"]' % name).text
+        s.select_by_visible_text(txt)
 
 
 class FlowNavBlock(Block):
@@ -281,11 +283,21 @@ class ChallengeMetricPage(ChallengeFlowPage):
     picker_module = 'picker'
     editor_module = 'editor'
 
+    selector_pick_another = '.picker'
+
     next_clss = ChallengeProtocolPage
 
     @property
     def is_picker(self):
         return self.is_module(self.picker_module)
+
+    @property
+    def pick_another_button(self):
+        return self.by_css(self.selector_pick_another)
+
+    def to_picker(self):
+        self.pick_another_button.click()
+        return self
 
     @property
     def is_editor(self):

@@ -258,6 +258,32 @@ class InvalidAutomlFormatException(Exception):
         self.message = "Expected an Automl Format archive: " + str(cause)
 
 
+def default_metric(metric, task):
+    suffixes = ['multiclass', 'multilabel', 'binary', 'regression']
+
+    m = metric.split('_')[0]
+
+    if m == 'a':
+        m = 'abs'
+
+    name = None
+    for s in suffixes:
+        if s in task:
+            name = '%s_%s' % (m, s)
+            break
+
+    if name == 'auc_multiclass':
+        print("Skipped missing metric: %s" % (name,))
+        return None
+
+    try:
+        assert name is not None
+        return MetricModel.objects.get(is_public=True, name=name)
+    except:
+        print("Couldn't find metric for %s" % (name,))
+        return None
+
+
 class DatasetModel(models.Model):
     owner = models.ForeignKey(User, null=True)
     is_public = models.BooleanField(default=False, null=False)
@@ -277,6 +303,7 @@ class DatasetModel(models.Model):
 
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
+    default_metric = models.ForeignKey('MetricModel', null=True)
 
     @classmethod
     def available(cls, user):
@@ -312,19 +339,23 @@ class DatasetModel(models.Model):
             except fs.InvalidDirectoryException as e:
                 raise InvalidAutomlFormatException(e) from e
 
-            input, target = self.load_from_automl(root, any_prefix=True)
+            input, target, metric = self.load_from_automl(root, any_prefix=True)
 
             self.name = name
             self.input = input
             self.target = target
+
+            if metric:
+                self.default_metric = metric
+
             self.save()
 
     @classmethod
     def create_from_chalearn(cls, path, name, owner=None, is_public=True):
-        input, target = cls.load_from_automl(path, any_prefix=False)
+        input, target, metric = cls.load_from_automl(path, any_prefix=False)
         return cls.create(owner=owner,
                           is_public=is_public,
-                          name=name,
+                          name=name, default_metric=metric,
                           input=input, target=target)
 
     @classmethod
@@ -332,8 +363,11 @@ class DatasetModel(models.Model):
         try:
             i = load_info_file(chalearn_path(path, '_public.info'))
             is_sparse = i.getboolean('is_sparse')
+            task, metric = i.get('task'), i.get('metric')
+            metric = default_metric(metric, task)
         except FileNotFoundError:
             is_sparse = False
+            metric = None
 
         input = load_chalearn(path, '.data',
                               is_sparse=is_sparse, any_prefix=any_prefix)
@@ -351,17 +385,19 @@ class DatasetModel(models.Model):
         input.save()
         target.save()
 
-        return input, target
+        return input, target, metric
 
     @classmethod
-    def create(cls, name, owner=None, is_public=False, input=None, target=None):
+    def create(cls, name, owner=None, is_public=False, input=None, target=None,
+               default_metric=None):
         x = {}
         if input is not None:
             x['input'] = input
         if target is not None:
             x['target'] = target
 
-        return cls.objects.create(name=name, owner=owner, is_public=is_public, **x)
+        return cls.objects.create(name=name, owner=owner, is_public=is_public,
+                                  default_metric=default_metric, **x)
 
     def clean(self):
         super().clean()
@@ -537,6 +573,7 @@ class TaskModel(models.Model):
 
 class MetricModel(models.Model):
     name = models.CharField(max_length=256, null=False)
+    description = models.TextField(null=True)
     owner = models.ForeignKey(User, null=True)
 
     is_default = models.BooleanField(default=False, null=False)

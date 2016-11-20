@@ -14,7 +14,7 @@ dataset:
 metrics:
 	docker-compose run web python manage.py load_default_metrics
 
-preload_db: dataset metrics
+preload_db: metrics datasets
 
 clean:
 	killall phantomjs || true
@@ -43,8 +43,8 @@ prod:
 
 preload_db_prod:
 	cd ./datasets/chalearn/ && ./download.sh
-	docker-compose -f 'docker-compose.production.yml' run web_scripts python manage.py load_chalearn_dataset
 	docker-compose -f 'docker-compose.production.yml' run web_scripts python manage.py load_default_metrics
+	docker-compose -f 'docker-compose.production.yml' run web_scripts python manage.py load_chalearn_dataset
 
 always:
 	@ echo ""

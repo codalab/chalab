@@ -29,7 +29,7 @@ METRICS = {
                        },
     'pac_binary': {'description': """Probabilistic Accuracy based on log_loss for binary data""",
                    'is_default': True,
-                   'classification': False,
+                   'classification': True,
                    },
     'pac_multiclass': {
         'description': """Probabilistic Accuracy based on log_loss for multi-class data""",
@@ -86,6 +86,7 @@ class Command(BaseCommand):
                 is_default=content.get('is_default', False),
                 classification=content.get('classification', False),
                 regression=content.get('regression', False),
+                description=content.get("description", None)
             )
             self._success('Successfully loaded metric: %s' % name)
 

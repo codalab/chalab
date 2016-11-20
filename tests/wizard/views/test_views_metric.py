@@ -40,7 +40,7 @@ class TestMetricPicker(object):
         r = cb.get('wizard:challenge:metric.pick', pk=cb.pk)
         pds = r.context['public_metrics']
 
-        assert pds.count() == len(s)
+        assert len(pds) == len(s)
         for x in s:
             assert x in pds
 
@@ -51,7 +51,7 @@ class TestMetricPicker(object):
 
         s = r.html.select_one('.pick .public form select')
         options = s.select('option')
-        options_txt = [x.text for x in options]
+        options_txt = ''.join(x.text for x in options)
 
         assert len(options) == len(samples)
         for s in samples:

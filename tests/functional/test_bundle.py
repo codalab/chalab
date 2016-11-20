@@ -13,7 +13,6 @@ def test_bundle_builder(challenge):
     p = (challenge.to_data().pick_dataset(public=True, name='Chalearn - adult')
          .next()
          .next()
-         .pick_metric(public=True, name='r2_metric')
          .next()
          .set({'dev_start_date': '2024-01-01\n',
                'final_start_date': '2028-01-01\n'})

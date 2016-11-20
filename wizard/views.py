@@ -268,6 +268,7 @@ def data_picker(request, pk):
 
             t = get_object_or_404(TaskModel, dataset=d)
             c.task = t
+            c.metric = d.default_metric
 
             c.save()
         elif k == 'create':
@@ -301,6 +302,28 @@ def metric_picker(request, pk):
         return redirect('wizard:challenge:metric', pk=pk)
     else:
         public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
+
+        current = c.metric
+
+        try:
+            for m in public_metrics:
+                if current and current == m:
+                    m.is_selected = True
+
+                if m == c.dataset.default_metric:
+                    m.is_favorite_metric = True
+        except:
+            pass
+
+        def f(x):
+            a = 1 if x.classification else 0
+            b = 1 if x.regression else 0
+            c = x.name.lower()
+
+            return '%s-%s-%s' % (a, b, c)
+
+        public_metrics = sorted(public_metrics, key=f)
+
         context = {'challenge': c, 'public_metrics': public_metrics,
                    'flow': flow.Flow(flow.MetricFlowItem, c)}
         return render(request, 'wizard/metric/picker.html', context=context)
@@ -311,7 +334,7 @@ class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     model = MetricModel
     context_object_name = 'metric'
 
-    fields = ['name']
+    fields = ['name', 'description']
     current_flow = flow.MetricFlowItem
 
     def get_form(self, form_class=None):

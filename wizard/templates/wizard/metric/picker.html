@@ -8,23 +8,46 @@
 
     <div class="pick">
         <div class="public">
-            <h4>Use a Public Metric</h4>
+            <h4>Public Metric:</h4>
 
             <form class="picker" method="POST" action="#">
                 {% csrf_token %}
 
                 <input type="hidden" name="kind" value="public"/>
 
-                <select name="metric">
-                    {% for metric in public_metrics %}
-                        <option value="{{ metric.pk }}">{{ metric.name }}</option>
-                    {% endfor %}
-                </select>
+                <div class="form-group">
+                    <select class="form-control" name="metric">
+                        {% for metric in public_metrics %}
+                            <option data-name={{ metric.name }}
+                                            value="{{ metric.pk }}"
+                                    {% if metric.is_selected %}
+                                    selected
+                                    {% endif %}>
+                                {% if metric.classification %}
+                                    Classification:
+                                {% elif metric.regression %}
+                                    Regression:
+                                {% endif %}
+                                {{ metric.description }}
+                                ({{ metric.name }})
+                                {% if metric.is_favorite_metric %}
+                                    *
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-muted text-center">
+                        The default metric for the dataset (if any) is marked
+                        with a *
+                    </p>
+                </div>
 
                 {% buttons %}
-                    <button class="primaryAction btn btn-primary"
-                            type="submit">Use
-                    </button>
+                    <div class="form-group">
+                        <button class="primaryAction btn btn-primary"
+                                type="submit">Use
+                        </button>
+                    </div>
                 {% endbuttons %}
             </form>
         </div>
