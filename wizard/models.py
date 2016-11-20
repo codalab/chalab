@@ -468,10 +468,13 @@ class TaskModel(models.Model):
     dataset = models.ForeignKey(DatasetModel, null=True)
 
     train_ratio = models.FloatField(null=True,
+                                    default=85,
                                     verbose_name='Ratio for train data (percents)')
     valid_ratio = models.FloatField(null=True,
+                                    default=5,
                                     verbose_name='Ratio for valid data (percents)')
     test_ratio = models.FloatField(null=True,
+                                   default=10,
                                    verbose_name='Ratio for test data (percents)')
 
     # TODO(laurent): This pattern of having a single model reference by many fields
