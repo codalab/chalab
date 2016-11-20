@@ -238,10 +238,14 @@ def gen_leaderboard(challenge):
                 {'leaderboard': leaderboard_Results,
                  'label': 'Precision',
                  'numeric_format': 4,
-                 'rank': 1}
+                 'rank': 2},
+            'Duration':
+                {'leaderboard': leaderboard_Results,
+                 'label': 'Duration',
+                 'numeric_format': 2,
+                 'rank': 7}
         }
     }
-
     return leaderboard
 
 

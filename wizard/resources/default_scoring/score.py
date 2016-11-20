@@ -64,16 +64,19 @@ if __name__=="__main__":
     html_file = open(os.path.join(output_dir, 'scores.html'), 'wb')
     
     # Get the metric
-    score_name, scoring_function = _load_scoring_function()
+    metric_name, scoring_function = _load_scoring_function()
     
     # Get all the solution files from the solution directory
     solution_names = sorted(ls(os.path.join(input_dir, 'ref', '*.solution')))
 
     # Loop over files in solution directory and search for predictions with extension .predict having the same basename
-    set_num = 1
-    for solution_file in solution_names:
+    for i, solution_file in enumerate(solution_names):
+        set_num = i + 1 # 1-indexed
+        score_name = 'set%s_score' % set_num
+
         # Extract the dataset name from the file name
         basename = solution_file[-solution_file[::-1].index(filesep):-solution_file[::-1].index('.')-1]
+
         try:
             # Get the last prediction from the res subdirectory (must end with '.predict')
             predict_file = ls(os.path.join(input_dir, 'res', basename + '*.predict'))[-1]
@@ -104,7 +107,7 @@ if __name__=="__main__":
             
         # Write score corresponding to selected task and metric to the output file
         score_file.write(score_name + ": %0.12f\n" % score)
-        set_num=set_num+1            
+
     # End loop for solution_file in solution_names
 
     # Read the execution time and add it to the scores:
