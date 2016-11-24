@@ -42,6 +42,14 @@
     background: #F4A842;
 }
 
+.vertical-stepper .circle.doable {
+    background-color: #5b2ebf;
+}
+
+.vertical-stepper .circle.not-doable {
+    background-color: #adb8bd;
+}
+
 .vertical-stepper .circle .fa {
     margin: 0;
 }
@@ -226,3 +234,9 @@ footer {
     border: 1px solid #EEEEEE;
     border-radius: 10px;
 }
+
+.btn-disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
+
