@@ -31,4 +31,34 @@
             </div>
         </div>
     {% endfor %}
+    <div class="step build">
+        <div>
+            {% if challenge.is_ready %}
+                <div class="circle doable">
+                    <i class="fa fa-check" aria-hidden="true"></i>
+                </div>
+            {% else %}
+                <div class="circle not-doable">
+                    <i class="fa fa-exclamation" aria-hidden="true"></i>
+                </div>
+            {% endif %}
+            <div class="line"></div>
+        </div>
+        <div>
+            <div class="title">
+                <h3>
+                    <a href="{% url 'wizard:challenge:build' object.id %}"
+                       id="to-build">
+                        Package & Publish
+                    </a>
+                </h3>
+            </div>
+            <div class="body">
+                Package & Publish your challenge.
+                {% if not challenge.is_ready %}
+                    <br/>Available when the previous steps are complete.
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>

@@ -35,7 +35,7 @@ DEFAULT_RULES = """
 <h1>${challenge_title}: Rules</h1>
 
 <p>
-Submissions must be submitted before the ${end_date}.
+Submissions must be submitted before the ${protocol_final_start_date}.
 You may submit ${protocol_max_submissions_per_day} submissions every day and
 ${protocol_max_submissions} in total.
 </p>

@@ -1,15 +1,30 @@
 from django.forms import ModelForm, FileField, DateTimeInput
 
-from .models import ProtocolModel, DatasetModel
+from .models import ProtocolModel, DatasetModel, TaskModel
+
+
+def naive_suffix(x):
+    x.label = "%s*" % (x.label,)
+    return x
+
+
+class TaskModelForm(ModelForm):
+    class Meta:
+        model = TaskModel
+        fields = [
+            'train_ratio',
+            'valid_ratio',
+            'test_ratio',
+        ]
 
 
 class ProtocolForm(ModelForm):
     def phase_1(self):
-        return [x for x in self
+        return [naive_suffix(x) for x in self
                 if x.name.startswith('dev')]
 
     def phase_2(self):
-        return [x for x in self
+        return [naive_suffix(x) for x in self
                 if x.name.startswith('final')]
 
     class Meta:
@@ -44,3 +59,6 @@ class DataUpdateAndUploadForm(DataUpdateForm):
         fields = DataUpdateForm.Meta.fields + [
             'automl_upload'
         ]
+
+    def do_hide(self):
+        self.fields['automl_upload'] = HiddenField()

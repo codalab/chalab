@@ -528,9 +528,9 @@ class TaskModel(models.Model):
                          self.input_valid is not None and
                          self.target_valid is not None)
 
-        self.is_ready = self.is_ready or (self.test_ratio is not None and
-                                          self.train_ratio is not None and
-                                          self.valid_ratio is not None)
+        self.is_ready = self.is_ready and (self.test_ratio is not None and
+                                           self.train_ratio is not None and
+                                           self.valid_ratio is not None)
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
@@ -598,8 +598,8 @@ class MetricModel(models.Model):
         return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
 
 
-DEV_PHASE_DESC = """Development phase: create your models and submit them or submit results on validation or test data; feed-back provided on validation set only."""
-FINAL_PHASE_DESC = """Final phase: no new submission, results on test set will be revealed when the organizers make them available."""
+DEV_PHASE_DESC = """Development phase: create models and submit them or directly submit results on validation and/or test data; feed-back are provided on the validation set only."""
+FINAL_PHASE_DESC = """Final phase: submissions from the previous phase are automatically cloned and used to compute the final score. The results on the test set will be revealed when the organizers make them available."""
 
 
 class ProtocolModel(models.Model):
@@ -632,7 +632,9 @@ class ProtocolModel(models.Model):
     @property
     def template_mapping(self):
         return {'protocol_max_submissions_per_day': self.max_submissions_per_day,
-                'protocol_max_submissions': self.max_submissions}
+                'protocol_max_submissions': self.max_submissions,
+                'protocol_dev_start_date': self.dev_start_date,
+                'protocol_final_start_date': self.final_start_date}
 
     @property
     def template_doc(self):

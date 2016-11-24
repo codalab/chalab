@@ -428,11 +428,14 @@ class ChallengeDataPage(ChallengeFlowPage):
         return self
 
 
-class CompleteBlock(Block):
-    selector = '.panel.complete'
+class BuildPage(LoggedPage):
+    app = 'wizard'
+    panel = 'challenge'
+    module = 'build'
+
     selector_build = '.build .btn'
     selector_build_status = '.build .status'
-    selector_download = '.download a'
+    selector_download = '.download a#do-download'
 
     @property
     def build_status(self):
@@ -445,10 +448,16 @@ class CompleteBlock(Block):
     def do_build(self):
         self.by_css(self.selector_build).click()
 
+    def build(self):
+        self.do_build()
+        return self.checked()
+
 
 class DetailChallengePage(LoggedPage):
     app = 'wizard'
     panel = 'challenge'
+
+    selector_build = '#to-build'
 
     def __init__(self, driver_or_prev, challenge=None):
         self._challenge = challenge or driver_or_prev.challenge
@@ -462,13 +471,9 @@ class DetailChallengePage(LoggedPage):
     def definition(self):
         return DefinitionBlock(self)
 
-    @property
-    def complete(self):
-        return CompleteBlock(self)
-
-    def build(self):
-        self.complete.do_build()
-        return self.checked()
+    def to_build(self):
+        self.click(self.selector_build)
+        return BuildPage(self).checked()
 
     def click_step(self, name):
         self.definition.steps.get(clss=name).click()

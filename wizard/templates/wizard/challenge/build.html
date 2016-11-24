@@ -1,0 +1,186 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Create a new competition{% endblock %}
+
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}challenge{% endblock %}
+{% block module_name %}build{% endblock %}
+
+{% block content %}
+    <h1>Packaging & Testing:</h1>
+
+    <script type="text/javascript">
+        {% if bundler and not bundler.done %}
+            var F = function () {
+                var jqxhr = $.get("{% url 'wizard:challenge:bundler:status_json' pk=challenge.pk %}")
+                        .done(function (data) {
+                            if (data.state == "finished") {
+                                console.log("Bundle finished");
+                                $('#building-btn').html(window.BUILT_BTN);
+                            }
+                            else {
+                                console.log("Still building");
+                                window.setTimeout(F, 4000);
+                            }
+                        })
+                        .fail(function (data) {
+                            console.log("Failed AJAX status call:" + data)
+                        });
+            };
+
+            F();
+        {% endif %}
+    </script>
+
+    {% if not challenge.is_ready %}
+        <div class="well text-center">
+            Once you complete the challenge definition,
+            this section will contains build & exports tools.
+        </div>
+    {% else %}
+        <div class="row build">
+            <div class="col-sm-12">
+                <h3>
+                    1. Build your challenge.
+                </h3>
+            </div>
+        </div>
+        <div class="row build">
+            <div class="col-sm-8">
+                <p>
+                    Chalab is going to compile your configuration into
+                    a single bundle file that can be used by other platforms.
+                </p>
+            </div>
+            <div class="col-sm-4">
+                {% if bundler and not bundler.done %}
+                    <script type="text/javascript">
+                        window.BUILT_BTN = ""
+                                + "<a href=\"{% url 'wizard:challenge:build' pk=challenge.pk %}\""
+                                + "class=\"btn btn-block btn-success\">"
+                                + "<i class=\"fa fa-refresh\"></i>"
+                                + "Build Completed! Refresh the page</a>";
+                    </script>
+                    <span id="building-btn">
+                            <button class="btn disabled btn-block">
+                                <i class="fa fa-cog fa-spin fa-fx" aria-hidden="true"></i>
+                                Building...
+                            </button>
+                            </span>
+                {% else %}
+                    <form action="{% url 'wizard:challenge:bundler:build' challenge.id %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-block btn-warning">
+                            <i class="fa fa-gears" aria-hidden="true"></i>
+                            Build
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row build">
+            <div class="col-sm-12">
+                <h3>
+                    2. Check the state of the build
+                </h3>
+            </div>
+        </div>
+        <div class="row build">
+            <div class="col-sm-6">
+                <p>If the build is failing or taking more time than you'd expect,
+                    check the builder logs to see what's wrong.</p>
+            </div>
+            <div class="col-xs-3">
+                {% if bundler %}
+                    Build Status:
+                    <span class="status">{{ bundler.get_state_display }}</span>
+                    <br/>
+                    {% if bundler.done %}
+                        Last build: {{ bundler.closed | date:'Y-m-d H:i' }}
+                    {% endif %}
+                {% else %}
+                    Last build: Never.
+                {% endif %}
+            </div>
+            <div class="col-xs-3">
+                {% if not bundler %}
+                    <button class="btn btn-default disabled btn-block">
+                        <i class="fa fa-gears" aria-hidden="true"></i>
+                        Logs
+                    </button>
+                {% else %}
+                    <a class="btn btn-block btn-default"
+                       href="{% url 'wizard:challenge:bundler:logs' challenge.id %}">
+                        Logs
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row build">
+            <div class="col-sm-12">
+                <h3>
+                    3. Download your bundle
+                </h3>
+            </div>
+        </div>
+        <div class="row download">
+            <div class="col-sm-8">
+                <p>
+                    When your challenge is ready, you can download it as a bundle archive.
+                    You can share this archive, it contains the configuration and the datasets.
+                </p>
+
+                <p>
+                    You can also upload this bundle to the competition platform
+                    <a href="http://competition.codalab.com">Codalab</a>.
+                </p>
+            </div>
+            <div class="col-xs-4">
+                {% if bundler.is_download_ready %}
+                    <a href="{% url 'wizard:challenge:bundler:download' challenge.id %}"
+                       id="do-download"
+                       class="btn btn-success btn-block">
+                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                        Download
+                    </a>
+                {% else %}
+                    <button type="submit" class="btn btn-block disabled">
+                        <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                        Download
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!--
+        <div class="row download top10 text-center">
+            <div class="col-xs-4">
+                In following versions,
+                you will be able to upload your challenge to other platforms automatically.
+            </div>
+            <div class="col-xs-4">
+                <button type="submit" class="btn btn-block disabled">
+                    <i class="fa fa-gears" aria-hidden="true"></i>
+                    Test
+                </button>
+            </div>
+            <div class="col-xs-4">
+                <button type="submit" class="btn btn-block disabled">
+                    <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                    Publish
+                </button>
+            </div>
+        </div>
+        -->
+    {% endif %}
+
+
+    <a href="{% url 'wizard:challenge' challenge.pk %}">
+        <i class="fa fa-cubes" aria-hidden="true"></i>
+        Go back to the challenge
+    </a>
+{% endblock %}

@@ -9,10 +9,11 @@ from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
+from bundler.models import BundleTaskModel
 from chalab import errors
 from . import models, flow
 from .flow import FlowOperationMixin
-from .forms import ProtocolForm, DataUpdateAndUploadForm
+from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
     DocumentationModel, DocumentationPageModel, BaselineModel, InvalidAutomlFormatException
 from .models import challenge_to_mappings, challenge_to_mappings_doc
@@ -78,7 +79,6 @@ class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMi
         context = super().get_context_data(challenge=self.object, **kwargs)
 
         try:
-            from bundler.models import BundleTaskModel
             context['bundler'] = BundleTaskModel.objects.filter(challenge=self.object).first()
         except ObjectDoesNotExist:
             pass
@@ -134,7 +134,10 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
         return self.object.owner != self.request.user
 
     def get_form(self, form_class=None):
-        form = super().get_form(form_class=form_class)
+        if self.object.is_public:
+            form = super().get_form(form_class=DataUpdateForm)
+        else:
+            form = super().get_form(form_class=form_class)
 
         for f in form.fields.keys():
             form.fields[f].disabled = self.disabled
@@ -196,7 +199,7 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     model = TaskModel
     context_object_name = 'task'
 
-    fields = ['train_ratio', 'test_ratio', 'valid_ratio']
+    fields = ['train_ratio', 'valid_ratio', 'test_ratio']
     current_flow = flow.TaskFlowItem
 
     @property
@@ -449,6 +452,18 @@ def documentation_page(request, pk, page_id):
                'flow': flow.Flow(flow.DocumentationFlowItem, c)}
 
     return render(request, "wizard/documentation/detail.html", context=context)
+
+
+def build_page(request, pk):
+    c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
+    context = {'challenge': c}
+
+    try:
+        context['bundler'] = BundleTaskModel.objects.filter(challenge=c).first()
+    except ObjectDoesNotExist:
+        pass
+
+    return render(request, "wizard/challenge/build.html", context=context)
 
 
 class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):

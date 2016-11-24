@@ -24,21 +24,22 @@ def test_bundle_builder(challenge):
 
     assert p.definition.is_ready
 
+    p = p.to_build()
     p = p.build()
-    assert p.complete.build_status in ['Scheduled', 'Started', 'Finished']
+    assert p.build_status in ['Scheduled', 'Started', 'Finished']
 
     for i in range(5):
         try:
             time.sleep(5)
             p = p.refresh()
-            assert p.complete.build_status == 'Finished'
+            assert p.build_status == 'Finished'
             break
         except AssertionError:
             continue
 
-    assert p.complete.build_status == 'Finished'
+    assert p.build_status == 'Finished'
 
-    url = p.complete.download_url
+    url = p.download_url
 
     r = p.request('GET', url, stream=True)
     r.raise_for_status()

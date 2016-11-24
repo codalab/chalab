@@ -37,7 +37,8 @@ def build(request, pk):
                                       """The bundle is already being built.""",
                                       challenge=c)
 
-    return redirect(c.get_absolute_url())
+    return redirect(reverse('wizard:challenge:build',
+                            kwargs={'pk': pk}))
 
 
 @login_required

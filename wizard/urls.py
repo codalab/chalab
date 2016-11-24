@@ -18,6 +18,8 @@ challenge_wizard = [
 
     url(r'^protocol/$', views.ChallengeProtocolUpdate.as_view(), name='protocol'),
 
+    url(r'^build/$', views.build_page, name='build'),
+
     url(r'^documentation/$', views.documentation, name='documentation'),
     url(r'^documentation/(?P<page_id>\d+)$', views.documentation_page, name='documentation.page'),
     url(r'^documentation/(?P<page_id>\d+)/edit$', views.DocumentationPageUpdate.as_view(),

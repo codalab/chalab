@@ -20,7 +20,7 @@ _DRIVERS = {
                              desired_capabilities={'browserName': SELENIUM_REMOTE_DRIVER})
 }
 
-CURRENT_DRIVER = _DRIVERS['chrome']
+CURRENT_DRIVER = _DRIVERS['phantomjs']
 
 
 def raw_driver():

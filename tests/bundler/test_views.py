@@ -17,9 +17,9 @@ class TestBundler(object):
         assert r.status_code == 400
         assert b'The challenge is not ready to be bundled' in r.content
 
-    def test_build_redirects_to_challenge(self, c):
+    def test_build_redirects_to_build(self, c):
         r = c.post('wizard:challenge:bundler:build', pk=c.pk)
-        assert_redirects(r, sreverse('wizard:challenge', pk=c.pk))
+        assert_redirects(r, sreverse('wizard:challenge:build', pk=c.pk))
 
     def test_cant_build_if_previous_is_SCHEDULED(self, c):
         bt = models.BundleTaskModel.create(c.challenge)
@@ -47,7 +47,7 @@ class TestBundler(object):
         bt.save()
 
         r = c.post('wizard:challenge:bundler:build', pk=c.pk)
-        assert_redirects(r, sreverse('wizard:challenge', pk=c.pk))
+        assert_redirects(r, sreverse('wizard:challenge:build', pk=c.pk))
 
     def test_cant_build_again_if_previous_is_FAILED(self, c):
         bt = models.BundleTaskModel.create(c.challenge)
@@ -55,7 +55,7 @@ class TestBundler(object):
         bt.save()
 
         r = c.post('wizard:challenge:bundler:build', pk=c.pk)
-        assert_redirects(r, sreverse('wizard:challenge', pk=c.pk))
+        assert_redirects(r, sreverse('wizard:challenge:build', pk=c.pk))
 
 
 class TestBundlerLogs(object):

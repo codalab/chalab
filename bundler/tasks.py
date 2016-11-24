@@ -263,6 +263,7 @@ def create_bundle(bt, output_dir, challenge):
         'has_registration': False,
         'force_submission_to_leaderboard': True,
         'disallow_leaderboard_modifying': True,
+        'allow_teams': True,
         'enable_detailed_results': True,
         'show_datasets_from_yaml': True,
         'allow_public_submissions': True,

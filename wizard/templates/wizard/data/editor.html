@@ -7,7 +7,6 @@
 {% block flow_content %}
     <div class="update">
         <h3>Current Dataset:</h3>
-
         <div class="desc">
             <table class="table">
                 <thead>
@@ -57,13 +56,17 @@
             {% csrf_token %}
             {% bootstrap_form form %}
 
-
             {% buttons %}
                 <div class="buttons">
-                    <button type="submit" class="btn btn-default"
-                            {% if form.disabled %}disabled{% endif %}>
+                    <button type="submit"
+                            class="btn btn-default tooltiped {% if form.disabled %}btn-disabled{% endif %}"
+                            {% if object.is_public %}
+                            data-placement="top" data-toggle="tooltip"
+                            data-title="You can't edit public datasets"
+                            {% endif %}>
                         <i class="fa fa-save"></i> Update
                     </button>
+
                     <a href="{% url 'wizard:challenge:data.pick' pk=challenge.pk %}"
                        class="btn btn-default picker">
                         <i class="fa fa-times"></i>

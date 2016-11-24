@@ -105,7 +105,7 @@ class TestDataUpdate(object):
 
     def test_cant_update_public_datasets_i_dont_own_form(self, cb_and_public_data):
         r = cb_and_public_data.get('wizard:challenge:data', pk=cb_and_public_data.pk)
-        assert 'disabled' in r.lhtml.cssselect('form button[type="submit"]')[0].attrib
+        assert 'disabled' in r.lhtml.cssselect('form button[type="submit"]')[0].attrib.get('class', '')
 
     def test_cant_update_public_ds_i_dont_own_post(self, cb_and_public_data):
         s = cb_and_public_data.sample
