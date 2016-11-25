@@ -18,6 +18,7 @@ services:
     ports:
       - "8742:8000"
     volumes:
+      - /var/log/chalab:/app/logs
       - mediavolume:/app/media
       - staticvolume:/app/static
   db:
