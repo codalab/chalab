@@ -71,6 +71,7 @@ services:
       - celery
     volumes:
       - .:/app
+      - /var/log/chalab:/app/logs
       - mediavolume:/app/media
       - staticvolume:/app/static
   media:
