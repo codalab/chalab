@@ -240,3 +240,7 @@ footer {
     opacity: .65;
 }
 
+.wiki-help {
+    font-size: 2em;
+    float: right;
+}
