@@ -796,8 +796,8 @@ class ChallengeModel(models.Model):
                                  related_name='challenge')
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,
                                     related_name='challenge')
-    documentation = models.ForeignKey(DocumentationModel, null=True, blank=True,
-                                      related_name='challenge')
+    documentation = models.OneToOneField(DocumentationModel, null=True, blank=True,
+                                         related_name='challenge')
 
     @property
     def is_ready(self):
