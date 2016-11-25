@@ -52,6 +52,8 @@
         {# Display django.contrib.messages as Bootstrap alerts #}
         {% bootstrap_messages %}
 
+        {% wiki_help %}
+
         <div id="{% block app_name %}{% endblock %}" class="app">
             <div id="{% block panel_name %}{% endblock %}" class="panel">
                 <div id="{% block module_name %}{% endblock %}" class="module">
