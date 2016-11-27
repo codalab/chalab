@@ -652,12 +652,18 @@ class DocumentationModel(models.Model):
 
     def save(self, *args, **kwargs):
         self.is_ready = all(page.is_rendered for page in self.pages)
-        self.challenge.updated_at = datetime.now()
+
+        try:
+            self.challenge.updated_at = datetime.now()
+        except ChallengeModel.DoesNotExist:
+            pass
+
         super().save(*args, **kwargs)
 
     @classmethod
     def create(cls, render_for=None):
         c = cls.objects.create()
+
         if render_for:
             mapping = challenge_to_mappings(render_for)
         else:
