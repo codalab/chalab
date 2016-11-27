@@ -522,15 +522,15 @@ class TaskModel(models.Model):
         # TODO(laurent): there are some subtleties on the validation
         # regarding nested fields. We also do not need to duplicate
         # the metadata for the columns between each input.
-        self.is_ready = (self.input_test is not None and
-                         self.target_train is not None and
-                         self.input_test is not None and
-                         self.input_valid is not None and
-                         self.target_valid is not None)
+        # self.is_ready = (self.input_test is not None and
+        #                  self.target_train is not None and
+        #                  self.input_test is not None and
+        #                  self.input_valid is not None and
+        #                  self.target_valid is not None)
 
-        self.is_ready = self.is_ready and (self.test_ratio is not None and
-                                           self.train_ratio is not None and
-                                           self.valid_ratio is not None)
+        self.is_ready = (self.test_ratio is not None and
+                         self.train_ratio is not None and
+                         self.valid_ratio is not None)
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
