@@ -15,13 +15,14 @@
             var F = function () {
                 var jqxhr = $.get("{% url 'wizard:challenge:bundler:status_json' pk=challenge.pk %}")
                         .done(function (data) {
-                            if (data.state == "finished") {
-                                console.log("Bundle finished");
-                                $('#building-btn').html(window.BUILT_BTN);
+                            if (data.state == "scheduled" || data.state == "started") {
+                                console.log("Still building");
+                                window.setTimeout(F, 2000);
                             }
                             else {
-                                console.log("Still building");
-                                window.setTimeout(F, 4000);
+                                console.log("Bundle finished");
+                                // $('#building-btn').html(window.BUILT_BTN);
+                                location.reload();
                             }
                         })
                         .fail(function (data) {
@@ -67,14 +68,18 @@
                                 <i class="fa fa-cog fa-spin fa-fx" aria-hidden="true"></i>
                                 Building...
                             </button>
-                            </span>
+                    </span>
                 {% else %}
                     <form action="{% url 'wizard:challenge:bundler:build' challenge.id %}">
                         {% csrf_token %}
                         <button type="submit"
                                 class="btn btn-block btn-warning">
                             <i class="fa fa-gears" aria-hidden="true"></i>
-                            Build
+                                {% if bundler.is_download_ready %}
+                                    Re-Build
+                                {% else %}
+                                    Build
+                                {% endif %}
                         </button>
                     </form>
                 {% endif %}

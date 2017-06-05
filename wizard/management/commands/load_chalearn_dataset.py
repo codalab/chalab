@@ -36,14 +36,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self._warn("You need to run the download script "
                    "first (see the `make dataset') commad")
-        self._warn("This command is designed to be run only once "
-                   "You need to remove previous datasets by hand.")
+        #self._warn("This command is designed to be run only once "
+        #           "You need to remove previous datasets by hand.")
 
-        for (path, name) in list_folders(PATH_CHALEARN_DATASET):
-            self._success('loading: %s' % path)
-            dataset = models.DatasetModel.create_from_chalearn(path, 'Chalearn - ' + name)
-            self._success('Successfully loaded dataset: %s' % path)
-            models.TaskModel.from_chalearn(dataset, path, 'Chalearn - %s - Base Task' % name)
-            self._success('Successfully loaded task: %s' % path)
+        # Verify if we already have some TaskModel
+        if models.DatasetModel.objects.exists() and models.TaskModel.objects.exists() :
+            self._warn("Database already initialised, skipping initialization.")
+        else :
+            for (path, name) in list_folders(PATH_CHALEARN_DATASET):
+                self._success('loading: %s' % path)
+                dataset = models.DatasetModel.create_from_chalearn(path, 'Chalearn - ' + name)
+                self._success('Successfully loaded dataset: %s' % path)
+                models.TaskModel.from_chalearn(dataset, path, 'Chalearn - %s - Base Task' % name)
+                self._success('Successfully loaded task: %s' % path)
 
         self._success('Successfully loaded the tasks and datasets')

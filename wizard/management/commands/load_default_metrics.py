@@ -73,21 +73,25 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(message))
 
     def handle(self, *args, **options):
-        self._warn("This command is designed to be run only once "
-                   "You need to remove previous metrics by hand.")
+        #self._warn("This command is designed to be run only once.\n"
+        #           "You need to remove previous metrics by hand.")
 
-        for (name, content) in METRICS.items():
-            self._success('loading: %s' % name)
-            models.MetricModel.objects.create(
-                name=name,
-                owner=None,
-                is_public=True,
-                is_ready=True,
-                is_default=content.get('is_default', False),
-                classification=content.get('classification', False),
-                regression=content.get('regression', False),
-                description=content.get("description", None)
-            )
-            self._success('Successfully loaded metric: %s' % name)
+        # Verify if we already have some MetricModel
+        if models.MetricModel.objects.exists() :
+            self._warn("Database already initialised, skipping initialization.")
+        else:
+            for (name, content) in METRICS.items():
+                self._success('loading: %s' % name)
+                models.MetricModel.objects.create(
+                    name=name,
+                    owner=None,
+                    is_public=True,
+                    is_ready=True,
+                    is_default=content.get('is_default', False),
+                    classification=content.get('classification', False),
+                    regression=content.get('regression', False),
+                    description=content.get("description", None)
+                )
+                self._success('Successfully loaded metric: %s' % name)
 
         self._success('Successfully loaded the metrics')
