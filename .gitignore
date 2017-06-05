@@ -16,6 +16,12 @@ postgresql-data
 # Docker production
 .env
 
+# Datasets
+datasets/chalearn/*
+!download.sh
+
+# Intellij IDE
+.idea/*
 
 # Github Default:
 
