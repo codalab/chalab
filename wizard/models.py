@@ -303,7 +303,7 @@ class DatasetModel(models.Model):
 
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
-    default_metric = models.ForeignKey('MetricModel', null=True)
+    default_metric = models.ForeignKey('MetricModel', null=True, on_delete=models.SET_NULL)
 
     @classmethod
     def available(cls, user):
@@ -465,7 +465,7 @@ class TaskModel(models.Model):
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
-    dataset = models.ForeignKey(DatasetModel, null=True)
+    dataset = models.ForeignKey(DatasetModel, null=True, on_delete=models.PROTECT)
 
     train_ratio = models.FloatField(null=True,
                                     default=85,
@@ -795,9 +795,9 @@ class ChallengeModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    dataset = models.ForeignKey(DatasetModel, null=True, blank=True)
+    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.PROTECT)
     task = models.ForeignKey(TaskModel, null=True, blank=True)
-    metric = models.ForeignKey(MetricModel, null=True, blank=True)
+    metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL)
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
                                  related_name='challenge')
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,

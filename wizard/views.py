@@ -9,6 +9,9 @@ from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
+from django.db.models import ProtectedError
+
+
 from bundler.models import BundleTaskModel
 from chalab import errors
 from . import models, flow
@@ -256,7 +259,7 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
         return super().dispatch(request, *args, **kwargs)
 
-
+@login_required
 def data_picker(request, pk):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
@@ -274,6 +277,30 @@ def data_picker(request, pk):
             c.metric = d.default_metric
 
             c.save()
+        elif k == 'private':
+            ds = request.POST['dataset']
+
+            if request.POST['button'] == 'delete':
+
+                try:
+                    models.DatasetModel.objects.filter(
+                        is_public=False, owner=request.user.id, id=ds
+                    ).delete()
+                except ProtectedError:
+                    # TODO If deletion haven't working because some project use
+                    # TODO it, we must do a popup to informate the user
+                    print("lol")
+
+                # refresh
+                request.method = ''
+                return data_picker(request, pk)
+
+            d = get_object_or_404(DatasetModel, is_public=False, owner=request.user.id, id=ds)
+            c.dataset = d
+
+            c.task = None
+
+            c.save()
         elif k == 'create':
             name = request.POST['name'] or "empty dataset"
             c.dataset = DatasetModel.create(name, request.user)
@@ -284,8 +311,10 @@ def data_picker(request, pk):
 
         return redirect('wizard:challenge:data', pk=pk)
     else:
-        pds = models.DatasetModel.objects.all().filter(is_public=True)
-        context = {'public_datasets': pds,
+        pubds = models.DatasetModel.objects.all().filter(is_public=True)
+        prids = models.DatasetModel.objects.all().filter(is_public=False, owner=request.user.id)
+        context = {'public_datasets': pubds,
+                   'private_datasets': prids,
                    'challenge': c,
                    'flow': flow.Flow(flow.DataFlowItem, c)}
         return render(request, 'wizard/data/picker.html', context=context)

@@ -34,7 +34,36 @@
             <div class="form-block">
                 <h4>Use one of your Datasets</h4>
 
-                <h5 class="text-muted">No datasets yet...</h5>
+
+                <form class="picker" method="POST" action="#">
+                    {% csrf_token %}
+                    <input type="hidden" name="kind" value="private"/>
+
+                    {% if private_datasets %}
+                        <div class="form-group">
+                            <label for="datasetPublicPicker">Dataset</label>
+                            <select name="dataset" id="datasetPrivatePicker">
+                                {% for dataset in private_datasets %}
+                                    <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {% buttons %}
+                            <button class="primaryAction btn btn-primary"
+                                    name="button" value="use"
+                                    type="submit">Use
+                            </button>
+                            <button class="primaryAction btn btn-danger"
+                                    name="button" value="delete"
+                                    type="submit">Delete
+                            </button>
+                        {% endbuttons %}
+                    {% else %}
+                        <h5 class="text-muted">No datasets yet...</h5>
+                    {% endif %}
+
+                </form>
             </div>
         </div>
         <div class="col-sm-4 create">
