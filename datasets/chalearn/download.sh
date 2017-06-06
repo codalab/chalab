@@ -24,7 +24,7 @@ done
 # Build original dataset
 for f in $FILES; do
     name=`echo ${f} | sed -E 's;(.*)\.zip;\1;'`
-    cat ./${name}/${name}_train.data ./${name}/${name}_valid.data  > ./${name}/${name}.data
-    cat ./${name}/${name}_train.solution ./${name}/${name}_valid.solution > ./${name}/${name}.solution
+    cat ./${name}/${name}_train.data ./${name}/${name}_valid.data ./${name}/${name}_test.data  > ./${name}/${name}.data
+    cat ./${name}/${name}_train.solution ./${name}/${name}_valid.solution ./${name}/${name}_test.solution > ./${name}/${name}.solution
 done
 
