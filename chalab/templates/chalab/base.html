@@ -23,7 +23,13 @@
     {% endblock %}
 
 </head>
-<body>
+
+{% if alert_message %}
+    <body onload="alert('{{ alert_message }}');">
+{% else %}
+    <body>
+{% endif %}
+
 <div class="container">
     {% block body %}
 
