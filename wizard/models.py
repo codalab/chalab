@@ -352,10 +352,11 @@ class DatasetModel(models.Model):
 
     @classmethod
     def create_from_chalearn(cls, path, name, owner=None, is_public=True):
-        input, target, metric = cls.load_from_automl(path, any_prefix=False)
+        input, target, metric, description = cls.load_from_automl(path, any_prefix=False)
         return cls.create(owner=owner,
                           is_public=is_public,
-                          name=name, default_metric=metric,
+                          name=name, description=description,
+                          default_metric=metric,
                           input=input, target=target)
 
     @classmethod
@@ -364,6 +365,7 @@ class DatasetModel(models.Model):
             i = load_info_file(chalearn_path(path, '_public.info'))
             is_sparse = i.getboolean('is_sparse')
             task, metric = i.get('task'), i.get('metric')
+            description = i.get('description')
             metric = default_metric(metric, task)
         except FileNotFoundError:
             is_sparse = False
@@ -385,16 +387,18 @@ class DatasetModel(models.Model):
         input.save()
         target.save()
 
-        return input, target, metric
+        return input, target, metric, description
 
     @classmethod
     def create(cls, name, owner=None, is_public=False, input=None, target=None,
-               default_metric=None):
+               default_metric=None, description=None):
         x = {}
         if input is not None:
             x['input'] = input
         if target is not None:
             x['target'] = target
+        if description is not None:
+            x['description'] = description
 
         return cls.objects.create(name=name, owner=owner, is_public=is_public,
                                   default_metric=default_metric, **x)
