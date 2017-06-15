@@ -17,6 +17,8 @@ from django.utils.deconstruct import deconstructible
 from tinymce.models import HTMLField
 
 from chalab.tools import archives, fs
+from chalab.tools.storage import *
+
 from . import docs
 
 log = logging.getLogger('wizard/models')
@@ -792,7 +794,7 @@ class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80)
     description = models.TextField(max_length=255)
-    logo = models.ImageField(null=True, blank=True, upload_to="data/logos/%Y/%m/%d/")
+    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -808,6 +810,16 @@ class ChallengeModel(models.Model):
                                     related_name='challenge')
     documentation = models.OneToOneField(DocumentationModel, null=True, blank=True,
                                          related_name='challenge')
+
+
+    def save(self, *args, **kwargs):
+        # delete old file when replacing by updating the file
+        try:
+            this = ChallengeModel.objects.get(id=self.id)
+            if this.logo != self.logo:
+                this.logo.delete(save=False)
+        except: pass # when new photo then we do nothing, normal case
+        super(ChallengeModel, self).save(*args, **kwargs)
 
     @property
     def is_ready(self):

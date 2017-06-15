@@ -316,7 +316,7 @@ def data_picker(request, pk, cant_delete = False):
                    'flow': flow.Flow(flow.DataFlowItem, c)}
 
         if cant_delete:
-            context['alert_message'] = "This dataset can\\'t be deleted :\\nAnother chalenge use it."
+            context['alert_message'] = "This dataset can\\'t be deleted :\\nAnother challenge use it."
 
         return render(request, 'wizard/data/picker.html', context=context)
 
