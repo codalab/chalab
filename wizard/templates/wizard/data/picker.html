@@ -23,8 +23,7 @@
                                 };
 
                                 if (description[s.value] != 'None' && description[s.value]) {
-                                    document.getElementById('datasetDescription').innerHTML = 'Description : '
-                                    + description[s.value];
+                                    document.getElementById('datasetDescription').innerHTML = description[s.value];
                                 }else{
                                     document.getElementById('datasetDescription').innerHTML = '';
                                 }
@@ -38,7 +37,7 @@
                             {% endfor %}
                         </select>
                         <br/>
-                        <label id="datasetDescription"></label>
+                        <h5 id="datasetDescription"></h5>
                         <script>
                             showDescription(document.getElementById('datasetPublicPicker'));
                         </script>
