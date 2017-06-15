@@ -298,7 +298,7 @@ def create_archive(bt, data_dir, output_dir):
 def save_archive(bt, archive, challenge, bundle_task):
     bt.add_log('Export the archive')
     with open(archive, 'rb') as f:
-        bundle_task.output.save('bundle_%s_%s.zip' % (challenge.pk, bundle_task.pk), File(f))
+        bundle_task.output.save('bundle_%s.zip' % (challenge.pk), File(f))
 
 
 def generate_task_data(bundle_task, challenge):

@@ -7,6 +7,8 @@ from django.utils.deconstruct import deconstructible
 
 from wizard.models import ChallengeModel
 
+from chalab.tools.storage import *
+
 storage = DefaultStorage()
 
 
@@ -71,7 +73,7 @@ class BundleTaskModel(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     closed = models.DateTimeField(null=True)
 
-    output = models.FileField(null=True, upload_to=StorageNameFactory('data', 'bundles'))
+    output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
 
     def __str__(self):
         return "<%s: challenge=%s, state=%s>" \
