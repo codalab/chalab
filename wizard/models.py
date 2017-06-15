@@ -341,11 +341,12 @@ class DatasetModel(models.Model):
             except fs.InvalidDirectoryException as e:
                 raise InvalidAutomlFormatException(e) from e
 
-            input, target, metric = self.load_from_automl(root, any_prefix=True)
+            input, target, metric, description  = self.load_from_automl(root, any_prefix=True)
 
             self.name = name
             self.input = input
             self.target = target
+            self.description = description
 
             if metric:
                 self.default_metric = metric
@@ -367,11 +368,15 @@ class DatasetModel(models.Model):
             i = load_info_file(chalearn_path(path, '_public.info'))
             is_sparse = i.getboolean('is_sparse')
             task, metric = i.get('task'), i.get('metric')
-            description = i.get('description')
             metric = default_metric(metric, task)
         except FileNotFoundError:
             is_sparse = False
             metric = None
+
+        try:
+            description = i.get('description')
+        except:
+            description = None
 
         input = load_chalearn(path, '.data',
                               is_sparse=is_sparse, any_prefix=any_prefix)
