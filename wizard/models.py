@@ -763,9 +763,18 @@ class DocumentationPageModel(models.Model):
 
 
 class BaselineModel(models.Model):
-    submission = models.FileField(upload_to="data/baseline/%Y/%m/%d/",
+    submission = models.FileField(upload_to=save_to_baseline,
                                   verbose_name='baseline submission',
                                   blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # delete old file when replacing by updating the file
+        try:
+            this = BaselineModel.objects.get(id=self.id)
+            if this.submission != self.submission:
+                this.submission.delete(save=False)
+        except: pass # when new photo then we do nothing, normal case
+        super(BaselineModel, self).save(*args, **kwargs)
 
     @property
     def absolute_uri(self):
