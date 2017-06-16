@@ -333,15 +333,30 @@ class DatasetModel(models.Model):
                 expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
                 expected_files |= {'README', 'README.txt', 'README.md'}
 
+                convertible_suffixes = {'.data', '.solution'}
+                convertible_files = set('%s%s' % (name, x) for x in convertible_suffixes)
+
                 unexpected = content - expected_files
 
-                if len(unexpected) > 0:
+                minimum = convertible_files - content
+
+                if len(unexpected) > 0 or len(minimum) > 0:
                     raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
 
             except fs.InvalidDirectoryException as e:
                 raise InvalidAutomlFormatException(e) from e
 
-            input, target, metric, description  = self.load_from_automl(root, any_prefix=True)
+            #TODO Despends of something, we must convert files before the load
+            #convert
+
+            from chalab.convert_to_automl import convert
+            newroot = root
+            for file in convertible_files:
+                newroot = convert(os.path.join(root, file))
+
+
+
+            input, target, metric, description  = self.load_from_automl(newroot, any_prefix=True)
 
             self.name = name
             self.input = input
