@@ -82,6 +82,17 @@ def columns_count_first_line(file_field):
     finally:
         file_field.close()
 
+def columns_all_the_same_count(file_field, cols):
+    file_field.open('r')
+    lines = file_field.readlines()
+    file_field.close()
+
+    for line in lines:
+        if line.strip and len(line.split()) != cols:
+            return False
+    return True
+
+
 
 class ColumnarFileModel(models.Model):
     name = None
@@ -232,9 +243,11 @@ class MatrixModel(models.Model):
     def clean(self):
         super().clean()  # Called last since we set the default self.columns and self.rows before.
 
-        # TODO(laurent): Validate the file by checking the number of column for EVERY lines.
         rows = lines_count(self.raw_content)
         cols = columns_count_first_line(self.raw_content)
+
+        if not columns_all_the_same_count(self.raw_content, cols):
+            raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
 
         if self.cols is None:
             self.cols = AxisDescriptionModel.objects.create()
