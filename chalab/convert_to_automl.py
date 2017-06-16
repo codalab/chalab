@@ -38,10 +38,13 @@ def from_csv(path):
     origin_file.seek(0)
     has_header = csv.Sniffer().has_header(origin_file.read(1024))
     origin_file.seek(0)
+
+    #If already in AutoML, we do nothing
+    if not has_header and dialect.delimiter == ' ':
+        return origin_path
+
+
     csv_file = csv.reader(origin_file, dialect)
-
-
-
 
     final_file = open(os.path.join(final_path, file), "w")
 
