@@ -6,4 +6,11 @@
             </a>
         </li>
     {% endfor %}
+    <li>
+        <a class=""
+           href="{% url 'wizard:challenge' challenge.id %}">
+            <i class="fa fa-cubes" aria-hidden="true"></i>
+            Recap
+        </a>
+    </li>
 </ol>
