@@ -316,7 +316,8 @@ def data_picker(request, pk, cant_delete = False):
                    'flow': flow.Flow(flow.DataFlowItem, c)}
 
         if cant_delete:
-            context['alert_message'] = "This dataset can\\'t be deleted :\\nAnother challenge use it."
+            from django.contrib import messages
+            messages.error(request, "This dataset can't be deleted : another challenge use it.")
 
         return render(request, 'wizard/data/picker.html', context=context)
 

@@ -23,7 +23,8 @@
                                 };
 
                                 if (description[s.value] != 'None' && description[s.value]) {
-                                    document.getElementById('datasetDescription').innerHTML = description[s.value];
+                                    document.getElementById('datasetDescription').innerHTML =
+                                    '<strong>Description: </strong>' + description[s.value];
                                 }else{
                                     document.getElementById('datasetDescription').innerHTML = '';
                                 }
