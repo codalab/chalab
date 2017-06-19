@@ -1,7 +1,8 @@
 {% extends 'wizard/base.html' %}
+{% load static %}
 {% load bootstrap3 %}
 
-{% block module_name %}picker{% endblock %}
+{% block module_name %}editor{% endblock %}
 
 {% block flow_content %}
     <h3>Which metric do you want to use?</h3>
@@ -44,15 +45,18 @@
 
                 <h4>Name:</h4>
 
-                <input type="text" class="form-control">
+                <input name="name" type="text" class="form-control" value="
+{% if metric %}{{ metric.name }}{% endif %}">
 
                 <h4>Description:</h4>
 
-                <input type="text" class="form-control">
+                <input name="description" type="text" class="form-control" value="
+{% if metric %}{{ metric.description }}{% endif %}">
 
                 <h4>Code:</h4>
 
-                <textarea class="form-control" cols="20" rows="20" ></textarea>
+                <textarea name="code" class="form-control" cols="20" rows="20" >
+{% if metric %}{{ metric.code }}{% endif %}</textarea>
 
                 <p class="text-muted text-center">
                     Les données attendues sont dans dkhsdkjh et celles données sont dans kgfkgfk

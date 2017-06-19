@@ -367,12 +367,35 @@ def metric(request, pk):
 
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
-    #metric = get_object_or_404(MetricModel, id=c.metric)
+
+    if request.method == 'POST':
+        k = request.POST['kind']
+        print(request.POST)
+        print(pk)
+
+        assert k == 'public'
+
+        mc = request.POST['metric']
+        m = get_object_or_404(MetricModel, is_public=True, id=mc)
+        c.metric = m
+        c.save()
+    else:
+        pass
 
     public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
 
+    def f(x):
+        a = 1 if x.classification else 0
+        b = 1 if x.regression else 0
+        c = x.name.lower()
+
+        return '%s-%s-%s' % (a, b, c)
+
+    public_metrics = sorted(public_metrics, key=f)
+
     context = {'challenge': c, 'public_metrics': public_metrics,
-               'flow': flow.Flow(flow.MetricFlowItem, c)}
+               'flow': flow.Flow(flow.MetricFlowItem, c),
+               'metric': c.metric}
 
     return render(request, 'wizard/metric/test_editor.html', context)
 

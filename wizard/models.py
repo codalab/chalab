@@ -612,22 +612,18 @@ class TaskModel(models.Model):
             **cls.load_from_chalearn(path)
         )
 
-
-class TypeMetricModel(models.Model):
-    name = models.CharField(max_length=64, null=False)
-
-
 class MetricModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
     name = models.CharField(max_length=256, null=False)
-    description = models.TextField(null=True)
-    code = models.TextField(null=True)
+    description = models.TextField(null=False, default="")
+    owner = models.ForeignKey(User, null=True)
+    code = models.TextField(null=False, default="")
 
     is_default = models.BooleanField(default=False, null=False)
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
 
-    type_metric = models.ForeignKey(TypeMetricModel, null=True)
+    classification = models.BooleanField(default=False, null=False)
+    regression = models.BooleanField(default=False, null=False)
 
     @property
     def template_mapping(self):
