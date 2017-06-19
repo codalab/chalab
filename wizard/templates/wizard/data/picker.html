@@ -14,12 +14,34 @@
                     <input type="hidden" name="kind" value="public"/>
 
                     <div class="form-group">
+                        <script>
+                            function showDescription(s) {
+                                var description = {
+                                    {% for dataset in public_datasets %}
+                                        {{ dataset.pk }}: '{{ dataset.description }}',
+                                    {% endfor %}
+                                };
+
+                                if (description[s.value] != 'None' && description[s.value]) {
+                                    document.getElementById('datasetDescription').innerHTML =
+                                    '<strong>Description: </strong>' + description[s.value];
+                                }else{
+                                    document.getElementById('datasetDescription').innerHTML = '';
+                                }
+                            }
+                        </script>
+
                         <label for="datasetPublicPicker">Dataset</label>
-                        <select name="dataset" id="datasetPublicPicker">
+                        <select onchange="showDescription(this)" name="dataset" id="datasetPublicPicker">
                             {% for dataset in public_datasets %}
                                 <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
                             {% endfor %}
                         </select>
+                        <br/>
+                        <h5 id="datasetDescription"></h5>
+                        <script>
+                            showDescription(document.getElementById('datasetPublicPicker'));
+                        </script>
                     </div>
 
                     {% buttons %}
@@ -33,7 +55,6 @@
         <div class="col-sm-4 private">
             <div class="form-block">
                 <h4>Use one of your Datasets</h4>
-
 
                 <form class="picker" method="POST" action="#">
                     {% csrf_token %}

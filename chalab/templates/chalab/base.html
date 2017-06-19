@@ -23,6 +23,7 @@
     {% endblock %}
 
 </head>
+
 <body>
 <div class="container">
     {% block body %}
@@ -42,7 +43,7 @@
                     {% else %}
                         <li id="home"><a href="{% url 'home' %}">Home</a></li>
                         <li id="about"><a href="{% url 'about' %}">About</a></li>
-                        <li id="signup"><a href="{% url 'account_signup' %}">Register</a></li>
+                        <li id="signup"><a href="{% url 'account_signup' %}">Sign Up</a></li>
                         <li id="login"><a href="{% url 'account_login' %}">Login</a></li>
                     {% endif %}
                 </ul>

@@ -17,6 +17,8 @@ from django.utils.deconstruct import deconstructible
 from tinymce.models import HTMLField
 
 from chalab.tools import archives, fs
+from chalab.tools.storage import *
+
 from . import docs
 
 log = logging.getLogger('wizard/models')
@@ -79,6 +81,17 @@ def columns_count_first_line(file_field):
         return len(line.split())
     finally:
         file_field.close()
+
+def columns_all_the_same_count(file_field, cols):
+    file_field.open('r')
+    lines = file_field.readlines()
+    file_field.close()
+
+    for line in lines:
+        if line.strip and len(line.split()) != cols:
+            return False
+    return True
+
 
 
 class ColumnarFileModel(models.Model):
@@ -230,9 +243,11 @@ class MatrixModel(models.Model):
     def clean(self):
         super().clean()  # Called last since we set the default self.columns and self.rows before.
 
-        # TODO(laurent): Validate the file by checking the number of column for EVERY lines.
         rows = lines_count(self.raw_content)
         cols = columns_count_first_line(self.raw_content)
+
+        if not columns_all_the_same_count(self.raw_content, cols):
+            raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
 
         if self.cols is None:
             self.cols = AxisDescriptionModel.objects.create()
@@ -331,19 +346,35 @@ class DatasetModel(models.Model):
                 expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
                 expected_files |= {'README', 'README.txt', 'README.md'}
 
+                convertible_suffixes = {'.data', '.solution'}
+                convertible_files = set('%s%s' % (name, x) for x in convertible_suffixes)
+
                 unexpected = content - expected_files
 
-                if len(unexpected) > 0:
+                minimum = convertible_files - content
+
+                if len(unexpected) > 0 or len(minimum) > 0:
                     raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
 
             except fs.InvalidDirectoryException as e:
                 raise InvalidAutomlFormatException(e) from e
 
-            input, target, metric = self.load_from_automl(root, any_prefix=True)
+            #TODO Despends of something, we must convert files before the load
+            #convert
+
+            from chalab.convert_to_automl import convert
+            newroot = root
+            for file in convertible_files:
+                newroot = convert(os.path.join(root, file))
+
+
+
+            input, target, metric, description  = self.load_from_automl(newroot, any_prefix=True)
 
             self.name = name
             self.input = input
             self.target = target
+            self.description = description
 
             if metric:
                 self.default_metric = metric
@@ -352,10 +383,11 @@ class DatasetModel(models.Model):
 
     @classmethod
     def create_from_chalearn(cls, path, name, owner=None, is_public=True):
-        input, target, metric = cls.load_from_automl(path, any_prefix=False)
+        input, target, metric, description = cls.load_from_automl(path, any_prefix=False)
         return cls.create(owner=owner,
                           is_public=is_public,
-                          name=name, default_metric=metric,
+                          name=name, description=description,
+                          default_metric=metric,
                           input=input, target=target)
 
     @classmethod
@@ -368,6 +400,11 @@ class DatasetModel(models.Model):
         except FileNotFoundError:
             is_sparse = False
             metric = None
+
+        try:
+            description = i.get('description')
+        except:
+            description = None
 
         input = load_chalearn(path, '.data',
                               is_sparse=is_sparse, any_prefix=any_prefix)
@@ -385,16 +422,18 @@ class DatasetModel(models.Model):
         input.save()
         target.save()
 
-        return input, target, metric
+        return input, target, metric, description
 
     @classmethod
     def create(cls, name, owner=None, is_public=False, input=None, target=None,
-               default_metric=None):
+               default_metric=None, description=None):
         x = {}
         if input is not None:
             x['input'] = input
         if target is not None:
             x['target'] = target
+        if description is not None:
+            x['description'] = description
 
         return cls.objects.create(name=name, owner=owner, is_public=is_public,
                                   default_metric=default_metric, **x)
@@ -757,9 +796,18 @@ class DocumentationPageModel(models.Model):
 
 
 class BaselineModel(models.Model):
-    submission = models.FileField(upload_to="data/baseline/%Y/%m/%d/",
+    submission = models.FileField(upload_to=save_to_baseline,
                                   verbose_name='baseline submission',
                                   blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # delete old file when replacing by updating the file
+        try:
+            this = BaselineModel.objects.get(id=self.id)
+            if this.submission != self.submission:
+                this.submission.delete(save=False)
+        except: pass # when new photo then we do nothing, normal case
+        super(BaselineModel, self).save(*args, **kwargs)
 
     @property
     def absolute_uri(self):
@@ -788,7 +836,7 @@ class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80)
     description = models.TextField(max_length=255)
-    logo = models.ImageField(null=True, blank=True, upload_to="data/logos/%Y/%m/%d/")
+    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -804,6 +852,16 @@ class ChallengeModel(models.Model):
                                     related_name='challenge')
     documentation = models.OneToOneField(DocumentationModel, null=True, blank=True,
                                          related_name='challenge')
+
+
+    def save(self, *args, **kwargs):
+        # delete old file when replacing by updating the file
+        try:
+            this = ChallengeModel.objects.get(id=self.id)
+            if this.logo != self.logo:
+                this.logo.delete(save=False)
+        except: pass # when new photo then we do nothing, normal case
+        super(ChallengeModel, self).save(*args, **kwargs)
 
     @property
     def is_ready(self):

@@ -1,6 +1,6 @@
 {% load account %}{% user_display user as user_display %}{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}Hello from {{ site_name }}!
 
-You're receiving this e-mail because user {{ user_display }} at {{ site_domain }} has registered using this e-mail address.
+You're receiving this e-mail because user {{ user_display }} at {{ site_domain }} has sign up using this e-mail address.
 
 To activate your account, please go to {{ activate_url }}
 

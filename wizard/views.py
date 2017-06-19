@@ -260,7 +260,7 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
 @login_required
-def data_picker(request, pk):
+def data_picker(request, pk, cant_delete = False):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
     if request.method == 'POST':
@@ -282,24 +282,21 @@ def data_picker(request, pk):
 
             if request.POST['button'] == 'delete':
 
+                cant_delete = False
                 try:
                     models.DatasetModel.objects.filter(
                         is_public=False, owner=request.user.id, id=ds
                     ).delete()
                 except ProtectedError:
-                    # TODO If deletion haven't working because some project use
-                    # TODO it, we must do a popup to informate the user
-                    print("lol")
+                    cant_delete=True
 
                 # refresh
                 request.method = ''
-                return data_picker(request, pk)
+                return data_picker(request, pk, cant_delete)
 
             d = get_object_or_404(DatasetModel, is_public=False, owner=request.user.id, id=ds)
             c.dataset = d
-
             c.task = None
-
             c.save()
         elif k == 'create':
             name = request.POST['name'] or "empty dataset"
@@ -317,6 +314,11 @@ def data_picker(request, pk):
                    'private_datasets': prids,
                    'challenge': c,
                    'flow': flow.Flow(flow.DataFlowItem, c)}
+
+        if cant_delete:
+            from django.contrib import messages
+            messages.error(request, "This dataset can't be deleted : another challenge use it.")
+
         return render(request, 'wizard/data/picker.html', context=context)
 
 
