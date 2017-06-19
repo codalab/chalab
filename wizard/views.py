@@ -18,7 +18,7 @@ from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
-    DocumentationModel, DocumentationPageModel, BaselineModel, InvalidAutomlFormatException, TestMetricModel
+    DocumentationModel, DocumentationPageModel, BaselineModel, InvalidAutomlFormatException
 from .models import challenge_to_mappings, challenge_to_mappings_doc
 
 log = logging.getLogger('wizard.views')
@@ -367,13 +367,12 @@ def metric(request, pk):
 
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
-    metric = get_object_or_404(TestMetricModel, id=c.metric)
+    #metric = get_object_or_404(MetricModel, id=c.metric)
 
     public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
 
     context = {'challenge': c, 'public_metrics': public_metrics,
-               'flow': flow.Flow(flow.MetricFlowItem, c),
-               'metric': metric}
+               'flow': flow.Flow(flow.MetricFlowItem, c)}
 
     return render(request, 'wizard/metric/test_editor.html', context)
 
