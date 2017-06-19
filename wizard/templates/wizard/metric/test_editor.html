@@ -1,0 +1,71 @@
+{% extends 'wizard/base.html' %}
+{% load bootstrap3 %}
+
+{% block module_name %}picker{% endblock %}
+
+{% block flow_content %}
+    <h3>Which metric do you want to use?</h3>
+
+    <div class="pick">
+        <div class="public">
+            <h4>Public Metric:</h4>
+
+            <form class="picker" method="POST" action="#">
+                {% csrf_token %}
+
+                <input type="hidden" name="kind" value="public"/>
+
+                <div class="form-group">
+                    <select class="form-control" name="metric">
+                        {% for metric in public_metrics %}
+                            <option data-name={{ metric.name }}
+                                            value="{{ metric.pk }}"
+                                    {% if metric.is_selected %}
+                                    selected
+                                    {% endif %}>
+                                {% if metric.classification %}
+                                    Classification:
+                                {% elif metric.regression %}
+                                    Regression:
+                                {% endif %}
+                                {{ metric.description }}
+                                ({{ metric.name }})
+                                {% if metric.is_favorite_metric %}
+                                    *
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-muted text-center">
+                        The default metric for the dataset (if any) is marked
+                        with a *
+                    </p>
+                </div>
+
+                <h4>Name:</h4>
+
+                <input type="text" class="form-control">
+
+                <h4>Description:</h4>
+
+                <input type="text" class="form-control">
+
+                <h4>Code:</h4>
+
+                <textarea class="form-control" cols="20" rows="20" ></textarea>
+
+                <p class="text-muted text-center">
+                    Les données attendues sont dans dkhsdkjh et celles données sont dans kgfkgfk
+                </p>
+
+                {% buttons %}
+                    <div class="form-group">
+                        <button class="primaryAction btn btn-primary"
+                                type="submit">Save
+                        </button>
+                    </div>
+                {% endbuttons %}
+            </form>
+        </div>
+    </div>
+{% endblock %}
