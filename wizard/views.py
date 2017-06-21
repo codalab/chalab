@@ -317,13 +317,12 @@ def data_picker(request, pk, cant_delete = False):
                    'flow': flow.Flow(flow.DataFlowItem, c)}
 
         if cant_delete:
-            messages.error(request, "This dataset can't be deleted : another challenge use it.")
+            messages.error(request, "This dataset can't be deleted: another challenge use it.")
 
         return render(request, 'wizard/data/picker.html', context=context)
 
 
 def metric(request, pk):
-
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
     if request.method == 'POST':
@@ -331,41 +330,54 @@ def metric(request, pk):
 
         assert k == 'public'
 
-        new_metric = MetricModel()
+        if request.POST['button'] == 'save':
+            new_metric = MetricModel()
 
-        # If it's here first metric or it's a default one, we create a new one
-        if (not c.metric is None) and (not c.metric.is_default):
-            new_metric = get_object_or_404(MetricModel, id=c.metric.id)
-        else:
-            new_metric.owner = request.user
+            # If it's here first metric or it's a default one, we create a new one
+            if (not c.metric is None) and (not c.metric.is_default):
+                new_metric = get_object_or_404(MetricModel, id=c.metric.id)
+            else:
+                new_metric.owner = request.user
 
-        new_metric.name = request.POST['name']
-        new_metric.description = request.POST['description']
-        new_metric.code = request.POST['code']
+            new_metric.name = request.POST['name']
+            new_metric.description = request.POST['description']
+            new_metric.code = request.POST['code']
 
-        #TODO Verify if the code is ok (static analyse) before validate it
-        if True:
-            new_metric.is_ready = True
-        else:
-            new_metric.is_ready = False
-            messages.error(request, "There is something wrong with your code (static analyse)")
+            #TODO Verify if the code is ok (static analyse) before validate it
+            if True:
+                new_metric.is_ready = True
+            else:
+                new_metric.is_ready = False
+                messages.error(request, "There is something wrong with your code (static analyse)")
 
-        new_metric.save()
+            new_metric.save()
 
-        c.metric = new_metric
-        c.save()
+            c.metric = new_metric
+            c.save()
+
+        elif request.POST['button'] == 'delete':
+            utilise = models.ChallengeModel.objects.filter(metric = request.POST['metricPrivate'])
+
+            if len(utilise) > 0:
+                messages.error(request, "This metric can't be deleted: another challenge use it.")
+            else:
+                models.MetricModel.objects.filter(
+                    is_public=False, owner=request.user.id, id=request.POST['metricPrivate']
+                ).delete()
     else:
         pass
 
     public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
 
+    private_metric = MetricModel.objects.all().filter(owner=request.user)
+
     context = {'challenge': c, 'public_metrics': public_metrics,
                'flow': flow.Flow(flow.MetricFlowItem, c),
-               'metric': c.metric}
+               'metric': c.metric, 'private_metric': private_metric}
 
     # Load a default metric if necessary
     if c.metric is None:
-        context['metric'] = get_object_or_404(MetricModel, name='default')
+        context['metric'] = get_object_or_404(MetricModel, name='example')
 
     context['is_ready'] = context['metric'].is_ready
 

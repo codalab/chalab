@@ -15,7 +15,6 @@
 
             <form class="picker" method="POST" action="#">
                 {% csrf_token %}
-
                 <input type="hidden" name="kind" value="public"/>
 
                 <h4>Name of the metric function:</h4>
@@ -39,13 +38,16 @@
                 </p>
 
                 <div class="pick row">
-                    <div class="col-sm-6 public">
+                    <div class="col-sm-4 public">
                         <div class="form-block">
                             <h4>Use a Public Metric:</h4>
 
                             <script>
                                 var metrics = {
                                 {% for metric in public_metrics %}
+                                    {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
+                                {% endfor %}
+                                {% for metric in private_metric %}
                                     {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
                                 {% endfor %}
                                 }
@@ -78,7 +80,37 @@
                             </p>
                         </div>
                     </div>
-                    <div class="col-sm-6 create">
+
+                    <div class="col-sm-4 private">
+                        <div class="form-block">
+                            <h4>Use one of your Metric</h4>
+                            {% if private_metric %}
+                                <div class="form-group">
+                                    <label>Metric: </label>
+                                    <select name="metricPrivate" id="metricPrivatePicker">
+                                        {% for metric in private_metric %}
+                                            <option value="{{ metric.pk }}">{{ metric.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                {% buttons %}
+                                    <button onclick="fillWithMetric(document.getElementById('metricPrivatePicker'))"
+                                            class="primaryAction btn btn-primary" type="button">
+                                        Use
+                                    </button>
+                                    <button class="primaryAction btn btn-danger"
+                                            name="button" value="delete" type="submit">
+                                        Delete
+                                    </button>
+                                {% endbuttons %}
+                            {% else %}
+                                <h5 class="text-muted">No datasets yet...</h5>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 create">
                         <div class="form-block">
                             <h4>Load your Metric from a file:</h4>
 
@@ -104,8 +136,8 @@
 
                 {% buttons %}
                     <div class="form-group">
-                        <button class="primaryAction btn btn-primary"
-                                type="submit">Save
+                        <button class="primaryAction btn btn-primary" name="button" value="save" type="submit">
+                            Save
                         </button>
                     </div>
                 {% endbuttons %}
