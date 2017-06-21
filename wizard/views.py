@@ -334,7 +334,7 @@ def metric(request, pk):
         new_metric = MetricModel()
 
         # If it's here first metric or it's a default one, we create a new one
-        if (not c.metric is None) or c.metric.is_default:
+        if (not c.metric is None) and (not c.metric.is_default):
             new_metric = get_object_or_404(MetricModel, id=c.metric.id)
         else:
             new_metric.owner = request.user

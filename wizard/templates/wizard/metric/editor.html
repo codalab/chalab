@@ -10,46 +10,15 @@
     <link rel="stylesheet" href="/static/chalab/CodeMirror/codemirror.css">
     <script src="/static/chalab/CodeMirror/python/python.js"></script>
 
-    <h3>Which metric do you want to use?</h3>
-
     <div class="pick">
         <div class="public">
-            <h4>Public Metric:</h4>
 
             <form class="picker" method="POST" action="#">
                 {% csrf_token %}
 
                 <input type="hidden" name="kind" value="public"/>
 
-                    <div class="form-group">
-
-                        <script>
-                        $.getJSON("/media/defaults_metrics.json", function(json) {
-                            console.log(json);
-                        });
-                        </script>
-
-                    <select onchange="loadDefaultMetric(this)" class="form-control" name="metric">
-                        {% for metric in public_metrics %}
-                            <option data-name={{ metric.name }} value="{{ metric.pk }}"
-                                    {% if metric.is_selected %}selected{% endif %}>
-                                {% if metric.classification %}
-                                    Classification:
-                                {% elif metric.regression %}
-                                    Regression:
-                                {% endif %}
-                                {{ metric.description }}
-                                {% if metric.is_favorite_metric %}*{% endif %}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <p class="text-muted text-center">
-                        The default metric for the dataset (if any) is marked
-                        with a *
-                    </p>
-                </div>
-
-                <h4>Name:</h4>
+                <h4>Name of the metric function:</h4>
 
                 <input name="name" id="name" type="text" class="form-control" value="
 {% if metric %}{{ metric.name }}{% endif %}">
@@ -69,25 +38,69 @@
                     and the list of answer give by the user are listed in 'prediction'
                 </p>
 
-                <input type='file' accept='text/*' onchange='openFile(event)'><br>
-                <script>
-                    var CodeMirrorPython = CodeMirror.fromTextArea(document.getElementById('code'), {
-                        mode:  "python",
-                        indentUnit: 4,
-                        lineWrapping: true,
-                        lineNumbers: true
-                    });
+                <div class="pick row">
+                    <div class="col-sm-6 public">
+                        <div class="form-block">
+                            <h4>Use a Public Metric:</h4>
 
-                    var openFile = function(event) {
-                        var reader = new FileReader();
+                            <script>
+                                var metrics = {
+                                {% for metric in public_metrics %}
+                                    {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
+                                {% endfor %}
+                                }
 
-                        reader.onload = function(){
-                            CodeMirrorPython.setValue(reader.result);
-                        };
+                                function fillWithMetric(s) {
+                                    metric = metrics[s.value];
+                                    document.getElementById('name').value = metric[0];
+                                    document.getElementById('description').value = metric[1];
+                                    CodeMirrorPython.setValue(metric[2]);
+                                }
+                            </script>
 
-                        reader.readAsText(event.target.files[0]);
-                    };
-                </script>
+                            <select onchange="fillWithMetric(this)" class="form-control" name="metric">
+                                {% for metric in public_metrics %}
+                                    <option data-name="{{ metric.name }}" value="{{ metric.pk }}"
+                                            {% if metric.is_selected %}selected{% endif %}>
+                                        {% if metric.classification %}
+                                            Classification:
+                                        {% elif metric.regression %}
+                                            Regression:
+                                        {% endif %}
+                                        {{ metric.description }} ({{ metric.name }})
+                                        {% if metric.is_favorite_metric %}*{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <p class="text-muted text-center">
+                                The default metric for the dataset (if any) is marked
+                                with a *
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 create">
+                        <div class="form-block">
+                            <h4>Load your Metric from a file:</h4>
+
+                            <input type='file' accept='text/*' onchange='openFile(event)'><br>
+                            <script>
+                                var CodeMirrorPython = CodeMirror.fromTextArea(document.getElementById('code'), {
+                                    mode:  "python", indentUnit: 4, lineWrapping: true, lineNumbers: true
+                                });
+
+                                var openFile = function(event) {
+                                    var reader = new FileReader();
+
+                                    reader.onload = function(){
+                                        CodeMirrorPython.setValue(reader.result);
+                                    };
+
+                                    reader.readAsText(event.target.files[0]);
+                                };
+                            </script>
+                        </div>
+                    </div>
+                </div>
 
                 {% buttons %}
                     <div class="form-group">
