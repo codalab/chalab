@@ -124,7 +124,7 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
     with fs.tmp_dir() as d:
         scoring_dir = os.path.join(d, scoring_program)
-        resources.build_default_scoring(metric.name, scoring_dir)
+        resources.build_default_scoring(metric, scoring_dir)
 
         archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
         p['scoring_program'] = os.path.basename(archive_path)

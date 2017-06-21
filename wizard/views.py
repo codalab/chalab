@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -316,7 +317,6 @@ def data_picker(request, pk, cant_delete = False):
                    'flow': flow.Flow(flow.DataFlowItem, c)}
 
         if cant_delete:
-            from django.contrib import messages
             messages.error(request, "This dataset can't be deleted : another challenge use it.")
 
         return render(request, 'wizard/data/picker.html', context=context)
@@ -343,8 +343,12 @@ def metric(request, pk):
         new_metric.description = request.POST['description']
         new_metric.code = request.POST['code']
 
-        # TODO Verify if the code is ok (static analys) before validate it
-        new_metric.is_ready = True
+        #TODO Verify if the code is ok (static analyse) before validate it
+        if True:
+            new_metric.is_ready = True
+        else:
+            new_metric.is_ready = False
+            messages.error(request, "There is something wrong with your code (static analyse)")
 
         new_metric.save()
 

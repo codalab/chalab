@@ -160,43 +160,12 @@ def mvmean(R, axis=0):
         return np.array(map(average, R.transpose()))
             
  
-# ======= All metrics used for scoring in the challenge ========
+# ======= Metric used for scoring in the challenge ========
  
-def bac_binary(solution, prediction):
-    return bac_metric(solution, prediction, task='binary.classification')
-    
-def bac_multiclass(solution, prediction):
-    return bac_metric(solution, prediction, task='multiclass.classification')
-    
-def bac_multilabel(solution, prediction):
-    return bac_metric(solution, prediction, task='multilabel.classification')
-    
-def auc_binary(solution, prediction):
-    return auc_metric(solution, prediction, task='binary.classification')
-    
-def auc_multilabel(solution, prediction):
-    return auc_metric(solution, prediction, task='multilabel.classification')
-    
-def pac_binary(solution, prediction):
-    return pac_metric(solution, prediction, task='binary.classification')
-    
-def pac_multiclass(solution, prediction):
-    return pac_metric(solution, prediction, task='multiclass.classification')
-    
-def pac_multilabel(solution, prediction):
-    return pac_metric(solution, prediction, task='multilabel.classification')
-    
-def f1_binary(solution, prediction):
-    return f1_metric(solution, prediction, task='binary.classification')
-    
-def f1_multilabel(solution, prediction):
-    return f1_metric(solution, prediction, task='multilabel.classification')
+# Fill with your metric
 
-def abs_regression(solution, prediction):
-    return a_metric(solution, prediction, task='regression')
-    
-def r2_regression(solution, prediction):
-    return r2_metric(solution, prediction, task='regression')
+
+# ======= Pre-made metrics ========
 
 ### REGRESSION METRICS (work on raw solution and prediction)
 # These can be computed on all solutions and predictions (classification included)
