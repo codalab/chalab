@@ -322,125 +322,50 @@ def data_picker(request, pk, cant_delete = False):
         return render(request, 'wizard/data/picker.html', context=context)
 
 
-def metric_picker(request, pk):
-    c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
-
-    if request.method == 'POST':
-        k = request.POST['kind']
-        assert k == 'public'
-
-        mc = request.POST['metric']
-        m = get_object_or_404(MetricModel, is_public=True, id=mc)
-        c.metric = m
-        c.save()
-        return redirect('wizard:challenge:metric', pk=pk)
-    else:
-        public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
-
-        current = c.metric
-
-        try:
-            for m in public_metrics:
-                if current and current == m:
-                    m.is_selected = True
-
-                if m == c.dataset.default_metric:
-                    m.is_favorite_metric = True
-        except:
-            pass
-
-        def f(x):
-            a = 1 if x.classification else 0
-            b = 1 if x.regression else 0
-            c = x.name.lower()
-
-            return '%s-%s-%s' % (a, b, c)
-
-        public_metrics = sorted(public_metrics, key=f)
-
-        context = {'challenge': c, 'public_metrics': public_metrics,
-                   'flow': flow.Flow(flow.MetricFlowItem, c)}
-        return render(request, 'wizard/metric/picker.html', context=context)
-
-
 def metric(request, pk):
 
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
-
     if request.method == 'POST':
         k = request.POST['kind']
-        print(request.POST)
-        print(pk)
 
         assert k == 'public'
 
-        mc = request.POST['metric']
-        m = get_object_or_404(MetricModel, is_public=True, id=mc)
-        c.metric = m
+        new_metric = MetricModel()
+
+        # If it's here first metric or it's a default one, we create a new one
+        if (not c.metric is None) or c.metric.is_default:
+            new_metric = get_object_or_404(MetricModel, id=c.metric.id)
+        else:
+            new_metric.owner = request.user
+
+        new_metric.name = request.POST['name']
+        new_metric.description = request.POST['description']
+        new_metric.code = request.POST['code']
+
+        # TODO Verify if the code is ok (static analys) before validate it
+        new_metric.is_ready = True
+
+        new_metric.save()
+
+        c.metric = new_metric
         c.save()
     else:
         pass
 
     public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
 
-    def f(x):
-        a = 1 if x.classification else 0
-        b = 1 if x.regression else 0
-        c = x.name.lower()
-
-        return '%s-%s-%s' % (a, b, c)
-
-    public_metrics = sorted(public_metrics, key=f)
-
     context = {'challenge': c, 'public_metrics': public_metrics,
                'flow': flow.Flow(flow.MetricFlowItem, c),
                'metric': c.metric}
 
-    return render(request, 'wizard/metric/test_editor.html', context)
+    # Load a default metric if necessary
+    if c.metric is None:
+        context['metric'] = get_object_or_404(MetricModel, name='default')
 
-class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
-    template_name = 'wizard/metric/editor.html'
-    model = MetricModel
-    context_object_name = 'metric'
+    context['is_ready'] = context['metric'].is_ready
 
-    fields = ['name', 'description']
-    current_flow = flow.MetricFlowItem
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class=form_class)
-
-        for f in self.fields:
-            form.fields[f].disabled = True
-        form.disabled = True
-
-        return form
-
-    def form_valid(self, form):
-        raise errors.HTTP400Exception('wizard/challenge/error.html',
-                                      "Forbidden edit on a metric",
-                                      """You can't edit a metric that you do not own.""")
-
-    def get_context_data(self, **kwargs):
-        pk = self.kwargs['pk']
-        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
-
-        context = super().get_context_data(challenge=c, **kwargs)
-        context['challenge'] = c
-        context['is_ready'] = self.object.is_ready
-        return context
-
-    def get_object(self, **kwargs):
-        pk = self.kwargs['pk']
-
-        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
-        return challenge.metric
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.get_object(**kwargs) is None:
-            return redirect('wizard:challenge:metric.pick', pk=kwargs['pk'])
-        else:
-            return super().dispatch(request, *args, **kwargs)
+    return render(request, 'wizard/metric/editor.html', context)
 
 
 class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):

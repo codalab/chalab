@@ -5,26 +5,98 @@
 {% block module_name %}editor{% endblock %}
 
 {% block flow_content %}
-    <div class="update">
-        <form class='editor' action="#" method="post">
-            {% confirm_form %}
-            {% csrf_token %}
-            {% bootstrap_form form %}
 
-            {% buttons %}
-                <div class="buttons">
-                    <button type="submit" class="btn btn-default"
-                            {% if form.disabled %}disabled{% endif %}>
-                        <i class="fa fa-save"></i> Update
-                    </button>
+    <script src="/static/chalab/CodeMirror/codemirror.js"></script>
+    <link rel="stylesheet" href="/static/chalab/CodeMirror/codemirror.css">
+    <script src="/static/chalab/CodeMirror/python/python.js"></script>
 
-                    <a href="{% url 'wizard:challenge:metric.pick' pk=challenge.pk %}"
-                       class="btn btn-default picker">
-                        <i class="fa fa-times"></i>
-                        Pick another metric
-                    </a>
+    <h3>Which metric do you want to use?</h3>
+
+    <div class="pick">
+        <div class="public">
+            <h4>Public Metric:</h4>
+
+            <form class="picker" method="POST" action="#">
+                {% csrf_token %}
+
+                <input type="hidden" name="kind" value="public"/>
+
+                    <div class="form-group">
+
+                        <script>
+                        $.getJSON("/media/defaults_metrics.json", function(json) {
+                            console.log(json);
+                        });
+                        </script>
+
+                    <select onchange="loadDefaultMetric(this)" class="form-control" name="metric">
+                        {% for metric in public_metrics %}
+                            <option data-name={{ metric.name }} value="{{ metric.pk }}"
+                                    {% if metric.is_selected %}selected{% endif %}>
+                                {% if metric.classification %}
+                                    Classification:
+                                {% elif metric.regression %}
+                                    Regression:
+                                {% endif %}
+                                {{ metric.description }}
+                                {% if metric.is_favorite_metric %}*{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-muted text-center">
+                        The default metric for the dataset (if any) is marked
+                        with a *
+                    </p>
                 </div>
-            {% endbuttons %}
-        </form>
+
+                <h4>Name:</h4>
+
+                <input name="name" id="name" type="text" class="form-control" value="
+{% if metric %}{{ metric.name }}{% endif %}">
+
+                <h4>Description:</h4>
+
+                <input name="description" id="description" type="text" class="form-control" value="
+{% if metric %}{{ metric.description }}{% endif %}">
+
+                <h4>Code:</h4>
+
+                <textarea name="code" id="code" class="form-control" cols="20" rows="20" >
+{% if metric %}{{ metric.code }}{% endif %}</textarea>
+
+                <p class="text-muted text-center">
+                    The list of wanted answer are in 'solution'
+                    and the list of answer give by the user are listed in 'prediction'
+                </p>
+
+                <input type='file' accept='text/*' onchange='openFile(event)'><br>
+                <script>
+                    var CodeMirrorPython = CodeMirror.fromTextArea(document.getElementById('code'), {
+                        mode:  "python",
+                        indentUnit: 4,
+                        lineWrapping: true,
+                        lineNumbers: true
+                    });
+
+                    var openFile = function(event) {
+                        var reader = new FileReader();
+
+                        reader.onload = function(){
+                            CodeMirrorPython.setValue(reader.result);
+                        };
+
+                        reader.readAsText(event.target.files[0]);
+                    };
+                </script>
+
+                {% buttons %}
+                    <div class="form-group">
+                        <button class="primaryAction btn btn-primary"
+                                type="submit">Save
+                        </button>
+                    </div>
+                {% endbuttons %}
+            </form>
+        </div>
     </div>
 {% endblock %}

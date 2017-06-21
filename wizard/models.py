@@ -247,7 +247,8 @@ class MatrixModel(models.Model):
         cols = columns_count_first_line(self.raw_content)
 
         if not columns_all_the_same_count(self.raw_content, cols):
-            raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
+            pass
+            #raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
 
         if self.cols is None:
             self.cols = AxisDescriptionModel.objects.create()
@@ -613,9 +614,9 @@ class TaskModel(models.Model):
         )
 
 class MetricModel(models.Model):
+    owner = models.ForeignKey(User, null=True)
     name = models.CharField(max_length=256, null=False)
     description = models.TextField(null=False, default="")
-    owner = models.ForeignKey(User, null=True)
     code = models.TextField(null=False, default="")
 
     is_default = models.BooleanField(default=False, null=False)
