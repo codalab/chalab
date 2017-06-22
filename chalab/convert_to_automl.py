@@ -3,6 +3,8 @@ import os
 import re
 
 
+# Convert the file (their path are given in "path") from the format give in "format"
+# to AutoML. Auto detect format if nothing (or "auto") give.
 def convert(path, format='auto'):
     if format == 'automl':
         origin_path, file = os.path.split(path)
