@@ -13,6 +13,7 @@ from django.db.models import OneToOneField
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
+from django.utils import timezone
 from tinymce.models import HTMLField
 
 from chalab.tools import archives, fs
@@ -309,6 +310,8 @@ class DatasetModel(models.Model):
 
     keywords = models.CharField(max_length=256, default="")
     authors = models.CharField(max_length=256, default="")
+
+    updated_at = models.DateTimeField(auto_now=True)
 
     resource_created = models.DateField(null=True, blank=True, default=None)
     resource_url = models.URLField(null=True, blank=True, default=None)
@@ -844,6 +847,8 @@ class ChallengeModel(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    build_at = models.DateTimeField(default=timezone.now)
 
     dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.PROTECT)
     task = models.ForeignKey(TaskModel, null=True, blank=True)
