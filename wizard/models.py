@@ -332,39 +332,42 @@ class DatasetModel(models.Model):
     def template_doc(self):
         return {'dataset_name': ""}
 
-    def update_from_chalearn(self, fp_zip):
+    def update_from_chalearn(self, fp_zip, data_format='auto'):
         with archives.unzip_fp(fp_zip) as d:
-            try:
-                root = fs.sole_path(d)
-                name = os.path.basename(root)
+            if data_format == 'libsvm':
+                pass
+            else:
+                try:
+                    root = fs.sole_path(d)
+                    name = os.path.basename(root)
 
-                content = set(x for x in os.listdir(root)
-                              if not 'DS_Store' in x and not '__MACOS' in x)
-                expected_suffixes = {'.data', '.solution', '_feat.name',
-                                     '_info.m', '_label.name', '_sample.name'}
-                expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
-                expected_files |= {'README', 'README.txt', 'README.md'}
+                    content = set(x for x in os.listdir(root)
+                                  if not 'DS_Store' in x and not '__MACOS' in x)
+                    expected_suffixes = {'.data', '.solution', '_feat.name',
+                                         '_info.m', '_label.name', '_sample.name'}
+                    expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
+                    expected_files |= {'README', 'README.txt', 'README.md'}
 
-                convertible_suffixes = {'.data', '.solution'}
-                convertible_files = set('%s%s' % (name, x) for x in convertible_suffixes)
+                    convertible_suffixes = {'.data', '.solution'}
+                    convertible_files = set('%s%s' % (name, x) for x in convertible_suffixes)
 
-                unexpected = content - expected_files
+                    unexpected = content - expected_files
 
-                minimum = convertible_files - content
+                    minimum = convertible_files - content
 
-                if len(unexpected) > 0 or len(minimum) > 0:
-                    raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
+                    if len(unexpected) > 0 or len(minimum) > 0:
+                        raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
 
-            except fs.InvalidDirectoryException as e:
-                raise InvalidAutomlFormatException(e) from e
+                except fs.InvalidDirectoryException as e:
+                    raise InvalidAutomlFormatException(e) from e
 
-            # TODO Despends of something, we must convert files before the load
+            # TODO Depends of something, we must convert files before the load
             # convert
 
             from chalab.convert_to_automl import convert
             newroot = root
             for file in convertible_files:
-                newroot = convert(os.path.join(root, file))
+                newroot = convert(os.path.join(root, file), data_format)
 
             input, target, metric, description = self.load_from_automl(newroot, any_prefix=True)
 

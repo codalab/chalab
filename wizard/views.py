@@ -134,7 +134,7 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     @property
     def disabled(self):
         dataset_users = len(ChallengeModel.objects.filter(dataset=self.object))
-        return self.object.owner != self.request.user or (self.object.is_ready and dataset_users>1)
+        return self.object.owner != self.request.user or (self.object.is_ready and dataset_users > 1)
 
     def get_form(self, form_class=None):
         if self.object.is_public:
@@ -160,8 +160,14 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
             if not self.disabled and self.request.FILES:
                 u = self.request.FILES.get('automl_upload', None)
+
+                if 'data_format' in self.request.POST:
+                    data_format = self.request.POST['data_format']
+                else:
+                    data_format = 'auto'
+
                 try:
-                    self.object.update_from_chalearn(u)
+                    self.object.update_from_chalearn(u, data_format)
                 except InvalidAutomlFormatException as e:
                     raise errors.HTTP400Exception('wizard/challenge/error.html',
                                                   "Invalid Automl archive",

@@ -3,7 +3,21 @@ import os
 import re
 
 
-def convert(path):
+def convert(path, format='auto'):
+    if format == 'automl':
+        origin_path, file = os.path.split(path)
+        return origin_path
+    elif format == 'csv':
+        return from_csv(path)
+    elif format == 'arff':
+        return from_arff(path)
+    elif format == 'libsvm':
+        return from_libsvm(path)
+    else:
+        return detect_from(path)
+
+
+def detect_from(path):
     file = open(path, 'r')
     lines = file.readlines()
     file.close()

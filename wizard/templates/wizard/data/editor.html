@@ -51,22 +51,31 @@
     {% endif %}
 
     <h3>Edit the dataset:</h3>
-    <form class='editor' action="#" method="post"
-          enctype="multipart/form-data">
-        {% confirm_form %}
+    <form class='editor' action="#" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% bootstrap_form form %}
+
+        <label>Format of the data: </label>
+        <select name="data_format" id="data_format" {% if form.disabled %}disabled{% endif %}>
+            <option value="auto" selected>Auto</option>
+            <option value="automl">AutoML</option>
+            <option value="csv">CSV</option>
+            <option value="arff">ARFF</option>
+            <option value="libsvm">LIBSVM</option>
+        </select>
 
         {% buttons %}
         <div class="buttons">
             <button type="submit"
-                    class="btn btn-default tooltiped {% if form.disabled %}btn-disabled{% endif %}"
+                    class="btn {% if form.disabled %}btn-disabled{% else %}btn-primary{% endif %}"
                     {% if object.is_public %}
                     data-placement="top" data-toggle="tooltip"
                     data-title="You can't edit public datasets"
+                    disabled
                     {% elif form.disabled %}
                     data-placement="top" data-toggle="tooltip"
                     data-title="An other chalenge use this dataset. Impossible to update it"
+                    disabled
                     {% endif %}>
                 <i class="fa fa-save"></i> Update
             </button>
