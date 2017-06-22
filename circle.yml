@@ -1,8 +1,8 @@
+machine:
+  python:
+    version: pypy-3.6.2
+
 test:
   override:
     - flake8 ./
     - python manage.py test
-
-machine:		
-  post:		
-    - pyenv global 3.5.2	
