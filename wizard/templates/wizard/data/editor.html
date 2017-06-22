@@ -64,6 +64,9 @@
                     {% if object.is_public %}
                     data-placement="top" data-toggle="tooltip"
                     data-title="You can't edit public datasets"
+                    {% elif form.disabled %}
+                    data-placement="top" data-toggle="tooltip"
+                    data-title="An other chalenge use this dataset. Impossible to update it"
                     {% endif %}>
                 <i class="fa fa-save"></i> Update
             </button>
