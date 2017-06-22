@@ -64,6 +64,9 @@
                     {% if object.is_public %}
                     data-placement="top" data-toggle="tooltip"
                     data-title="You can't edit public datasets"
+                    {% elif object.is_ready %}
+                    data-placement="top" data-toggle="tooltip"
+                    data-title="You have already load a dataset"
                     {% endif %}>
                 <i class="fa fa-save"></i> Update
             </button>

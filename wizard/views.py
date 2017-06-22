@@ -133,7 +133,7 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
     @property
     def disabled(self):
-        return self.object.owner != self.request.user
+        return self.object.owner != self.request.user or self.object.is_ready
 
     def get_form(self, form_class=None):
         if self.object.is_public:
