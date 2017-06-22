@@ -1,0 +1,8 @@
+test:
+  override:
+    - flake8 ./
+    - python manage.py test
+
+machine:		
+  post:		
+    - pyenv global 3.5.2	

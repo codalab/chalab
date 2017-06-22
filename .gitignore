@@ -23,9 +23,6 @@ datasets/chalearn/*
 # Intellij IDE
 .idea/*
 
-# CircleCI
-circle.yml
-
 # Github Default:
 
 # Byte-compiled / optimized / DLL files
