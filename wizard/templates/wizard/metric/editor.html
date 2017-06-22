@@ -63,22 +63,16 @@
 
                         <select onchange="fillWithMetric(this)" class="form-control" name="metric">
                             {% for metric in public_metrics %}
-                            <option data-name="{{ metric.name }}" value="{{ metric.pk }}"
-                                    {% if metric.is_selected %}selected{% endif %}>
+                            <option data-name="{{ metric.name }}" value="{{ metric.pk }}">
                                 {% if metric.classification %}
                                 Classification:
                                 {% elif metric.regression %}
                                 Regression:
                                 {% endif %}
                                 {{ metric.description }} ({{ metric.name }})
-                                {% if metric.is_favorite_metric %}*{% endif %}
                             </option>
                             {% endfor %}
                         </select>
-                        <p class="text-muted text-center">
-                            The default metric for the dataset (if any) is marked
-                            with a *
-                        </p>
                     </div>
                 </div>
 
@@ -106,7 +100,7 @@
                         </button>
                         {% endbuttons %}
                         {% else %}
-                        <h5 class="text-muted">No datasets yet...</h5>
+                        <h5 class="text-muted">No metrics yet...</h5>
                         {% endif %}
                     </div>
                 </div>
