@@ -4,17 +4,17 @@
 {% block module_name %}picker{% endblock %}
 
 {% block flow_content %}
-    <div class="pick row">
-        <div class="col-sm-4 public">
-            <div class="form-block">
-                <h4>Use a Public Dataset:</h4>
+<div class="pick row">
+    <div class="col-sm-4 public">
+        <div class="form-block">
+            <h4>Use a Public Dataset:</h4>
 
-                <form class="picker" method="POST" action="#">
-                    {% csrf_token %}
-                    <input type="hidden" name="kind" value="public"/>
+            <form class="picker" method="POST" action="#">
+                {% csrf_token %}
+                <input type="hidden" name="kind" value="public"/>
 
-                    <div class="form-group">
-                        <script>
+                <div class="form-group">
+                    <script>
                             function showDescription(s) {
                                 var description = {
                                     {% for dataset in public_datasets %}
@@ -29,86 +29,88 @@
                                     document.getElementById('datasetDescription').innerHTML = '';
                                 }
                             }
-                        </script>
 
-                        <label for="datasetPublicPicker">Dataset</label>
-                        <select onchange="showDescription(this)" name="dataset" id="datasetPublicPicker">
-                            {% for dataset in public_datasets %}
-                                <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <br/>
-                        <h5 id="datasetDescription"></h5>
-                        <script>
+                    </script>
+
+                    <label for="datasetPublicPicker">Dataset</label>
+                    <select onchange="showDescription(this)" name="dataset" id="datasetPublicPicker">
+                        {% for dataset in public_datasets %}
+                        <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <br/>
+                    <h5 id="datasetDescription"></h5>
+                    <script>
                             showDescription(document.getElementById('datasetPublicPicker'));
-                        </script>
-                    </div>
 
-                    {% buttons %}
-                        <button class="primaryAction btn btn-primary"
-                                type="submit">Use
-                        </button>
-                    {% endbuttons %}
-                </form>
-            </div>
+                    </script>
+                </div>
+
+                {% buttons %}
+                <button class="primaryAction btn btn-primary"
+                        type="submit">Use
+                </button>
+                {% endbuttons %}
+            </form>
         </div>
-        <div class="col-sm-4 private">
-            <div class="form-block">
-                <h4>Use one of your Datasets</h4>
-
-                <form class="picker" method="POST" action="#">
-                    {% csrf_token %}
-                    <input type="hidden" name="kind" value="private"/>
-
-                    {% if private_datasets %}
-                        <div class="form-group">
-                            <label for="datasetPublicPicker">Dataset</label>
-                            <select name="dataset" id="datasetPrivatePicker">
-                                {% for dataset in private_datasets %}
-                                    <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        {% buttons %}
-                            <button class="primaryAction btn btn-primary"
-                                    name="button" value="use"
-                                    type="submit">Use
-                            </button>
-                            <button class="primaryAction btn btn-danger"
-                                    name="button" value="delete"
-                                    type="submit">Delete
-                            </button>
-                        {% endbuttons %}
-                    {% else %}
-                        <h5 class="text-muted">No datasets yet...</h5>
-                    {% endif %}
-
-                </form>
-            </div>
-        </div>
-        <div class="col-sm-4 create">
-            <div class="form-block">
-                <h4>Create a Dataset:</h4>
-
-                <form class="creator" method="POST" action="#">
-                    {% csrf_token %}
-                    <input type="hidden" name="kind" value="create"/>
-
-                    <div class="form-group">
-                        <label for="name">Name</label>
-                        <input type="text" class="form-control" name="name"
-                               id="name" placeholder="Name">
-                    </div>
-
-                    {% buttons %}
-                        <button class="primaryAction btn btn-primary"
-                                type="submit">Create
-                        </button>
-                    {% endbuttons %}
-                </form>
-            </div>
-        </div>
-
     </div>
+    <div class="col-sm-4 private">
+        <div class="form-block">
+            <h4>Use one of your Datasets</h4>
+
+            <form class="picker" method="POST" action="#">
+                {% csrf_token %}
+                <input type="hidden" name="kind" value="private"/>
+
+                {% if private_datasets %}
+                <div class="form-group">
+                    <label for="datasetPublicPicker">Dataset</label>
+                    <select name="dataset" id="datasetPrivatePicker">
+                        {% for dataset in private_datasets %}
+                        <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% buttons %}
+                <button class="primaryAction btn btn-primary"
+                        name="button" value="use"
+                        type="submit">Use
+                </button>
+                <button class="primaryAction btn btn-danger"
+                        name="button" value="delete"
+                        type="submit">Delete
+                </button>
+                {% endbuttons %}
+                {% else %}
+                <h5 class="text-muted">No datasets yet...</h5>
+                {% endif %}
+
+            </form>
+        </div>
+    </div>
+    <div class="col-sm-4 create">
+        <div class="form-block">
+            <h4>Create a Dataset:</h4>
+
+            <form class="creator" method="POST" action="#">
+                {% csrf_token %}
+                <input type="hidden" name="kind" value="create"/>
+
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" name="name"
+                           id="name" placeholder="Name">
+                </div>
+
+                {% buttons %}
+                <button class="primaryAction btn btn-primary"
+                        type="submit">Create
+                </button>
+                {% endbuttons %}
+            </form>
+        </div>
+    </div>
+
+</div>
 {% endblock %}

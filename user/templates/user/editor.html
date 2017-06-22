@@ -5,16 +5,16 @@
 {% block panel_name %}editor{% endblock %}
 
 {% block content %}
-    <div class="update">
-        <form class='editor' action="#" method="post">
-            {% csrf_token %}
-            {% bootstrap_form form %}
+<div class="update">
+    <form class='editor' action="#" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
 
-            {% buttons %}
-                <button type="submit" class="btn btn-primary">
-                    {% bootstrap_icon "star" %} Update
-                </button>
-            {% endbuttons %}
-        </form>
-    </div>
+        {% buttons %}
+        <button type="submit" class="btn btn-primary">
+            {% bootstrap_icon "star" %} Update
+        </button>
+        {% endbuttons %}
+    </form>
+</div>
 {% endblock %}

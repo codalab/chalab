@@ -1,4 +1,7 @@
-import re, csv, os
+import csv
+import os
+import re
+
 
 def convert(path):
     file = open(path, 'r')
@@ -26,6 +29,7 @@ def convert(path):
 
     return from_csv(path)
 
+
 def from_csv(path):
     origin_path, file = os.path.split(path)
 
@@ -39,10 +43,9 @@ def from_csv(path):
     has_header = csv.Sniffer().has_header(origin_file.read(1024))
     origin_file.seek(0)
 
-    #If already in AutoML, we do nothing
+    # If already in AutoML, we do nothing
     if not has_header and dialect.delimiter == ' ':
         return origin_path
-
 
     csv_file = csv.reader(origin_file, dialect)
 
@@ -56,7 +59,6 @@ def from_csv(path):
         for val in row:
             final_file.write(val + " ")
         final_file.write("\n")
-
 
     origin_file.close()
 
@@ -85,6 +87,7 @@ def from_libsvm(path):
 
     return final_path
 
+
 def from_arff(path):
     origin_path, file = os.path.split(path)
 
@@ -98,7 +101,6 @@ def from_arff(path):
     final_file = open(os.path.join(final_path, file), "w")
 
     attribute = []
-
 
     for line in lines:
         if line.strip():

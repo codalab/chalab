@@ -2,23 +2,23 @@
 {% load bootstrap3 %}
 
 {% block flow_content %}
-    <div class="nav-pages">
-        <ul class="nav nav-tabs">
-            {% for page in pages %}
-                <li role="presentation"
-                    class="nav-page {% if page.name == current %}active{% endif %}">
-                    <a href="{% url 'wizard:challenge:documentation.page' pk=challenge.id page_id=page.id %}"
-                       class="focus">{{ page.name }}</a>
-                </li>
-            {% endfor %}
-        </ul>
+<div class="nav-pages">
+    <ul class="nav nav-tabs">
+        {% for page in pages %}
+        <li role="presentation"
+            class="nav-page {% if page.name == current %}active{% endif %}">
+            <a href="{% url 'wizard:challenge:documentation.page' pk=challenge.id page_id=page.id %}"
+               class="focus">{{ page.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+<div class="page">
+    <h2>{{ current_page.name }}</h2>
+    <div class="content">
+        {{ current_page.displayed | safe }}
     </div>
-    <div class="page">
-        <h2>{{ current_page.name }}</h2>
-        <div class="content">
-            {{ current_page.displayed | safe }}
-        </div>
-        <a href="{% url 'wizard:challenge:documentation.page.edit' pk=challenge.id page_id=current_page.id %}"
-           class="edit">Edit</a>
-    </div>
+    <a href="{% url 'wizard:challenge:documentation.page.edit' pk=challenge.id page_id=current_page.id %}"
+       class="edit">Edit</a>
+</div>
 {% endblock %}

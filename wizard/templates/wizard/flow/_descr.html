@@ -1,46 +1,46 @@
 <div class="flow-full vertical-stepper">
     {% for f in flow %}
-        <div class="step {{ f.slug }}">
-            <div>
-                {% if f.is_prepared %}
-                    {% if f.is_ready %}
-                        <div class="circle ready">
-                            <i class="fa fa-check" aria-hidden="true"></i>
-                        </div>
-                    {% else %}
-                        <div class="circle not-ready">
-                            <i class="fa fa-exclamation" aria-hidden="true"></i>
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <div class="circle">
-                        <i class="fa fa-question" aria-hidden="true"></i>
-                    </div>
-                {% endif %}
-                <div class="line"></div>
+    <div class="step {{ f.slug }}">
+        <div>
+            {% if f.is_prepared %}
+            {% if f.is_ready %}
+            <div class="circle ready">
+                <i class="fa fa-check" aria-hidden="true"></i>
             </div>
-            <div>
-                <div class="title">
-                    <h3>
-                        <a href="{% url f.url object.id %}">
-                            {{ forloop.counter }}. {{ f.name }}
-                        </a>
-                    </h3>
-                </div>
-                <div class="body">{% include f.descr_template %}</div>
+            {% else %}
+            <div class="circle not-ready">
+                <i class="fa fa-exclamation" aria-hidden="true"></i>
             </div>
+            {% endif %}
+            {% else %}
+            <div class="circle">
+                <i class="fa fa-question" aria-hidden="true"></i>
+            </div>
+            {% endif %}
+            <div class="line"></div>
         </div>
+        <div>
+            <div class="title">
+                <h3>
+                    <a href="{% url f.url object.id %}">
+                        {{ forloop.counter }}. {{ f.name }}
+                    </a>
+                </h3>
+            </div>
+            <div class="body">{% include f.descr_template %}</div>
+        </div>
+    </div>
     {% endfor %}
     <div class="step build">
         <div>
             {% if challenge.is_ready %}
-                <div class="circle doable">
-                    <i class="fa fa-check" aria-hidden="true"></i>
-                </div>
+            <div class="circle doable">
+                <i class="fa fa-check" aria-hidden="true"></i>
+            </div>
             {% else %}
-                <div class="circle not-doable">
-                    <i class="fa fa-exclamation" aria-hidden="true"></i>
-                </div>
+            <div class="circle not-doable">
+                <i class="fa fa-exclamation" aria-hidden="true"></i>
+            </div>
             {% endif %}
             <div class="line"></div>
         </div>
@@ -56,7 +56,7 @@
             <div class="body">
                 Package & Publish your challenge.
                 {% if not challenge.is_ready %}
-                    <br/>Available when the previous steps are complete.
+                <br/>Available when the previous steps are complete.
                 {% endif %}
             </div>
         </div>

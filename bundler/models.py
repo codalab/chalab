@@ -1,13 +1,11 @@
-import os
 from time import gmtime, strftime
 
 from django.core.files.storage import DefaultStorage
 from django.db import models
 from django.utils.deconstruct import deconstructible
 
-from wizard.models import ChallengeModel
-
 from chalab.tools.storage import *
+from wizard.models import ChallengeModel
 
 storage = DefaultStorage()
 

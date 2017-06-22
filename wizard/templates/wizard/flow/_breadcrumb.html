@@ -1,10 +1,10 @@
 <ol class="nav nav-pills">
     {% for f in flow %}
-        <li {% if f.active %}class="active"{% endif %}>
-            <a href="{% url f.url pk=challenge.id %}">
-                {{ forloop.counter }}. {{ f.name }}
-            </a>
-        </li>
+    <li {% if f.active %}class="active" {% endif %}>
+        <a href="{% url f.url pk=challenge.id %}">
+            {{ forloop.counter }}. {{ f.name }}
+        </a>
+    </li>
     {% endfor %}
     <li>
         <a class=""

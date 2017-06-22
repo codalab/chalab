@@ -7,53 +7,53 @@
 {% block panel_name %}challenge{% endblock %}
 
 {% block content %}
-    <div class="description panel panel-default">
-        <div class="row">
-            <div class="col-xs-2">
-                {% if object.logo %}
-                    <img class="center-block img-rounded img-responsive"
-                         src="{{ object.logo.url }}">
-                {% endif %}
-            </div>
-            <div class="col-xs-7">
-                <h1 class="">
-                    {{ object.title }}
-                </h1>
-
-                <h3 class="text-muted">
-                    <small>
-                        Organized by {{ object.organization_name }}
-                    </small>
-                </h3>
-
-                <p class="content">{{ object.description }}</p>
-            </div>
-            <div class="col-xs-3">
-                <a href="{% url 'wizard:challenge:edit' pk=challenge.pk %}"
-                   class="btn btn-edit small">
-                    <i class="fa fa-pencil" aria-hidden="true"></i>
-                    Edit
-                </a>
-                <p>
-                    Created: {{ challenge.created_at }}
-                </p>
-                <p>
-                    Last change: {{ challenge.updated_at }}
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <div class="definition panel {% if object.is_ready %}ready panel-info{% else %}panel-warning{% endif %}">
-        <div class="panel-heading">
-            {% if not object.is_ready %}
-                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+<div class="description panel panel-default">
+    <div class="row">
+        <div class="col-xs-2">
+            {% if object.logo %}
+            <img class="center-block img-rounded img-responsive"
+                 src="{{ object.logo.url }}">
             {% endif %}
-            Challenge
-            Definition{% if not object.is_ready %} (incomplete){% endif %}:
         </div>
-        <div class="panel-body">
-            {% include 'wizard/flow/_descr.html' %}
+        <div class="col-xs-7">
+            <h1 class="">
+                {{ object.title }}
+            </h1>
+
+            <h3 class="text-muted">
+                <small>
+                    Organized by {{ object.organization_name }}
+                </small>
+            </h3>
+
+            <p class="content">{{ object.description }}</p>
+        </div>
+        <div class="col-xs-3">
+            <a href="{% url 'wizard:challenge:edit' pk=challenge.pk %}"
+               class="btn btn-edit small">
+                <i class="fa fa-pencil" aria-hidden="true"></i>
+                Edit
+            </a>
+            <p>
+                Created: {{ challenge.created_at }}
+            </p>
+            <p>
+                Last change: {{ challenge.updated_at }}
+            </p>
         </div>
     </div>
+</div>
+
+<div class="definition panel {% if object.is_ready %}ready panel-info{% else %}panel-warning{% endif %}">
+    <div class="panel-heading">
+        {% if not object.is_ready %}
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+        {% endif %}
+        Challenge
+        Definition{% if not object.is_ready %} (incomplete){% endif %}:
+    </div>
+    <div class="panel-body">
+        {% include 'wizard/flow/_descr.html' %}
+    </div>
+</div>
 {% endblock %}

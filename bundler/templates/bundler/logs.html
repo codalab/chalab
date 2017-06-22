@@ -7,12 +7,12 @@
 {% block panel_name %}bundler-logs{% endblock %}
 
 {% block content %}
-    <h1>Logs</h1>
-    {% for log in task.logs %}
-        <div class="row">
+<h1>Logs</h1>
+{% for log in task.logs %}
+<div class="row">
         <pre>
             {{ log.message }}
         </pre>
-        </div>
-    {% endfor %}
+</div>
+{% endfor %}
 {% endblock %}

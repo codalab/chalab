@@ -6,43 +6,43 @@
 
 {% block flow_content %}
 
-    <script src="/static/chalab/CodeMirror/codemirror.js"></script>
-    <link rel="stylesheet" href="/static/chalab/CodeMirror/codemirror.css">
-    <script src="/static/chalab/CodeMirror/python/python.js"></script>
+<script src="/static/chalab/CodeMirror/codemirror.js"></script>
+<link rel="stylesheet" href="/static/chalab/CodeMirror/codemirror.css">
+<script src="/static/chalab/CodeMirror/python/python.js"></script>
 
-    <div class="pick">
-        <div class="public">
+<div class="pick">
+    <div class="public">
 
-            <form class="picker" method="POST" action="#">
-                {% csrf_token %}
-                <input type="hidden" name="kind" value="public"/>
+        <form class="picker" method="POST" action="#">
+            {% csrf_token %}
+            <input type="hidden" name="kind" value="public"/>
 
-                <h4>Name of the metric function:</h4>
+            <h4>Name of the metric function:</h4>
 
-                <input name="name" id="name" type="text" class="form-control" value="
+            <input name="name" id="name" type="text" class="form-control" value="
 {% if metric %}{{ metric.name }}{% endif %}">
 
-                <h4>Description:</h4>
+            <h4>Description:</h4>
 
-                <input name="description" id="description" type="text" class="form-control" value="
+            <input name="description" id="description" type="text" class="form-control" value="
 {% if metric %}{{ metric.description }}{% endif %}">
 
-                <h4>Code:</h4>
+            <h4>Code:</h4>
 
-                <textarea name="code" id="code" class="form-control" cols="20" rows="20" >
+            <textarea name="code" id="code" class="form-control" cols="20" rows="20">
 {% if metric %}{{ metric.code }}{% endif %}</textarea>
 
-                <p class="text-muted text-center">
-                    The list of wanted answer are in 'solution'
-                    and the list of answer give by the user are listed in 'prediction'
-                </p>
+            <p class="text-muted text-center">
+                The list of wanted answer are in 'solution'
+                and the list of answer give by the user are listed in 'prediction'
+            </p>
 
-                <div class="pick row">
-                    <div class="col-sm-4 public">
-                        <div class="form-block">
-                            <h4>Use a Public Metric:</h4>
+            <div class="pick row">
+                <div class="col-sm-4 public">
+                    <div class="form-block">
+                        <h4>Use a Public Metric:</h4>
 
-                            <script>
+                        <script>
                                 var metrics = {
                                 {% for metric in public_metrics %}
                                     {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
@@ -58,64 +58,65 @@
                                     document.getElementById('description').value = metric[1];
                                     CodeMirrorPython.setValue(metric[2]);
                                 }
-                            </script>
 
-                            <select onchange="fillWithMetric(this)" class="form-control" name="metric">
-                                {% for metric in public_metrics %}
-                                    <option data-name="{{ metric.name }}" value="{{ metric.pk }}"
-                                            {% if metric.is_selected %}selected{% endif %}>
-                                        {% if metric.classification %}
-                                            Classification:
-                                        {% elif metric.regression %}
-                                            Regression:
-                                        {% endif %}
-                                        {{ metric.description }} ({{ metric.name }})
-                                        {% if metric.is_favorite_metric %}*{% endif %}
-                                    </option>
+                        </script>
+
+                        <select onchange="fillWithMetric(this)" class="form-control" name="metric">
+                            {% for metric in public_metrics %}
+                            <option data-name="{{ metric.name }}" value="{{ metric.pk }}"
+                                    {% if metric.is_selected %}selected{% endif %}>
+                                {% if metric.classification %}
+                                Classification:
+                                {% elif metric.regression %}
+                                Regression:
+                                {% endif %}
+                                {{ metric.description }} ({{ metric.name }})
+                                {% if metric.is_favorite_metric %}*{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-muted text-center">
+                            The default metric for the dataset (if any) is marked
+                            with a *
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-sm-4 private">
+                    <div class="form-block">
+                        <h4>Use one of your Metric</h4>
+                        {% if private_metric %}
+                        <div class="form-group">
+                            <label>Metric: </label>
+                            <select name="metricPrivate" id="metricPrivatePicker">
+                                {% for metric in private_metric %}
+                                <option value="{{ metric.pk }}">{{ metric.name }}</option>
                                 {% endfor %}
                             </select>
-                            <p class="text-muted text-center">
-                                The default metric for the dataset (if any) is marked
-                                with a *
-                            </p>
                         </div>
+
+                        {% buttons %}
+                        <button onclick="fillWithMetric(document.getElementById('metricPrivatePicker'))"
+                                class="primaryAction btn btn-primary" type="button">
+                            Use
+                        </button>
+                        <button class="primaryAction btn btn-danger"
+                                name="button" value="delete" type="submit">
+                            Delete
+                        </button>
+                        {% endbuttons %}
+                        {% else %}
+                        <h5 class="text-muted">No datasets yet...</h5>
+                        {% endif %}
                     </div>
+                </div>
 
-                    <div class="col-sm-4 private">
-                        <div class="form-block">
-                            <h4>Use one of your Metric</h4>
-                            {% if private_metric %}
-                                <div class="form-group">
-                                    <label>Metric: </label>
-                                    <select name="metricPrivate" id="metricPrivatePicker">
-                                        {% for metric in private_metric %}
-                                            <option value="{{ metric.pk }}">{{ metric.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                <div class="col-sm-4 create">
+                    <div class="form-block">
+                        <h4>Load your Metric from a file:</h4>
 
-                                {% buttons %}
-                                    <button onclick="fillWithMetric(document.getElementById('metricPrivatePicker'))"
-                                            class="primaryAction btn btn-primary" type="button">
-                                        Use
-                                    </button>
-                                    <button class="primaryAction btn btn-danger"
-                                            name="button" value="delete" type="submit">
-                                        Delete
-                                    </button>
-                                {% endbuttons %}
-                            {% else %}
-                                <h5 class="text-muted">No datasets yet...</h5>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="col-sm-4 create">
-                        <div class="form-block">
-                            <h4>Load your Metric from a file:</h4>
-
-                            <input type='file' accept='text/*' onchange='openFile(event)'><br>
-                            <script>
+                        <input type='file' accept='text/*' onchange='openFile(event)'><br>
+                        <script>
                                 var CodeMirrorPython = CodeMirror.fromTextArea(document.getElementById('code'), {
                                     mode:  "python", indentUnit: 4, lineWrapping: true, lineNumbers: true
                                 });
@@ -129,19 +130,20 @@
 
                                     reader.readAsText(event.target.files[0]);
                                 };
-                            </script>
-                        </div>
+
+                        </script>
                     </div>
                 </div>
+            </div>
 
-                {% buttons %}
-                    <div class="form-group">
-                        <button class="primaryAction btn btn-primary" name="button" value="save" type="submit">
-                            Save
-                        </button>
-                    </div>
-                {% endbuttons %}
-            </form>
-        </div>
+            {% buttons %}
+            <div class="form-group">
+                <button class="primaryAction btn btn-primary" name="button" value="save" type="submit">
+                    Save
+                </button>
+            </div>
+            {% endbuttons %}
+        </form>
     </div>
+</div>
 {% endblock %}

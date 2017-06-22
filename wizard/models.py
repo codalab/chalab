@@ -1,5 +1,4 @@
 import logging
-import os
 import string
 from datetime import datetime
 from time import gmtime, strftime
@@ -18,7 +17,6 @@ from tinymce.models import HTMLField
 
 from chalab.tools import archives, fs
 from chalab.tools.storage import *
-
 from . import docs
 
 log = logging.getLogger('wizard/models')
@@ -82,6 +80,7 @@ def columns_count_first_line(file_field):
     finally:
         file_field.close()
 
+
 def columns_all_the_same_count(file_field, cols):
     file_field.open('r')
     lines = file_field.readlines()
@@ -91,7 +90,6 @@ def columns_all_the_same_count(file_field, cols):
         if line.strip and len(line.split()) != cols:
             return False
     return True
-
 
 
 class ColumnarFileModel(models.Model):
@@ -248,7 +246,7 @@ class MatrixModel(models.Model):
 
         if not columns_all_the_same_count(self.raw_content, cols):
             pass
-            #raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
+            # raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
 
         if self.cols is None:
             self.cols = AxisDescriptionModel.objects.create()
@@ -360,17 +358,15 @@ class DatasetModel(models.Model):
             except fs.InvalidDirectoryException as e:
                 raise InvalidAutomlFormatException(e) from e
 
-            #TODO Despends of something, we must convert files before the load
-            #convert
+            # TODO Despends of something, we must convert files before the load
+            # convert
 
             from chalab.convert_to_automl import convert
             newroot = root
             for file in convertible_files:
                 newroot = convert(os.path.join(root, file))
 
-
-
-            input, target, metric, description  = self.load_from_automl(newroot, any_prefix=True)
+            input, target, metric, description = self.load_from_automl(newroot, any_prefix=True)
 
             self.name = name
             self.input = input
@@ -613,6 +609,7 @@ class TaskModel(models.Model):
             **cls.load_from_chalearn(path)
         )
 
+
 class MetricModel(models.Model):
     owner = models.ForeignKey(User, null=True)
     name = models.CharField(max_length=256, null=False)
@@ -807,7 +804,8 @@ class BaselineModel(models.Model):
             this = BaselineModel.objects.get(id=self.id)
             if this.submission != self.submission:
                 this.submission.delete(save=False)
-        except: pass # when new photo then we do nothing, normal case
+        except:
+            pass  # when new photo then we do nothing, normal case
         super(BaselineModel, self).save(*args, **kwargs)
 
     @property
@@ -854,14 +852,14 @@ class ChallengeModel(models.Model):
     documentation = models.OneToOneField(DocumentationModel, null=True, blank=True,
                                          related_name='challenge')
 
-
     def save(self, *args, **kwargs):
         # delete old file when replacing by updating the file
         try:
             this = ChallengeModel.objects.get(id=self.id)
             if this.logo != self.logo:
                 this.logo.delete(save=False)
-        except: pass # when new photo then we do nothing, normal case
+        except:
+            pass  # when new photo then we do nothing, normal case
         super(ChallengeModel, self).save(*args, **kwargs)
 
     @property

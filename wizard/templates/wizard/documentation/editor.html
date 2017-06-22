@@ -4,33 +4,33 @@
 {% block module_name %}editor{% endblock %}
 
 {% block flow_content %}
-    <div class="update">
-        <form class='editor' action="#" method="post">
-            {% confirm_form %}
-            {% csrf_token %}
-            {% bootstrap_form form %}
+<div class="update">
+    <form class='editor' action="#" method="post">
+        {% confirm_form %}
+        {% csrf_token %}
+        {% bootstrap_form form %}
 
-            {% buttons %}
-                <button type="submit" class="btn btn-default">
-                    {% bootstrap_icon "star" %} Update
-                </button>
-            {% endbuttons %}
-        </form>
-        <div id="template-doc">
-            <p>
-                You can use template variables that will be remplaced
-                when the project is compiled. </p>
-            <p>
-                For example <code>${challenge_description}</code>
-                or <code>$challenge_description</code> will be replaced by
-                the description of the current challenge.
-            </p>
-            <h4>Available template values:</h4>
-            <ul>
-                {% for k, v in template_doc.items %}
-                    <li>{{ k }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+        {% buttons %}
+        <button type="submit" class="btn btn-default">
+            {% bootstrap_icon "star" %} Update
+        </button>
+        {% endbuttons %}
+    </form>
+    <div id="template-doc">
+        <p>
+            You can use template variables that will be remplaced
+            when the project is compiled. </p>
+        <p>
+            For example <code>${challenge_description}</code>
+            or <code>$challenge_description</code> will be replaced by
+            the description of the current challenge.
+        </p>
+        <h4>Available template values:</h4>
+        <ul>
+            {% for k, v in template_doc.items %}
+            <li>{{ k }}</li>
+            {% endfor %}
+        </ul>
     </div>
+</div>
 {% endblock %}

@@ -1,17 +1,15 @@
 import logging
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import ProtectedError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
-
-from django.db.models import ProtectedError
-
 
 from bundler.models import BundleTaskModel
 from chalab import errors
@@ -260,8 +258,9 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
         return super().dispatch(request, *args, **kwargs)
 
+
 @login_required
-def data_picker(request, pk, cant_delete = False):
+def data_picker(request, pk, cant_delete=False):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
     if request.method == 'POST':
@@ -289,7 +288,7 @@ def data_picker(request, pk, cant_delete = False):
                         is_public=False, owner=request.user.id, id=ds
                     ).delete()
                 except ProtectedError:
-                    cant_delete=True
+                    cant_delete = True
 
                 # refresh
                 request.method = ''
@@ -343,7 +342,7 @@ def metric(request, pk):
             new_metric.description = request.POST['description']
             new_metric.code = request.POST['code']
 
-            #TODO Verify if the code is ok (static analyse) before validate it
+            # TODO Verify if the code is ok (static analyse) before validate it
             if True:
                 new_metric.is_ready = True
             else:
@@ -356,7 +355,7 @@ def metric(request, pk):
             c.save()
 
         elif request.POST['button'] == 'delete':
-            utilise = models.ChallengeModel.objects.filter(metric = request.POST['metricPrivate'])
+            utilise = models.ChallengeModel.objects.filter(metric=request.POST['metricPrivate'])
 
             if len(utilise) > 0:
                 messages.error(request, "This metric can't be deleted: another challenge use it.")
