@@ -55,6 +55,7 @@
         {% csrf_token %}
         {% bootstrap_form form %}
 
+        {% if not form.disabled %}
         <label>Format of the data: </label>
         <select name="data_format" id="data_format" {% if form.disabled %}disabled{% endif %}>
             <option value="auto" selected>Auto</option>
@@ -63,6 +64,7 @@
             <option value="arff">ARFF</option>
             <option value="libsvm">LIBSVM</option>
         </select>
+        {% endif %}
 
         {% buttons %}
         <div class="buttons">
