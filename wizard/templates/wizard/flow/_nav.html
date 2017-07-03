@@ -1,26 +1,26 @@
 <div class="row flow-nav text-left">
     <div class="previous col-xs-6">
         {% if flow.previous %}
-            <a class=""
-               href="{% url flow.previous.url pk=challenge.id %}">
-                <i class="fa fa-arrow-left" aria-hidden="true"></i>
-                Previous
-            </a>
+        <a class=""
+           href="{% url flow.previous.url pk=challenge.id %}">
+            <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            Previous
+        </a>
         {% endif %}
     </div>
     <div class="next col-xs-6 text-right">
         {% if flow.next %}
-            <a class=""
-               href="{% url flow.next.url pk=challenge.id %}">
-                <i class="fa fa-arrow-right" aria-hidden="true"></i>
-                Next
-            </a>
+        <a class=""
+           href="{% url flow.next.url pk=challenge.id %}">
+            <i class="fa fa-arrow-right" aria-hidden="true"></i>
+            Next
+        </a>
         {% else %}
-            <a class=""
-               href="{% url 'wizard:challenge' challenge.id %}">
-                <i class="fa fa-cubes" aria-hidden="true"></i>
-                Recap
-            </a>
+        <a class=""
+           href="{% url 'wizard:challenge' challenge.id %}">
+            <i class="fa fa-cubes" aria-hidden="true"></i>
+            Recap
+        </a>
         {% endif %}
     </div>
 </div>

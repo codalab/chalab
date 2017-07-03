@@ -124,7 +124,7 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
     with fs.tmp_dir() as d:
         scoring_dir = os.path.join(d, scoring_program)
-        resources.build_default_scoring(metric.name, scoring_dir)
+        resources.build_default_scoring(metric, scoring_dir)
 
         archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
         p['scoring_program'] = os.path.basename(archive_path)
@@ -302,14 +302,15 @@ def save_archive(bt, archive, challenge, bundle_task):
 
 
 def generate_task_data(bundle_task, challenge):
-    # TODO: check last modified time & last generated time
-    # -> build only when necessary
-
     task = challenge.task
     data = challenge.dataset
 
     if task.has_content and task.is_public:
         bundle_task.add_log('Skipping task data generation, already present')
+        return
+
+    if data.updated_at <= challenge.build_at:
+        bundle_task.add_log('Skipping task data generation, already generated')
         return
 
     bundle_task.add_log('Starting task data generation, based on dataset: %s' % (data.pk))
@@ -374,6 +375,9 @@ def bundle(bundle_task):
             create_bundle(bundle_task, data, challenge)
             a = create_archive(bundle_task, data, output)
             save_archive(bundle_task, a, challenge, bundle_task)
+
+        challenge.build_at = timezone.now()
+        challenge.save()
 
         bundle_task.add_log('Set state to finished')
         bundle_task.state = bundle_task.FINISHED

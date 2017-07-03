@@ -2,34 +2,34 @@
 {% load bootstrap3 %}
 
 {% block flow_content %}
-    <div class="protocol">
-        <form class='edit' action="#" method="post">
-            {% confirm_form %}
+<div class="protocol">
+    <form class='edit' action="#" method="post">
+        {% confirm_form %}
 
-            {% csrf_token %}
+        {% csrf_token %}
 
-            <h1>Phase 1:</h1>
+        <h1>Phase 1:</h1>
 
-            <div class="group group_{{ group.grouper }}">
-                {% for field in form.phase_1 %}
-                    {% bootstrap_field field %}
-                {% endfor %}
-            </div>
+        <div class="group group_{{ group.grouper }}">
+            {% for field in form.phase_1 %}
+            {% bootstrap_field field %}
+            {% endfor %}
+        </div>
 
-            <h1>Phase 2:</h1>
+        <h1>Phase 2:</h1>
 
-            <div class="group group_{{ group.grouper }}">
-                {% for field in form.phase_2 %}
-                    {% bootstrap_field field %}
-                {% endfor %}
-            </div>
+        <div class="group group_{{ group.grouper }}">
+            {% for field in form.phase_2 %}
+            {% bootstrap_field field %}
+            {% endfor %}
+        </div>
 
 
-            {% buttons %}
-                <button type="submit" class="btn btn-default">
-                    {% bootstrap_icon "star" %} Update
-                </button>
-            {% endbuttons %}
-        </form>
-    </div>
+        {% buttons %}
+        <button type="submit" class="btn btn-default">
+            {% bootstrap_icon "star" %} Update
+        </button>
+        {% endbuttons %}
+    </form>
+</div>
 {% endblock %}

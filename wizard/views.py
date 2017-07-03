@@ -1,16 +1,15 @@
 import logging
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import ProtectedError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
-
-from django.db.models import ProtectedError
-
 
 from bundler.models import BundleTaskModel
 from chalab import errors
@@ -134,7 +133,8 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
     @property
     def disabled(self):
-        return self.object.owner != self.request.user
+        dataset_users = len(ChallengeModel.objects.filter(dataset=self.object))
+        return self.object.owner != self.request.user or (self.object.is_ready and dataset_users > 1)
 
     def get_form(self, form_class=None):
         if self.object.is_public:
@@ -160,8 +160,14 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
             if not self.disabled and self.request.FILES:
                 u = self.request.FILES.get('automl_upload', None)
+
+                if 'data_format' in self.request.POST:
+                    data_format = self.request.POST['data_format']
+                else:
+                    data_format = 'auto'
+
                 try:
-                    self.object.update_from_chalearn(u)
+                    self.object.update_from_chalearn(u, data_format)
                 except InvalidAutomlFormatException as e:
                     raise errors.HTTP400Exception('wizard/challenge/error.html',
                                                   "Invalid Automl archive",
@@ -259,8 +265,9 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
         return super().dispatch(request, *args, **kwargs)
 
+
 @login_required
-def data_picker(request, pk, cant_delete = False):
+def data_picker(request, pk, cant_delete=False):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
     if request.method == 'POST':
@@ -288,7 +295,7 @@ def data_picker(request, pk, cant_delete = False):
                         is_public=False, owner=request.user.id, id=ds
                     ).delete()
                 except ProtectedError:
-                    cant_delete=True
+                    cant_delete = True
 
                 # refresh
                 request.method = ''
@@ -316,95 +323,71 @@ def data_picker(request, pk, cant_delete = False):
                    'flow': flow.Flow(flow.DataFlowItem, c)}
 
         if cant_delete:
-            from django.contrib import messages
-            messages.error(request, "This dataset can't be deleted : another challenge use it.")
+            messages.error(request, "This dataset can't be deleted: another challenge use it.")
 
         return render(request, 'wizard/data/picker.html', context=context)
 
 
-def metric_picker(request, pk):
+def metric(request, pk):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
     if request.method == 'POST':
         k = request.POST['kind']
+
         assert k == 'public'
 
-        mc = request.POST['metric']
-        m = get_object_or_404(MetricModel, is_public=True, id=mc)
-        c.metric = m
-        c.save()
-        return redirect('wizard:challenge:metric', pk=pk)
+        if request.POST['button'] == 'save':
+            new_metric = MetricModel()
+
+            # If it's here first metric or it's a default one, we create a new one
+            if (not c.metric is None) and (not c.metric.is_default):
+                new_metric = get_object_or_404(MetricModel, id=c.metric.id)
+            else:
+                new_metric.owner = request.user
+
+            new_metric.name = request.POST['name']
+            new_metric.description = request.POST['description']
+            new_metric.code = request.POST['code']
+
+            # TODO Verify if the code is ok (static analyse) before validate it
+            if True:
+                new_metric.is_ready = True
+            else:
+                new_metric.is_ready = False
+                messages.error(request, "There is something wrong with your code (static analyse)")
+
+            new_metric.save()
+
+            c.metric = new_metric
+            c.save()
+
+        elif request.POST['button'] == 'delete':
+            utilise = models.ChallengeModel.objects.filter(metric=request.POST['metricPrivate'])
+
+            if len(utilise) > 0:
+                messages.error(request, "This metric can't be deleted: another challenge use it.")
+            else:
+                models.MetricModel.objects.filter(
+                    is_public=False, owner=request.user.id, id=request.POST['metricPrivate']
+                ).delete()
     else:
-        public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
+        pass
 
-        current = c.metric
+    public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
 
-        try:
-            for m in public_metrics:
-                if current and current == m:
-                    m.is_selected = True
+    private_metric = MetricModel.objects.all().filter(owner=request.user)
 
-                if m == c.dataset.default_metric:
-                    m.is_favorite_metric = True
-        except:
-            pass
+    context = {'challenge': c, 'public_metrics': public_metrics,
+               'flow': flow.Flow(flow.MetricFlowItem, c),
+               'metric': c.metric, 'private_metric': private_metric}
 
-        def f(x):
-            a = 1 if x.classification else 0
-            b = 1 if x.regression else 0
-            c = x.name.lower()
+    # Load a default metric if necessary
+    if c.metric is None:
+        context['metric'] = get_object_or_404(MetricModel, name='example')
 
-            return '%s-%s-%s' % (a, b, c)
+    context['is_ready'] = context['metric'].is_ready
 
-        public_metrics = sorted(public_metrics, key=f)
-
-        context = {'challenge': c, 'public_metrics': public_metrics,
-                   'flow': flow.Flow(flow.MetricFlowItem, c)}
-        return render(request, 'wizard/metric/picker.html', context=context)
-
-
-class ChallengeMetricUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
-    template_name = 'wizard/metric/editor.html'
-    model = MetricModel
-    context_object_name = 'metric'
-
-    fields = ['name', 'description']
-    current_flow = flow.MetricFlowItem
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class=form_class)
-
-        for f in self.fields:
-            form.fields[f].disabled = True
-        form.disabled = True
-
-        return form
-
-    def form_valid(self, form):
-        raise errors.HTTP400Exception('wizard/challenge/error.html',
-                                      "Forbidden edit on a metric",
-                                      """You can't edit a metric that you do not own.""")
-
-    def get_context_data(self, **kwargs):
-        pk = self.kwargs['pk']
-        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
-
-        context = super().get_context_data(challenge=c, **kwargs)
-        context['challenge'] = c
-        context['is_ready'] = self.object.is_ready
-        return context
-
-    def get_object(self, **kwargs):
-        pk = self.kwargs['pk']
-
-        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
-        return challenge.metric
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.get_object(**kwargs) is None:
-            return redirect('wizard:challenge:metric.pick', pk=kwargs['pk'])
-        else:
-            return super().dispatch(request, *args, **kwargs)
+    return render(request, 'wizard/metric/editor.html', context)
 
 
 class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):

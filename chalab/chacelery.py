@@ -16,7 +16,4 @@ def smoke(self, x):
     print('Request: {0!r}'.format(self.request))
     return x
 
-
-import sys
-
 # print("BROKER=", app.conf['BROKER_URL'], file=sys.stderr)

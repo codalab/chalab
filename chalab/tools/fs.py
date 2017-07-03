@@ -10,7 +10,6 @@ class InvalidDirectoryException(Exception):
         self.message = msg
 
 
-
 def sole_path(path):
     l = ls(path)
 

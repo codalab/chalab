@@ -13,8 +13,7 @@ challenge_wizard = [
 
     url(r'^task/$', views.ChallengeTaskUpdate.as_view(), name='task'),
 
-    url(r'^metric/pick$', views.metric_picker, name='metric.pick'),
-    url(r'^metric$', views.ChallengeMetricUpdate.as_view(), name='metric'),
+    url(r'^metric$', views.metric, name='metric'),
 
     url(r'^protocol/$', views.ChallengeProtocolUpdate.as_view(), name='protocol'),
 

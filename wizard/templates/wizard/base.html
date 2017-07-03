@@ -2,25 +2,25 @@
 {% load bootstrap3 %}
 
 {% block title %}
-    {{ flow.id }}. {{ flow.name }}
+{{ flow.id }}. {{ flow.name }}
 {% endblock %}
 
 {% block app_name %}wizard{% endblock %}
 {% block panel_name %}challenge-{{ flow.slug }}{% endblock %}
 
 {% block content %}
-    <h1 class="challenge-title">{{ challenge.title }}</h1>
+<h1 class="challenge-title">{{ challenge.title }}</h1>
 
-    <div class="row flow-crumbs text-center">
-        {% include 'wizard/flow/_breadcrumb.html' %}
-    </div>
+<div class="row flow-crumbs text-center">
+    {% include 'wizard/flow/_breadcrumb.html' %}
+</div>
 
-    <h2>{{ flow.id }}. {{ flow.name }} Definition
-        {% include 'wizard/_status.html' %}
-    </h2>
+<h2>{{ flow.id }}. {{ flow.name }} Definition
+    {% include 'wizard/_status.html' %}
+</h2>
 
-    {% block flow_content %}
-    {% endblock %}
+{% block flow_content %}
+{% endblock %}
 
-    {% include 'wizard/flow/_nav.html' %}
+{% include 'wizard/flow/_nav.html' %}
 {% endblock %}

@@ -14,6 +14,7 @@ django-allauth==0.26.1
 django-bootstrap3==7.0.1
 django-debug-toolbar==1.5
 django-tinymce==2.4.0
+flake8==3.3.0
 flower==0.9.1
 idna==2.1
 ipython==5.0.0

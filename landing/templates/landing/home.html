@@ -3,40 +3,40 @@
 {% block title %}Welcome{% endblock %}
 
 {% block content %}
-    <div class="hero jumbotron text-center">
-        <h1>Welcome to Chalab</h1>
-        <p class="lead">
-            Here you can create new Machine Learning Challenges.
-        </p>
+<div class="hero jumbotron text-center">
+    <h1>Welcome to Chalab</h1>
+    <p class="lead">
+        Here you can create new Machine Learning Challenges.
+    </p>
+    <p>
+        <a class="btn btn-lg btn-success" href="{% url 'account_signup' %}" role="button">Sign Up</a>
+    </p>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <h2><i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload:</h2>
         <p>
-            <a class="btn btn-lg btn-success" href="{% url 'account_signup' %}" role="button">Sign Up</a>
+            Upload your data and baseline methods. The platform lets you choose among pre-loaded
+            datasets or lets you upload your own in a simple text-based format. The platform
+            also lets you upload a starting kit to help the participants solve there tasks.
+            A Python example is provided.
         </p>
     </div>
-    <div class="row">
-        <div class="col-md-4">
-            <h2><i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload:</h2>
-            <p>
-                Upload your data and baseline methods. The platform lets you choose among pre-loaded
-                datasets or lets you upload your own in a simple text-based format. The platform
-                also lets you upload a starting kit to help the participants solve there tasks.
-                A Python example is provided.
-            </p>
-        </div>
-        <div class="col-md-4">
-            <h2><i class="fa fa-wrench" aria-hidden="true"></i> Design:</h2>
-            <p>
-                Prepare your very own challenge protocol and rules. The platform helps you create
-                tasks by automatically splitting your data and letting you choose among pre-defined
-                metrics. An editor helps you add documentation pages.
-            </p>
-        </div>
-        <div class="col-md-4">
-            <h2><i class="fa fa-paper-plane" aria-hidden="true"></i> Ship:</h2>
-            <p>
-                The platform compiles your tasks, sample code, and documentation into a
-                self-contained zip archive, ready to upload to a competition platform.
-                (in this version, Codalab.org is supported).
-            </p>
-        </div>
+    <div class="col-md-4">
+        <h2><i class="fa fa-wrench" aria-hidden="true"></i> Design:</h2>
+        <p>
+            Prepare your very own challenge protocol and rules. The platform helps you create
+            tasks by automatically splitting your data and letting you choose among pre-defined
+            metrics. An editor helps you add documentation pages.
+        </p>
     </div>
+    <div class="col-md-4">
+        <h2><i class="fa fa-paper-plane" aria-hidden="true"></i> Ship:</h2>
+        <p>
+            The platform compiles your tasks, sample code, and documentation into a
+            self-contained zip archive, ready to upload to a competition platform.
+            (in this version, Codalab.org is supported).
+        </p>
+    </div>
+</div>
 {% endblock %}

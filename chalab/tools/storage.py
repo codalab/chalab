@@ -1,9 +1,10 @@
-from django.core.files.storage import FileSystemStorage
-from django.conf import settings
 import os
 
-class OverwriteStorage(FileSystemStorage):
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 
+
+class OverwriteStorage(FileSystemStorage):
     def get_available_name(self, name, max_length):
         """Returns a filename that's free on the target storage system, and
         available for new content to be written to.
@@ -27,11 +28,14 @@ class OverwriteStorage(FileSystemStorage):
             os.remove(os.path.join(settings.MEDIA_ROOT, name))
         return name
 
+
 def save_to_logo(instance, filename):
     return "".join(["data/logos/", str(instance.id), "/", filename])
 
+
 def save_to_baseline(instance, filename):
     return "".join(["data/baseline/", str(instance.id), "/", filename])
+
 
 def save_to_bundle(instance, filename):
     return "".join(["data/bundles/", str(instance.challenge.id), "/", filename])

@@ -1,5 +1,4 @@
 import logging
-import os
 import string
 from datetime import datetime
 from time import gmtime, strftime
@@ -14,11 +13,11 @@ from django.db.models import OneToOneField
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
+from django.utils import timezone
 from tinymce.models import HTMLField
 
 from chalab.tools import archives, fs
 from chalab.tools.storage import *
-
 from . import docs
 
 log = logging.getLogger('wizard/models')
@@ -82,6 +81,7 @@ def columns_count_first_line(file_field):
     finally:
         file_field.close()
 
+
 def columns_all_the_same_count(file_field, cols):
     file_field.open('r')
     lines = file_field.readlines()
@@ -91,7 +91,6 @@ def columns_all_the_same_count(file_field, cols):
         if line.strip and len(line.split()) != cols:
             return False
     return True
-
 
 
 class ColumnarFileModel(models.Model):
@@ -247,7 +246,8 @@ class MatrixModel(models.Model):
         cols = columns_count_first_line(self.raw_content)
 
         if not columns_all_the_same_count(self.raw_content, cols):
-            raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
+            pass
+            # raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
 
         if self.cols is None:
             self.cols = AxisDescriptionModel.objects.create()
@@ -311,6 +311,8 @@ class DatasetModel(models.Model):
     keywords = models.CharField(max_length=256, default="")
     authors = models.CharField(max_length=256, default="")
 
+    updated_at = models.DateTimeField(auto_now=True)
+
     resource_created = models.DateField(null=True, blank=True, default=None)
     resource_url = models.URLField(null=True, blank=True, default=None)
     contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
@@ -333,43 +335,44 @@ class DatasetModel(models.Model):
     def template_doc(self):
         return {'dataset_name': ""}
 
-    def update_from_chalearn(self, fp_zip):
+    def update_from_chalearn(self, fp_zip, data_format='auto'):
         with archives.unzip_fp(fp_zip) as d:
-            try:
-                root = fs.sole_path(d)
-                name = os.path.basename(root)
+            if data_format == 'libsvm':
+                pass
+            else:
+                try:
+                    root = fs.sole_path(d)
+                    name = os.path.basename(root)
 
-                content = set(x for x in os.listdir(root)
-                              if not 'DS_Store' in x and not '__MACOS' in x)
-                expected_suffixes = {'.data', '.solution', '_feat.name',
-                                     '_info.m', '_label.name', '_sample.name'}
-                expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
-                expected_files |= {'README', 'README.txt', 'README.md'}
+                    content = set(x for x in os.listdir(root)
+                                  if not 'DS_Store' in x and not '__MACOS' in x)
+                    expected_suffixes = {'.data', '.solution', '_feat.name',
+                                         '_info.m', '_label.name', '_sample.name'}
+                    expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
+                    expected_files |= {'README', 'README.txt', 'README.md'}
 
-                convertible_suffixes = {'.data', '.solution'}
-                convertible_files = set('%s%s' % (name, x) for x in convertible_suffixes)
+                    convertible_suffixes = {'.data', '.solution'}
+                    convertible_files = set('%s%s' % (name, x) for x in convertible_suffixes)
 
-                unexpected = content - expected_files
+                    unexpected = content - expected_files
 
-                minimum = convertible_files - content
+                    minimum = convertible_files - content
 
-                if len(unexpected) > 0 or len(minimum) > 0:
-                    raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
+                    if len(unexpected) > 0 or len(minimum) > 0:
+                        raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
 
-            except fs.InvalidDirectoryException as e:
-                raise InvalidAutomlFormatException(e) from e
+                except fs.InvalidDirectoryException as e:
+                    raise InvalidAutomlFormatException(e) from e
 
-            #TODO Despends of something, we must convert files before the load
-            #convert
+            # TODO Depends of something, we must convert files before the load
+            # convert
 
             from chalab.convert_to_automl import convert
             newroot = root
             for file in convertible_files:
-                newroot = convert(os.path.join(root, file))
+                newroot = convert(os.path.join(root, file), data_format)
 
-
-
-            input, target, metric, description  = self.load_from_automl(newroot, any_prefix=True)
+            input, target, metric, description = self.load_from_automl(newroot, any_prefix=True)
 
             self.name = name
             self.input = input
@@ -614,9 +617,10 @@ class TaskModel(models.Model):
 
 
 class MetricModel(models.Model):
-    name = models.CharField(max_length=256, null=False)
-    description = models.TextField(null=True)
     owner = models.ForeignKey(User, null=True)
+    name = models.CharField(max_length=256, null=False)
+    description = models.TextField(null=False, default="")
+    code = models.TextField(null=False, default="")
 
     is_default = models.BooleanField(default=False, null=False)
     is_public = models.BooleanField(default=False, null=False)
@@ -806,7 +810,8 @@ class BaselineModel(models.Model):
             this = BaselineModel.objects.get(id=self.id)
             if this.submission != self.submission:
                 this.submission.delete(save=False)
-        except: pass # when new photo then we do nothing, normal case
+        except:
+            pass  # when new photo then we do nothing, normal case
         super(BaselineModel, self).save(*args, **kwargs)
 
     @property
@@ -843,6 +848,8 @@ class ChallengeModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    build_at = models.DateTimeField(default=timezone.now)
+
     dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.PROTECT)
     task = models.ForeignKey(TaskModel, null=True, blank=True)
     metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL)
@@ -853,14 +860,14 @@ class ChallengeModel(models.Model):
     documentation = models.OneToOneField(DocumentationModel, null=True, blank=True,
                                          related_name='challenge')
 
-
     def save(self, *args, **kwargs):
         # delete old file when replacing by updating the file
         try:
             this = ChallengeModel.objects.get(id=self.id)
             if this.logo != self.logo:
                 this.logo.delete(save=False)
-        except: pass # when new photo then we do nothing, normal case
+        except:
+            pass  # when new photo then we do nothing, normal case
         super(ChallengeModel, self).save(*args, **kwargs)
 
     @property

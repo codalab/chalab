@@ -5,75 +5,90 @@
 {% block module_name %}editor{% endblock %}
 
 {% block flow_content %}
-    <div class="update">
-        <h3>Current Dataset:</h3>
-        <div class="desc">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>Rows</th>
-                    <th>Columns</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>Input</td>
-                    <td>{{ object.input.rows.count }}</td>
-                    <td>{{ object.input.cols.count }}</td>
-                </tr>
-                <tr>
-                    <td>Target</td>
-                    <td>{{ object.target.rows.count }}</td>
-                    <td>{{ object.target.cols.count }}</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+<div class="update">
+    <h3>Current Dataset:</h3>
+    <div class="desc">
+        <table class="table">
+            <thead>
+            <tr>
+                <th></th>
+                <th>Rows</th>
+                <th>Columns</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Input</td>
+                <td>{{ object.input.rows.count }}</td>
+                <td>{{ object.input.cols.count }}</td>
+            </tr>
+            <tr>
+                <td>Target</td>
+                <td>{{ object.target.rows.count }}</td>
+                <td>{{ object.target.cols.count }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
-        {% if not object.is_public %}
-            <h3>Dataset Format:</h3>
-            <p>
-                Use the <code>Choose File</code> button to upload a dataset
-                archive.
-            </p>
+    {% if not object.is_public %}
+    <h3>Dataset Format:</h3>
+    <p>
+        Use the <code>Choose File</code> button to upload a dataset
+        archive.
+    </p>
 
-            <p>
-                Only <code>automl, csv and arff</code> archives are currently supported. They are defined as a zip
-                file containing at least:
-            <pre>dataset_name/
+    <p>
+        Only <code>AutoML</code>, <code>CSV</code> and <code>ARFF</code> archives are currently supported. All archives
+        will be converted
+        automatically into AutoML. They are defined as a zip file containing at least:
+    <pre>dataset_name/
    dataset_name.data
    dataset_name.solution</pre>
-            Please check the <a href="{% static 'chalab/resource/iris.zip' %}">Iris Dataset</a>
-            for an example.
-            </p>
+    Please check the <a href="{% static 'chalab/resource/iris.zip' %}">Iris Dataset</a>
+    for an example.
+    </p>
+    {% endif %}
+
+    <h3>Edit the dataset:</h3>
+    <form class='editor' action="#" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+
+        {% if not form.disabled %}
+        <label>Format of the data: </label>
+        <select name="data_format" id="data_format" {% if form.disabled %}disabled{% endif %}>
+            <option value="auto" selected>Auto</option>
+            <option value="automl">AutoML</option>
+            <option value="csv">CSV</option>
+            <option value="arff">ARFF</option>
+            <option value="libsvm">LIBSVM</option>
+        </select>
         {% endif %}
 
-        <h3>Edit the dataset:</h3>
-        <form class='editor' action="#" method="post"
-              enctype="multipart/form-data">
-            {% confirm_form %}
-            {% csrf_token %}
-            {% bootstrap_form form %}
+        {% buttons %}
+        <div class="buttons">
+            <button type="submit"
+                    class="btn {% if form.disabled %}btn-disabled{% else %}btn-primary{% endif %}"
+                    {% if object.is_public %}
+                    data-placement="top" data-toggle="tooltip"
+                    data-title="You can't edit public datasets"
+                    disabled
+                    {% elif form.disabled %}
+                    data-placement="top" data-toggle="tooltip"
+                    data-title="An other chalenge use this dataset. Impossible to update it"
+                    disabled
+                    {% endif %}>
+                <i class="fa fa-save"></i> Update
+            </button>
 
-            {% buttons %}
-                <div class="buttons">
-                    <button type="submit"
-                            class="btn btn-default tooltiped {% if form.disabled %}btn-disabled{% endif %}"
-                            {% if object.is_public %}
-                            data-placement="top" data-toggle="tooltip"
-                            data-title="You can't edit public datasets"
-                            {% endif %}>
-                        <i class="fa fa-save"></i> Update
-                    </button>
-
-                    <a href="{% url 'wizard:challenge:data.pick' pk=challenge.pk %}"
-                       class="btn btn-default picker">
-                        <i class="fa fa-times"></i>
-                        Pick another dataset
-                    </a>
-                </div>
-            {% endbuttons %}
-        </form>
-    </div>
+            <a href="{% url 'wizard:challenge:data.pick' pk=challenge.pk %}"
+               class="btn btn-default picker">
+                <i class="fa fa-times"></i>
+                Pick another dataset
+            </a>
+        </div>
+        {% endbuttons %}
+    </form>
+</div>
 {% endblock %}
