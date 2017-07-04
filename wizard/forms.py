@@ -1,4 +1,4 @@
-from django.forms import ModelForm, FileField, DateTimeInput
+from django.forms import ModelForm, FileField, DateTimeInput, Textarea
 
 from .models import ProtocolModel, DatasetModel, TaskModel
 
@@ -39,6 +39,9 @@ class ProtocolForm(ModelForm):
             'final_start_date'
         ]
         widgets = {
+            'dev_phase_description': Textarea(attrs={'rows': 3}),
+            'final_phase_description': Textarea(attrs={'rows': 3}),
+
             'dev_start_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
             'dev_end_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
             'final_start_date': DateTimeInput(attrs={'class': 'datetime-picker'}),
