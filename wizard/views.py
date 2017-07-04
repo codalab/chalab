@@ -16,8 +16,10 @@ from chalab import errors
 from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
-from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, ProtocolModel, \
-    DocumentationModel, DocumentationPageModel, BaselineModel, InvalidAutomlFormatException
+from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, \
+    ProtocolModel, \
+    DocumentationModel, DocumentationPageModel, BaselineModel, \
+    InvalidAutomlFormatException
 from .models import challenge_to_mappings, challenge_to_mappings_doc
 
 log = logging.getLogger('wizard.views')
@@ -49,7 +51,8 @@ You can check the archive actual content using <code>`unzip -l ./my_archive.zip'
 @login_required
 def home(request):
     challenges = ChallengeModel.objects.filter(created_by=request.user)
-    return render(request, 'wizard/home.html', context={'object_list': challenges})
+    return render(request, 'wizard/home.html',
+                  context={'object_list': challenges})
 
 
 class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
@@ -71,7 +74,8 @@ class ChallengeDescriptionUpdate(UpdateView, LoginRequiredMixin):
     fields = ChallengeDescriptionCreate.fields
 
 
-class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMixin):
+class ChallengeDescriptionDetail(FlowOperationMixin, DetailView,
+                                 LoginRequiredMixin):
     template_name = 'wizard/challenge/detail.html'
     model = ChallengeModel
     context_object_name = 'challenge'
@@ -81,14 +85,16 @@ class ChallengeDescriptionDetail(FlowOperationMixin, DetailView, LoginRequiredMi
         context = super().get_context_data(challenge=self.object, **kwargs)
 
         try:
-            context['bundler'] = BundleTaskModel.objects.filter(challenge=self.object).first()
+            context['bundler'] = BundleTaskModel.objects.filter(
+                challenge=self.object).first()
         except ObjectDoesNotExist:
             pass
 
         return context
 
 
-class ChallengeBaselineEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+class ChallengeBaselineEdit(FlowOperationMixin, LoginRequiredMixin,
+                            UpdateView):
     template_name = 'wizard/baseline.html'
     model = BaselineModel
     fields = ['submission']
@@ -111,7 +117,8 @@ class ChallengeBaselineEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     def get_object(self, **kwargs):
         pk = self.kwargs['pk']
 
-        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        challenge = ChallengeModel.objects.get(id=pk,
+                                               created_by=self.request.user)
         self._runtime_challenge = challenge
 
         baseline = challenge.baseline
@@ -134,7 +141,8 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     @property
     def disabled(self):
         dataset_users = len(ChallengeModel.objects.filter(dataset=self.object))
-        return self.object.owner != self.request.user or (self.object.is_ready and dataset_users > 1)
+        return self.object.owner != self.request.user or (
+            self.object.is_ready and dataset_users > 1)
 
     def get_form(self, form_class=None):
         if self.object.is_public:
@@ -169,9 +177,10 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
                 try:
                     self.object.update_from_chalearn(u, data_format)
                 except InvalidAutomlFormatException as e:
-                    raise errors.HTTP400Exception('wizard/challenge/error.html',
-                                                  "Invalid Automl archive",
-                                                  AUTOML_ERROR % (e,))
+                    raise errors.HTTP400Exception(
+                        'wizard/challenge/error.html',
+                        "Invalid Automl archive",
+                        AUTOML_ERROR % (e,))
 
             r = super().form_valid(form)
 
@@ -193,7 +202,8 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
         pk = self.kwargs['pk']
         self.pk = pk
 
-        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        challenge = ChallengeModel.objects.get(id=pk,
+                                               created_by=self.request.user)
         return challenge.dataset
 
     def dispatch(self, request, *args, **kwargs):
@@ -267,7 +277,7 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
 
 @login_required
-def data_picker(request, pk, cant_delete=False):
+def data_picker(request, pk):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
 
     if request.method == 'POST':
@@ -289,25 +299,25 @@ def data_picker(request, pk, cant_delete=False):
 
             if request.POST['button'] == 'delete':
 
-                cant_delete = False
                 try:
                     models.DatasetModel.objects.filter(
                         is_public=False, owner=request.user.id, id=ds
                     ).delete()
                 except ProtectedError:
-                    cant_delete = True
+                    messages.error(request, "This dataset can't be deleted: "
+                                   "another challenge use it.")
 
                 # refresh
                 request.method = ''
-                return data_picker(request, pk, cant_delete)
+                return data_picker(request, pk)
 
-            d = get_object_or_404(DatasetModel, is_public=False, owner=request.user.id, id=ds)
+            d = get_object_or_404(
+                DatasetModel, is_public=False, owner=request.user.id, id=ds)
             c.dataset = d
             c.task = None
             c.save()
         elif k == 'create':
-            name = request.POST['name'] or "empty dataset"
-            c.dataset = DatasetModel.create(name, request.user)
+            c.dataset = DatasetModel.create("new dataset", request.user)
             c.task = None
             c.save()
         else:
@@ -316,14 +326,13 @@ def data_picker(request, pk, cant_delete=False):
         return redirect('wizard:challenge:data', pk=pk)
     else:
         pubds = models.DatasetModel.objects.all().filter(is_public=True)
-        prids = models.DatasetModel.objects.all().filter(is_public=False, owner=request.user.id)
+        prids = models.DatasetModel.objects.all().filter(
+            is_public=False, owner=request.user.id).exclude(input=None)
+
         context = {'public_datasets': pubds,
                    'private_datasets': prids,
                    'challenge': c,
                    'flow': flow.Flow(flow.DataFlowItem, c)}
-
-        if cant_delete:
-            messages.error(request, "This dataset can't be deleted: another challenge use it.")
 
         return render(request, 'wizard/data/picker.html', context=context)
 
@@ -339,7 +348,7 @@ def metric(request, pk):
         if request.POST['button'] == 'save':
             new_metric = MetricModel()
 
-            # If it's here first metric or it's a default one, we create a new one
+            # If it's here first metric or a default one, we create a new one
             if (not c.metric is None) and (not c.metric.is_default):
                 new_metric = get_object_or_404(MetricModel, id=c.metric.id)
             else:
@@ -354,7 +363,9 @@ def metric(request, pk):
                 new_metric.is_ready = True
             else:
                 new_metric.is_ready = False
-                messages.error(request, "There is something wrong with your code (static analyse)")
+                messages.error(request,
+                               "There is something wrong with your code"
+                               "(static analyse)")
 
             new_metric.save()
 
@@ -362,18 +373,23 @@ def metric(request, pk):
             c.save()
 
         elif request.POST['button'] == 'delete':
-            utilise = models.ChallengeModel.objects.filter(metric=request.POST['metricPrivate'])
+            utilise = models.ChallengeModel.objects.filter(
+                metric=request.POST['metricPrivate'])
 
             if len(utilise) > 0:
-                messages.error(request, "This metric can't be deleted: another challenge use it.")
+                messages.error(request,
+                               "This metric can't be deleted: "
+                               "another challenge use it.")
             else:
                 models.MetricModel.objects.filter(
-                    is_public=False, owner=request.user.id, id=request.POST['metricPrivate']
+                    is_public=False, owner=request.user.id,
+                    id=request.POST['metricPrivate']
                 ).delete()
     else:
         pass
 
-    public_metrics = MetricModel.objects.all().filter(is_public=True, is_ready=True)
+    public_metrics = MetricModel.objects.all().filter(is_public=True,
+                                                      is_ready=True)
 
     private_metric = MetricModel.objects.all().filter(owner=request.user)
 
@@ -390,7 +406,8 @@ def metric(request, pk):
     return render(request, 'wizard/metric/editor.html', context)
 
 
-class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin,
+                              UpdateView):
     template_name = 'wizard/protocol.html'
     model = ProtocolModel
     form_class = ProtocolForm
@@ -402,7 +419,8 @@ class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
     current_flow = flow.ProtocolFlowItem
 
     def get_success_url(self):
-        return reverse('wizard:challenge:protocol', kwargs={'pk': self._runtime_challenge.pk})
+        return reverse('wizard:challenge:protocol',
+                       kwargs={'pk': self._runtime_challenge.pk})
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
@@ -416,7 +434,8 @@ class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
     def get_object(self, **kwargs):
         pk = self.kwargs['pk']
 
-        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        challenge = ChallengeModel.objects.get(id=pk,
+                                               created_by=self.request.user)
         self._runtime_challenge = challenge
 
         protocol = challenge.protocol
@@ -458,7 +477,8 @@ def documentation(request, pk):
 
 def documentation_page(request, pk, page_id):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
-    p = get_object_or_404(DocumentationPageModel, documentation=c.documentation, id=page_id)
+    p = get_object_or_404(DocumentationPageModel,
+                          documentation=c.documentation, id=page_id)
     doc = c.documentation
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
@@ -473,14 +493,16 @@ def build_page(request, pk):
     context = {'challenge': c}
 
     try:
-        context['bundler'] = BundleTaskModel.objects.filter(challenge=c).first()
+        context['bundler'] = BundleTaskModel.objects.filter(
+            challenge=c).first()
     except ObjectDoesNotExist:
         pass
 
     return render(request, "wizard/challenge/build.html", context=context)
 
 
-class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
+class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin,
+                              UpdateView):
     template_name = 'wizard/documentation/editor.html'
     model = DocumentationPageModel
     context_object_name = 'page'
@@ -525,7 +547,8 @@ class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView
         pk = self.kwargs['pk']
         page_id = self.kwargs['page_id']
 
-        challenge = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+        challenge = ChallengeModel.objects.get(id=pk,
+                                               created_by=self.request.user)
         page = get_object_or_404(DocumentationPageModel, id=page_id,
                                  documentation=challenge.documentation)
 

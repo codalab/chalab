@@ -89,17 +89,11 @@
     </div>
     <div class="col-sm-4 create">
         <div class="form-block">
-            <h4>Create a Dataset:</h4>
+            <h4>Create a new Dataset:</h4>
 
             <form class="creator" method="POST" action="#">
                 {% csrf_token %}
                 <input type="hidden" name="kind" value="create"/>
-
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" class="form-control" name="name"
-                           id="name" placeholder="Name">
-                </div>
 
                 {% buttons %}
                 <button class="primaryAction btn btn-primary"

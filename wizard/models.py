@@ -507,7 +507,7 @@ class TaskModel(models.Model):
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
-    dataset = models.ForeignKey(DatasetModel, null=True, on_delete=models.PROTECT)
+    dataset = models.ForeignKey(DatasetModel, null=True, on_delete=models.CASCADE)
 
     train_ratio = models.FloatField(null=True,
                                     default=85,
@@ -804,15 +804,18 @@ class BaselineModel(models.Model):
                                   verbose_name='baseline submission',
                                   blank=True, null=True)
 
-    def save(self, *args, **kwargs):
-        # delete old file when replacing by updating the file
-        try:
-            this = BaselineModel.objects.get(id=self.id)
-            if this.submission != self.submission:
-                this.submission.delete(save=False)
-        except:
-            pass  # when new photo then we do nothing, normal case
-        super(BaselineModel, self).save(*args, **kwargs)
+    # Let comment until we put the baseline in the bundle
+    #
+    #
+    # def save(self, *args, **kwargs):
+    #     # delete old file when replacing by updating the file
+    #     try:
+    #         this = BaselineModel.objects.get(id=self.id)
+    #         if this.submission != self.submission:
+    #             this.submission.delete(save=False)
+    #     except:
+    #         pass  # when new baseline then we do nothing, normal case
+    #     super(BaselineModel, self).save(*args, **kwargs)
 
     @property
     def absolute_uri(self):
