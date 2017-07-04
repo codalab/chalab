@@ -1,5 +1,8 @@
 # Django "runtime"
 static/*
+!static/chalab
+static/chalab/*
+!static/chalab/CodeMirror
 media/*
 backups/*
 
