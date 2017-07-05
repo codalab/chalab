@@ -311,8 +311,6 @@ class DatasetModel(models.Model):
     keywords = models.CharField(max_length=256, default="")
     authors = models.CharField(max_length=256, default="")
 
-    updated_at = models.DateTimeField(auto_now=True)
-
     resource_created = models.DateField(null=True, blank=True, default=None)
     resource_url = models.URLField(null=True, blank=True, default=None)
     contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
@@ -508,6 +506,8 @@ class TaskModel(models.Model):
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
     dataset = models.ForeignKey(DatasetModel, null=True, on_delete=models.CASCADE)
+
+    updated_at = models.DateTimeField(auto_now=True)
 
     train_ratio = models.FloatField(null=True,
                                     default=85,

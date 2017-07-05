@@ -309,7 +309,7 @@ def generate_task_data(bundle_task, challenge):
         bundle_task.add_log('Skipping task data generation, already present')
         return
 
-    if data.updated_at <= challenge.build_at:
+    if task.updated_at <= challenge.build_at:
         bundle_task.add_log('Skipping task data generation, already generated')
         return
 
