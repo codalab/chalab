@@ -214,19 +214,19 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
 
 class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
-    template_name = 'wizard/task.html'
+    template_name = 'wizard/split.html'
     model = TaskModel
-    context_object_name = 'task'
+    context_object_name = 'split'
 
     fields = ['train_ratio', 'valid_ratio', 'test_ratio']
-    current_flow = flow.TaskFlowItem
+    current_flow = flow.SplitFlowItem
 
     @property
     def disabled(self):
         return self.object.owner != self.request.user
 
     def get_success_url(self):
-        return reverse('wizard:challenge:task',
+        return reverse('wizard:challenge:split',
                        kwargs={'pk': self.kwargs['pk']})
 
     def get_form(self, form_class=None):
@@ -259,6 +259,12 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         c = self.get_challenge(**kwargs)
         context = super().get_context_data(challenge=c, **kwargs)
+
+        if self.get_challenge(**kwargs).dataset.input:
+            context['rows'] = self.get_challenge(**kwargs).dataset.input.rows.count
+        else:
+            context['rows'] = None
+
         context['challenge'] = c
         context['is_ready'] = self.object.is_ready
         return context
@@ -271,7 +277,7 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
                 return redirect('wizard:challenge:data.pick', pk=kwargs['pk'])
             else:
                 challenge.create_initial_task()
-                return redirect('wizard:challenge:task', pk=kwargs['pk'])
+                return redirect('wizard:challenge:split', pk=kwargs['pk'])
 
         return super().dispatch(request, *args, **kwargs)
 

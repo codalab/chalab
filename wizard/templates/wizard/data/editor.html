@@ -52,12 +52,14 @@
 
     <h3>Edit the dataset:</h3>
     <form class='editor' action="#" method="post" enctype="multipart/form-data">
+        {% confirm_form %}
         {% csrf_token %}
         {% bootstrap_form form %}
 
         {% if not form.disabled %}
         <label>Format of the data: </label>
         <select name="data_format" id="data_format" {% if form.disabled %}disabled{% endif %}>
+            <option value="auto" selected>---</option>
             <option value="auto" selected>Auto</option>
             <option value="automl">AutoML</option>
             <option value="csv">CSV</option>
