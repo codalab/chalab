@@ -316,9 +316,12 @@ class DatasetModel(models.Model):
     contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
     contact_url = models.URLField(max_length=256, null=True, blank=True, default=None)
 
+    default_metric = models.ForeignKey('MetricModel', null=True, on_delete=models.SET_NULL)
+
+    fixed_split = models.BooleanField(default=False, null=False)
+
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
-    default_metric = models.ForeignKey('MetricModel', null=True, on_delete=models.SET_NULL)
 
     @classmethod
     def available(cls, user):
@@ -331,51 +334,79 @@ class DatasetModel(models.Model):
 
     @property
     def template_doc(self):
-        return {'dataset_name': ""}
+        return {'dataset_name': ''}
 
-    def update_from_chalearn(self, fp_zip, data_format='auto'):
+    def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
-            if data_format == 'libsvm':
-                pass
-            else:
-                try:
-                    root = fs.sole_path(d)
-                    name = os.path.basename(root)
+            try:
+                root = fs.sole_path(d)
+                name = os.path.basename(root)
 
-                    content = set(x for x in os.listdir(root)
-                                  if not 'DS_Store' in x and not '__MACOS' in x)
-                    expected_suffixes = {'.data', '.solution', '_feat.name',
-                                         '_info.m', '_label.name', '_sample.name'}
-                    expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
-                    expected_files |= {'README', 'README.txt', 'README.md'}
+                pre_split = True
 
-                    convertible_suffixes = {'.data', '.solution'}
-                    convertible_files = set('%s%s' % (name, x) for x in convertible_suffixes)
+                # Verify if data are pre split
+                for extension in ['data', 'solution']:
+                    for part in ['train', 'valid', 'test']:
+                        path = os.path.join(root,
+                                            '%s_%s.%s' % (name, part, extension))
+                        if not os.path.isfile(path):
+                            pre_split = False
 
-                    unexpected = content - expected_files
+                if not pre_split:
+                    # Verify if necessary file are not missing
+                    for extension in ['data', 'solution']:
+                        path = os.path.join(root, '%s.%s' % (name, extension))
+                        if not os.path.isfile(path):
+                            raise InvalidAutomlFormatException(
+                                '%s.%s missing' % (name, extension))
 
-                    minimum = convertible_files - content
+            except fs.InvalidDirectoryException as e:
+                raise InvalidAutomlFormatException(e) from e
 
-                    if len(unexpected) > 0 or len(minimum) > 0:
-                        raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
 
-                except fs.InvalidDirectoryException as e:
-                    raise InvalidAutomlFormatException(e) from e
+            if pre_split:
+                # recreate the original .data and .solution (concatenate)
+                for extension in ['data', 'solution']:
+                    output_name = '%s.%s' % (name, extension)
+                    with open(os.path.join(root, output_name), 'a') as outfile:
+                        for part in ['train', 'valid', 'test']:
+                            input_name = '%s_%s.%s' % (name, part, extension)
+                            with open(os.path.join(root, input_name), 'r') as infile:
+                                for line in infile:
+                                    outfile.write(line)
 
-            # TODO Depends of something, we must convert files before the load
-            # convert
+                # Add pre split to database
+                from django.shortcuts import get_object_or_404
+                task = get_object_or_404(ChallengeModel, dataset=self.id).task
 
-            from chalab.convert_to_automl import convert
-            newroot = root
-            for file in convertible_files:
-                newroot = convert(os.path.join(root, file), data_format)
+                task.input_train = create_with_file(MatrixModel, os.path.join(root, '%s_train.data'%name))
+                task.input_valid = create_with_file(MatrixModel, os.path.join(root, '%s_valid.data'%name))
+                task.input_test = create_with_file(MatrixModel, os.path.join(root, '%s_test.data'%name))
 
-            input, target, metric, description = self.load_from_automl(newroot, any_prefix=True)
+                task.target_train = create_with_file(MatrixModel, os.path.join(root, '%s_train.solution'%name))
+                task.target_valid = create_with_file(MatrixModel, os.path.join(root, '%s_valid.solution'%name))
+                task.target_test = create_with_file(MatrixModel, os.path.join(root, '%s_test.solution'%name))
+
+                train = task.input_train.rows.count
+                valid = task.input_valid.rows.count
+                test = task.input_test.rows.count
+                total = train + valid + test
+                total = train + valid + test
+
+                task.train_ratio = round(train * 100 / total, 1)
+                task.valid_ratio = round(valid * 100 / total, 1)
+                task.test_ratio = round(test * 100 / total, 1)
+
+                task.is_ready = True
+                task.save()
+
+            input, target, metric, description = self.load_from_automl(root, any_prefix=False)
 
             self.name = name
             self.input = input
             self.target = target
             self.description = description
+            self.fixed_split = pre_split
 
             if metric:
                 self.default_metric = metric
@@ -387,9 +418,8 @@ class DatasetModel(models.Model):
         input, target, metric, description = cls.load_from_automl(path, any_prefix=False)
         return cls.create(owner=owner,
                           is_public=is_public,
-                          name=name, description=description,
-                          default_metric=metric,
-                          input=input, target=target)
+                          name=name, description=description, fixed_split=True,
+                          default_metric=metric, input=input, target=target)
 
     @classmethod
     def load_from_automl(cls, path, any_prefix=False):
@@ -854,7 +884,7 @@ class ChallengeModel(models.Model):
     build_at = models.DateTimeField(default=timezone.now)
 
     dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.PROTECT)
-    task = models.ForeignKey(TaskModel, null=True, blank=True)
+    task = models.ForeignKey(TaskModel, null=True, blank=True, on_delete=models.SET_NULL)
     metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL)
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
                                  related_name='challenge')

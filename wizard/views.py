@@ -169,13 +169,8 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             if not self.disabled and self.request.FILES:
                 u = self.request.FILES.get('automl_upload', None)
 
-                if 'data_format' in self.request.POST:
-                    data_format = self.request.POST['data_format']
-                else:
-                    data_format = 'auto'
-
                 try:
-                    self.object.update_from_chalearn(u, data_format)
+                    self.object.update_from_chalearn(u)
                 except InvalidAutomlFormatException as e:
                     raise errors.HTTP400Exception(
                         'wizard/challenge/error.html',
@@ -223,7 +218,7 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
     @property
     def disabled(self):
-        return self.object.owner != self.request.user
+        return self.object.owner != self.request.user or self.object.dataset.fixed_split
 
     def get_success_url(self):
         return reverse('wizard:challenge:split',
@@ -320,7 +315,12 @@ def data_picker(request, pk):
             d = get_object_or_404(
                 DatasetModel, is_public=False, owner=request.user.id, id=ds)
             c.dataset = d
-            c.task = None
+
+            if d.fixed_split:
+                c.task = get_object_or_404(TaskModel, dataset=d.id)
+            else:
+                c.task = None
+
             c.save()
         elif k == 'create':
             c.dataset = DatasetModel.create("new dataset", request.user)

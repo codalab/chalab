@@ -305,12 +305,12 @@ def generate_task_data(bundle_task, challenge):
     task = challenge.task
     data = challenge.dataset
 
-    if task.has_content and task.is_public:
-        bundle_task.add_log('Skipping task data generation, already present')
+    if task.has_content and data.fixed_split:
+        bundle_task.add_log('Skipping task data splitting, fixed split')
         return
 
     if task.updated_at <= challenge.build_at:
-        bundle_task.add_log('Skipping task data generation, already generated')
+        bundle_task.add_log('Skipping task data splitting, already splinted')
         return
 
     bundle_task.add_log('Starting task data generation, based on dataset: %s' % (data.pk))
