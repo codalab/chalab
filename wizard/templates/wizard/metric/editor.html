@@ -43,7 +43,7 @@
                         <h4>Use a Public Metric:</h4>
 
                         <script>
-                                var metrics = {
+                                var metrics_pk = {
                                 {% for metric in public_metrics %}
                                     {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
                                 {% endfor %}
@@ -53,25 +53,48 @@
                                 }
 
                                 function fillWithMetric(s) {
-                                    metric = metrics[s.value];
+                                    metric = metrics_pk[s.value];
                                     document.getElementById('name').value = metric[0];
                                     document.getElementById('description').value = metric[1];
                                     CodeMirrorPython.setValue(metric[2]);
                                 }
 
+                                var metrics_list = {
+                                    "" : [["",""]],
+                                    "other" : [["",""],{% for metric in public_metrics %}{% if not metric.classification and not metric.regression %}
+                                        [{{ metric.pk }}, "{{ metric.description }} ({{ metric.name }})"],
+                                        {% endif %}{% endfor %}],
+                                    "regression" : [["",""],{% for metric in public_metrics %}{% if metric.regression %}
+                                        [{{ metric.pk }}, "{{ metric.description }} ({{ metric.name }})"],
+                                        {% endif %}{% endfor %}],
+                                    "classification" : [["",""],{% for metric in public_metrics %}{% if metric.classification %}
+                                        [{{ metric.pk }}, "{{ metric.description }} ({{ metric.name }})"],
+                                        {% endif %}{% endfor %}]
+                                }
+
+                                function fillWithListMetric(s) {
+                                    metric = metrics_list[s.value];
+
+                                    var sel = document.getElementById('name_metric');
+                                    sel.options.length = 0;
+                                    for(var i = 0; i < metric.length; i++) {
+                                        var opt = document.createElement('option');
+                                        opt.innerHTML = metric[i][1];
+                                        opt.value = metric[i][0];
+                                        sel.appendChild(opt);
+                                    }
+                                }
+
                         </script>
 
-                        <select onchange="fillWithMetric(this)" class="form-control" name="metric">
-                            {% for metric in public_metrics %}
-                            <option data-name="{{ metric.name }}" value="{{ metric.pk }}">
-                                {% if metric.classification %}
-                                Classification:
-                                {% elif metric.regression %}
-                                Regression:
-                                {% endif %}
-                                {{ metric.description }} ({{ metric.name }})
-                            </option>
-                            {% endfor %}
+                        <select onchange="fillWithListMetric(this)" class="form-control" id="type_metric">
+                            <option value="" selected></option>
+                            <option value="other">Other</option>
+                            <option value="classification">Classification</option>
+                            <option value="regression">Regression</option>
+                        </select>
+
+                        <select onchange="fillWithMetric(this)" class="form-control" id="name_metric">
                         </select>
                     </div>
                 </div>
