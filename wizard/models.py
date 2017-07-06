@@ -368,37 +368,25 @@ class DatasetModel(models.Model):
                 # recreate the original .data and .solution (concatenate)
                 for extension in ['data', 'solution']:
                     output_name = '%s.%s' % (name, extension)
-                    with open(os.path.join(root, output_name), 'a') as outfile:
-                        for part in ['train', 'valid', 'test']:
-                            input_name = '%s_%s.%s' % (name, part, extension)
-                            with open(os.path.join(root, input_name), 'r') as infile:
-                                for line in infile:
-                                    outfile.write(line)
+                    outfile = open(os.path.join(root, output_name), 'w')
+                    for part in ['train', 'valid', 'test']:
+                        input_name = '%s_%s.%s' % (name, part, extension)
+                        infile = open(os.path.join(root, input_name), 'r')
+                        for line in infile:
+                            outfile.write(line)
+                        infile.close()
+                    outfile.close()
 
                 # Add pre split to database
                 from django.shortcuts import get_object_or_404
-                task = get_object_or_404(ChallengeModel, dataset=self.id).task
-
-                task.input_train = create_with_file(MatrixModel, os.path.join(root, '%s_train.data'%name))
-                task.input_valid = create_with_file(MatrixModel, os.path.join(root, '%s_valid.data'%name))
-                task.input_test = create_with_file(MatrixModel, os.path.join(root, '%s_test.data'%name))
-
-                task.target_train = create_with_file(MatrixModel, os.path.join(root, '%s_train.solution'%name))
-                task.target_valid = create_with_file(MatrixModel, os.path.join(root, '%s_valid.solution'%name))
-                task.target_test = create_with_file(MatrixModel, os.path.join(root, '%s_test.solution'%name))
-
-                train = task.input_train.rows.count
-                valid = task.input_valid.rows.count
-                test = task.input_test.rows.count
-                total = train + valid + test
-                total = train + valid + test
-
-                task.train_ratio = round(train * 100 / total, 1)
-                task.valid_ratio = round(valid * 100 / total, 1)
-                task.test_ratio = round(test * 100 / total, 1)
-
-                task.is_ready = True
-                task.save()
+                challenge = get_object_or_404(ChallengeModel, dataset=self.id)
+                task = challenge.task
+                if task is None:
+                    task = TaskModel(owner=self.owner, dataset=self)
+                    task.save()
+                    challenge.task = task
+                    challenge.save()
+                task.update_from_chalearn(root)
 
             input, target, metric, description = self.load_from_automl(root, any_prefix=False)
 
@@ -457,7 +445,7 @@ class DatasetModel(models.Model):
 
     @classmethod
     def create(cls, name, owner=None, is_public=False, input=None, target=None,
-               default_metric=None, description=None):
+               default_metric=None, description=None, fixed_split=False):
         x = {}
         if input is not None:
             x['input'] = input
@@ -467,7 +455,8 @@ class DatasetModel(models.Model):
             x['description'] = description
 
         return cls.objects.create(name=name, owner=owner, is_public=is_public,
-                                  default_metric=default_metric, **x)
+                                  default_metric=default_metric,
+                                  fixed_split=fixed_split, **x)
 
     def clean(self):
         super().clean()
@@ -594,15 +583,12 @@ class TaskModel(models.Model):
         # TODO(laurent): there are some subtleties on the validation
         # regarding nested fields. We also do not need to duplicate
         # the metadata for the columns between each input.
-        # self.is_ready = (self.input_test is not None and
-        #                  self.target_train is not None and
-        #                  self.input_test is not None and
-        #                  self.input_valid is not None and
-        #                  self.target_valid is not None)
 
-        self.is_ready = (self.test_ratio is not None and
-                         self.train_ratio is not None and
-                         self.valid_ratio is not None)
+        self.is_ready = self.is_ready or (self.input_test is not None and
+                         self.target_train is not None and
+                         self.input_test is not None and
+                         self.input_valid is not None and
+                         self.target_valid is not None)
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
@@ -623,19 +609,24 @@ class TaskModel(models.Model):
         train_target = load_chalearn(path, '_train.solution')
 
         test = load_chalearn(path, '_test.data')
-
-        try:
-            test_target = load_chalearn(path, '_test.solution')
-        except Exception as e:
-            test_target = None
-            log.error("Failed loading test solution: %r", e)
+        test_target = load_chalearn(path, '_test.solution')
 
         valid = load_chalearn(path, '_valid.data')
         valid_target = load_chalearn(path, '_valid.solution')
 
+        train_count = train.rows.count
+        valid_count = valid.rows.count
+        test_count = test.rows.count
+        total = train_count + valid_count + test_count
+
         return dict(input_train=train, target_train=train_target,
                     input_test=test, target_test=test_target,
-                    input_valid=valid, target_valid=valid_target)
+                    input_valid=valid, target_valid=valid_target,
+                    train_ratio=round(train_count*100/total,1),
+                    valid_ratio=round(valid_count*100/total,1),
+                    test_ratio=100-round(train_count*100/total,1)
+                               -round(valid_count*100/total,1),
+                    is_ready=True)
 
     @classmethod
     def from_chalearn(cls, dataset, path, name):

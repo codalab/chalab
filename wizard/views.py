@@ -240,6 +240,9 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
                                           """You can't edit a dataset that you do not own.""")
         else:
             r = super().form_valid(form)
+            if r:
+                self.object.is_ready = True
+                self.object.save()
             return r
 
     def get_challenge(self, pk=None, **_):
