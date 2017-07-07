@@ -82,6 +82,19 @@ def columns_count_first_line(file_field):
         file_field.close()
 
 
+def columns_count_sparse(file_field):
+    maximum = 0
+
+    file_field.open('r')
+    lines = file_field.readlines()
+    file_field.close()
+
+    for line in lines:
+        maximum = max(maximum, len(line.split()))
+
+    return maximum
+
+
 def columns_all_the_same_count(file_field, cols):
     file_field.open('r')
     lines = file_field.readlines()
@@ -243,9 +256,13 @@ class MatrixModel(models.Model):
         super().clean()  # Called last since we set the default self.columns and self.rows before.
 
         rows = lines_count(self.raw_content)
-        cols = columns_count_first_line(self.raw_content)
 
-        if not columns_all_the_same_count(self.raw_content, cols):
+        if self.is_sparse:
+            cols = columns_count_sparse(self.raw_content)
+        else:
+            cols = columns_count_first_line(self.raw_content)
+
+        if not columns_all_the_same_count(self.raw_content, cols) and not self.is_sparse:
             pass
             # raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
 
@@ -342,40 +359,43 @@ class DatasetModel(models.Model):
                 root = fs.sole_path(d)
                 name = os.path.basename(root)
 
-                pre_split = True
+                content = set(x for x in os.listdir(root))
 
-                # Verify if data are pre split
-                for extension in ['data', 'solution']:
-                    for part in ['train', 'valid', 'test']:
-                        path = os.path.join(root,
-                                            '%s_%s.%s' % (name, part, extension))
-                        if not os.path.isfile(path):
-                            pre_split = False
+                extensions = ['data', 'solution']
+                parts = ['train', 'valid', 'test']
+                meta = ['feat.name', 'label.name', 'public.info']
 
-                if not pre_split:
-                    # Verify if necessary file are not missing
-                    for extension in ['data', 'solution']:
-                        path = os.path.join(root, '%s.%s' % (name, extension))
-                        if not os.path.isfile(path):
-                            raise InvalidAutomlFormatException(
-                                '%s.%s missing' % (name, extension))
+                necessary_wanted = set('%s.%s' % (name, x) for x in extensions)
+
+                pre_split_wanted = set('%s_%s.%s' % (name, p, x)
+                                       for x in extensions for p in parts)
+
+                meta_optional = set('%s_%s' % (name, m) for m in meta)
+
+                total_dataset = len(necessary_wanted - content) == 0
+                pre_split_dataset = len(pre_split_wanted - content) == 0
+
+                if not total_dataset and not pre_split_dataset:
+                    raise InvalidAutomlFormatException(
+                        str(necessary_wanted - content) + ' are missing')
 
             except fs.InvalidDirectoryException as e:
                 raise InvalidAutomlFormatException(e) from e
 
+            if pre_split_dataset:
 
-            if pre_split:
-                # recreate the original .data and .solution (concatenate)
-                for extension in ['data', 'solution']:
-                    output_name = '%s.%s' % (name, extension)
-                    outfile = open(os.path.join(root, output_name), 'w')
-                    for part in ['train', 'valid', 'test']:
-                        input_name = '%s_%s.%s' % (name, part, extension)
-                        infile = open(os.path.join(root, input_name), 'r')
-                        for line in infile:
-                            outfile.write(line)
-                        infile.close()
-                    outfile.close()
+                if not total_dataset:
+                    # recreate the original .data and .solution (concatenate)
+                    for extension in ['data', 'solution']:
+                        output_name = '%s.%s' % (name, extension)
+                        outfile = open(os.path.join(root, output_name), 'w')
+                        for part in ['train', 'valid', 'test']:
+                            input_name = '%s_%s.%s' % (name, part, extension)
+                            infile = open(os.path.join(root, input_name), 'r')
+                            for line in infile:
+                                outfile.write(line)
+                            infile.close()
+                        outfile.close()
 
                 # Add pre split to database
                 from django.shortcuts import get_object_or_404
@@ -394,12 +414,15 @@ class DatasetModel(models.Model):
             self.input = input
             self.target = target
             self.description = description
-            self.fixed_split = pre_split
+            self.fixed_split = pre_split_dataset
 
             if metric:
                 self.default_metric = metric
 
             self.save()
+
+            return (total_dataset, pre_split_dataset,
+                    content - necessary_wanted - pre_split_wanted - meta_optional)
 
     @classmethod
     def create_from_chalearn(cls, path, name, owner=None, is_public=True):
@@ -622,10 +645,10 @@ class TaskModel(models.Model):
         return dict(input_train=train, target_train=train_target,
                     input_test=test, target_test=test_target,
                     input_valid=valid, target_valid=valid_target,
-                    train_ratio=round(train_count*100/total,1),
-                    valid_ratio=round(valid_count*100/total,1),
-                    test_ratio=100-round(train_count*100/total,1)
-                               -round(valid_count*100/total,1),
+                    train_ratio=train_count*100/total,
+                    valid_ratio=valid_count*100/total,
+                    test_ratio=100-(train_count*100/total)
+                               -(valid_count*100/total),
                     is_ready=True)
 
     @classmethod

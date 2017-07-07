@@ -170,7 +170,21 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
                 u = self.request.FILES.get('automl_upload', None)
 
                 try:
-                    self.object.update_from_chalearn(u)
+                    total, pre_split, useless = self.object.update_from_chalearn(u)
+
+                    if pre_split:
+                        text = 'Already split dataset'
+                    else:
+                        text = 'Dataset'
+
+                    text += ' successfully uploaded'
+                    messages.add_message(self.request, messages.INFO, text)
+
+                    if len(useless) > 0:
+                        messages.add_message(self.request, messages.WARNING,
+                                             'Some files have been ignored : '
+                                              + str(useless))
+
                 except InvalidAutomlFormatException as e:
                     raise errors.HTTP400Exception(
                         'wizard/challenge/error.html',

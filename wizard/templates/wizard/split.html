@@ -17,19 +17,19 @@
         <tr>
             <td>Train</td>
             <td id="train_row"></td>
-            <td>{{ object.train_ratio }}%</td>
+            <td>{{ object.train_ratio|floatformat }}%</td>
         </tr>
 
         <tr>
             <td>Valid</td>
             <td id="valid_row"></td>
-            <td>{{ object.valid_ratio }}%</td>
+            <td>{{ object.valid_ratio|floatformat }}%</td>
         </tr>
 
         <tr>
             <td>Test</td>
             <td id="test_row"></td>
-            <td>{{ object.test_ratio }}%</td>
+            <td>{{ object.test_ratio|floatformat }}%</td>
         </tr>
 
         <tr>
