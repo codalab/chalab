@@ -114,6 +114,18 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
             copy_file_field(task.target_train.raw_content,
                             path.join(d, '%s_train.solution' % name))
 
+            data = challenge.dataset
+
+            for i in [data.input, data.target]:
+                for j in [i.cols, i.rows]:
+                    if j is not None:
+                        for k in [j.types, j.names, j.doc]:
+                            if k is not None:
+                                k.raw_content.open()
+                                copy_file_field(k.raw_content,
+                                                path.join(d, os.path.basename(k.raw_content.name)))
+                                k.raw_content.close()
+
             zipdir(bt, output_dir, input_data, d)
             p['input_data'] = input_data + '.zip'
         finally:

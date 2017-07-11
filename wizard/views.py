@@ -232,7 +232,8 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
     @property
     def disabled(self):
-        return self.object.owner != self.request.user or self.object.dataset.fixed_split
+        return self.object.owner != self.request.user or \
+               (self.object.dataset is not None and self.object.dataset.fixed_split)
 
     def get_success_url(self):
         return reverse('wizard:challenge:split',

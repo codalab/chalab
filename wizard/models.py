@@ -148,18 +148,14 @@ class AxisDescriptionModel(models.Model):
         # Check that this object and the nested objects all share the same counts.
         c1 = self.types.count if self.types is not None else None
         c2 = self.names.count if self.names is not None else None
-        c3 = self.doc.count if self.doc is not None else None
 
-        self.count = self.count or c1 or c2 or c3
+        self.count = self.count or c1 or c2
 
         if not (c1 == self.count or c1 is None):
-            raise ValidationError("the size of the `types' data "
+            raise ValidationError("the size of the 'types' data "
                                   "doesn't match the others definitions.")
         if not (c2 == self.count or c2 is None):
-            raise ValidationError("the size of the `names' data "
-                                  "doesn't match the others definitions.")
-        if not (c3 == self.count or c3 is None):
-            raise ValidationError("the size of the `doc' data "
+            raise ValidationError("the size of the 'names' data "
                                   "doesn't match the others definitions.")
 
     def save(self, *args, **kwargs):
@@ -363,7 +359,8 @@ class DatasetModel(models.Model):
 
                 extensions = ['data', 'solution']
                 parts = ['train', 'valid', 'test']
-                meta = ['feat.name', 'label.name', 'public.info']
+                meta = ['feat.name', 'label.name',
+                        'feat.type', 'label.type', 'public.info']
 
                 necessary_wanted = set('%s.%s' % (name, x) for x in extensions)
 
@@ -451,6 +448,15 @@ class DatasetModel(models.Model):
         input = load_chalearn(path, '.data',
                               is_sparse=is_sparse, any_prefix=any_prefix)
 
+        if os.path.isfile(chalearn_path(path, '_public.info')):
+            input.cols.doc = create_with_file(ColumnarDocDefinition, chalearn_path(path, '_public.info'))
+
+        if os.path.isfile(chalearn_path(path, '_feat.type')):
+            input.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_feat.type'))
+
+        if os.path.isfile(chalearn_path(path, '_feat.name')):
+            input.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_feat.name'))
+
         try:
             cols_type = load_chalearn(path, '_feat.type',
                                       clss=ColumnarTypesDefinition,
@@ -460,6 +466,12 @@ class DatasetModel(models.Model):
             pass  # It's fine, feat specs are not mandatory.
 
         target = load_chalearn(path, '.solution', any_prefix=any_prefix)
+
+        if os.path.isfile(chalearn_path(path, '_label.type')):
+            target.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_label.type'))
+
+        if os.path.isfile(chalearn_path(path, '_label.name')):
+            target.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_label.name'))
 
         input.save()
         target.save()
