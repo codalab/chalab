@@ -89,8 +89,13 @@ def columns_count_sparse(file_field):
     lines = file_field.readlines()
     file_field.close()
 
-    for line in lines:
-        maximum = max(maximum, len(line.split()))
+    try:
+        for line in lines:
+            list_val = list(map(int, line.split()))
+            maximum = max(maximum, max(list_val))
+    except:
+        raise InvalidAutomlFormatException("Bad line format\n"
+                                           "They don't contain only numbers")
 
     return maximum
 
@@ -267,8 +272,7 @@ class MatrixModel(models.Model):
         if self.rows is None:
             self.rows = AxisDescriptionModel.objects.create()
 
-        if not self.is_sparse:
-            self.cols.count = cols
+        self.cols.count = cols
 
         self.rows.count = rows
 

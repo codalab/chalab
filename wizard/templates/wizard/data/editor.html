@@ -39,12 +39,21 @@
     </p>
 
     <p>
-        Only <code>AutoML</code>, <code>CSV</code> and <code>ARFF</code> archives are currently supported. All archives
-        will be converted
-        automatically into AutoML. They are defined as a zip file containing at least:
+        Only <code>AutoML</code> archives are currently supported.
+        They are defined as a zip file containing at least:
     <pre>dataset_name/
-   dataset_name.data
-   dataset_name.solution</pre>
+    dataset_name.data
+    dataset_name.solution</pre>
+
+        Or, if data are already splitted, the zip file must contain :
+    <pre>dataset_name/
+    dataset_name_train.data
+    dataset_name_train.solution
+    dataset_name_valid.data
+    dataset_name_valid.solution
+    dataset_name_test.data
+    dataset_name_test.solution</pre>
+
     Please check the <a href="{% static 'chalab/resource/iris.zip' %}">Iris Dataset</a>
     for an example.
     </p>
