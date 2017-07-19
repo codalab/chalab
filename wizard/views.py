@@ -423,7 +423,8 @@ def metric(request, pk):
 
     # Load a default metric if necessary
     if c.metric is None:
-        context['metric'] = get_object_or_404(MetricModel, name='example')
+        context['metric'] = get_object_or_404(MetricModel,
+                                              name='example', is_default=True)
 
     context['is_ready'] = context['metric'].is_ready
 

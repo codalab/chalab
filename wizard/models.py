@@ -94,8 +94,7 @@ def columns_count_sparse(file_field):
             list_val = list(map(int, line.split()))
             maximum = max(maximum, max(list_val))
     except:
-        raise InvalidAutomlFormatException("Bad line format\n"
-                                           "They don't contain only numbers")
+        return None
 
     return maximum
 
