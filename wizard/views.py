@@ -50,7 +50,8 @@ You can check the archive actual content using <code>`unzip -l ./my_archive.zip'
 
 @login_required
 def home(request):
-    challenges = ChallengeModel.objects.filter(created_by=request.user)
+    challenges = ChallengeModel.objects.filter(created_by=request.user)\
+        .order_by('-created_at')
     return render(request, 'wizard/home.html',
                   context={'object_list': challenges})
 
@@ -295,6 +296,37 @@ class ChallengeTaskUpdate(FlowOperationMixin, LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
 
+# Clean way to update the dataset
+# (prevent to have some useless row in the database, like unreferenced task)
+def update_chalenge_dataset(chalenge, new_dataset):
+    old_dataset = chalenge.dataset
+    old_task = chalenge.task
+
+    # Update dataset and task
+    chalenge.dataset = new_dataset
+    chalenge.task = None
+
+    if new_dataset.fixed_split or new_dataset.is_public:
+        chalenge.task = get_object_or_404(TaskModel, dataset=new_dataset.id)
+        print("fixed task")
+
+    chalenge.save()
+
+    if old_dataset is None:
+        return
+
+    # Remove garbage
+    if old_dataset.input is None:
+        old_dataset.delete()
+        print("delete dataset")
+
+    if not old_dataset.fixed_split and not old_task is None:
+        old_task.delete()
+        print("delete task")
+
+    chalenge.save()
+
+
 @login_required
 def data_picker(request, pk):
     c = get_object_or_404(ChallengeModel, id=pk, created_by=request.user)
@@ -306,10 +338,9 @@ def data_picker(request, pk):
             ds = request.POST['dataset']
 
             d = get_object_or_404(DatasetModel, is_public=True, id=ds)
-            c.dataset = d
 
-            t = get_object_or_404(TaskModel, dataset=d)
-            c.task = t
+            update_chalenge_dataset(c, d)
+
             c.metric = d.default_metric
 
             c.save()
@@ -332,17 +363,13 @@ def data_picker(request, pk):
 
             d = get_object_or_404(
                 DatasetModel, is_public=False, owner=request.user.id, id=ds)
-            c.dataset = d
 
-            if d.fixed_split:
-                c.task = get_object_or_404(TaskModel, dataset=d.id)
-            else:
-                c.task = None
+            update_chalenge_dataset(c, d)
 
             c.save()
         elif k == 'create':
-            c.dataset = DatasetModel.create("new dataset", request.user)
-            c.task = None
+            d = DatasetModel.create("new dataset", request.user)
+            update_chalenge_dataset(c, d)
             c.save()
         else:
             assert False, "unsupported k=%s" % k
@@ -425,8 +452,9 @@ def metric(request, pk):
     if c.metric is None:
         context['metric'] = get_object_or_404(MetricModel,
                                               name='example', is_default=True)
-
-    context['is_ready'] = context['metric'].is_ready
+        context['is_ready'] = False
+    else:
+        context['is_ready'] = context['metric'].is_ready
 
     return render(request, 'wizard/metric/editor.html', context)
 
