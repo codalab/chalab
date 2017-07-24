@@ -1,0 +1,124 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block app_name %}profile{% endblock %}
+{% block panel_name %}editor{% endblock %}
+
+{% block content %}
+<div class="nav-pages">
+    <ul class="nav nav-tabs">
+        {% for group in groups %}
+        <li role="presentation"
+            class="nav-page {% if group.id == current %}active{% endif %}">
+            <a href="{% url 'group:edit' group_id=group.id %}"
+               style="color:#{{ group.get_color }}"
+               class="focus">{{ group.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+<div class="page">
+
+    <form class='editor' action="#" method="post">
+    {% confirm_form %}
+    {% csrf_token %}
+
+    <br/>
+
+    <div class="form-group">
+        <label class="control-label" for="id_name">Name:</label>
+        <input class="form-control" id="id_name" maxlength="30" name="name"
+               value="{{ current_group.name }}" type="text" required />
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="id_users">Users in this group</label>
+        <select multiple="multiple" class="form-control" id="id_users" >
+            {% for user in users %}
+            <option value="{{ user.id }}">{{ user.username }}</option>
+            {% endfor %}
+        </select>
+
+        <div style="display: inline-block">
+            <input class="form-control" id="add_user" name="add_user" maxlength="30"
+                   name="add_user" type="text" placeholder="Username or Email" />
+        </div>
+
+        <div style="display: inline-block">
+            <button type=button class="btn btn-default" id="click_add_user">
+            {% bootstrap_icon "plus" %} Add
+            </button>
+        </div>
+
+        <div style="display: inline-block">
+            <button type=button class="btn btn-default" id="click_remove_user">
+            {% bootstrap_icon "minus" %} Remove
+            </button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="id_default_dataset">Default datasets</label>
+        <select multiple="multiple" class="form-control" id="id_default_dataset" >
+            {% for dt in default_dataset %}
+            <option value="{{ dt.id }}">{{ dt.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="id_default_metric">Default metrics</label>
+        <select multiple="multiple" class="form-control" id="id_default_metric" >
+            {% for mt in default_metric %}
+            <option value="{{ mt.id }}">{{ mt.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    {% buttons %}
+    <button type="submit" class="btn btn-primary">
+        {% bootstrap_icon "star" %} Update
+    </button>
+    {% endbuttons %}
+    </form>
+</div>
+
+
+<script type="text/javascript">
+// using jQuery
+var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+$("#click_add_user").click(function () {
+      $.ajax({
+        url: '{% url 'group:add_user' %}',
+        data: {
+          'add_user': $("#add_user").val()
+        },
+        dataType: 'json',
+        success: function (data) {
+          if (data.is_taken) {
+            alert("Pseudo valide");
+          }else{
+            alert("Unknow username or email");
+          }
+        }
+      });
+
+    });
+</script>
+
+{% endblock %}

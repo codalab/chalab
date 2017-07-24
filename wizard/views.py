@@ -50,10 +50,16 @@ You can check the archive actual content using <code>`unzip -l ./my_archive.zip'
 
 @login_required
 def home(request):
-    challenges = ChallengeModel.objects.filter(created_by=request.user)\
-        .order_by('-created_at')
-    return render(request, 'wizard/home.html',
-                  context={'object_list': challenges})
+    u = request.user
+
+    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at')
+
+    context = {
+        'object_list': challenges,
+        'groups': u.admin_of_group.all()
+        }
+
+    return render(request, 'wizard/home.html', context=context)
 
 
 class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):

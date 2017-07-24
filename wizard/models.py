@@ -919,8 +919,8 @@ class ChallengeModel(models.Model):
                                  related_name='challenge')
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,
                                     related_name='challenge')
-    documentation = models.OneToOneField(DocumentationModel, null=True, blank=True,
-                                         related_name='challenge')
+    documentation = models.OneToOneField(DocumentationModel, null=True,
+                                         blank=True, related_name='challenge')
 
     def save(self, *args, **kwargs):
         # delete old file when replacing by updating the file
