@@ -42,7 +42,7 @@
                     <div class="form-block">
                         <h4>Use a Public Metric:</h4>
 
-                        <script>
+                        <script type="text/javascript">
                                 var metrics_pk = {
                                 {% for metric in public_metrics %}
                                     {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
@@ -54,8 +54,8 @@
 
                                 function fillWithMetric(s) {
                                     metric = metrics_pk[s.value];
-                                    document.getElementById('name').value = metric[0];
-                                    document.getElementById('description').value = metric[1];
+                                    $('#name').val(metric[0]);
+                                    $('#description').val(metric[1]);
                                     CodeMirrorPython.setValue(metric[2]);
                                 }
 
@@ -133,7 +133,7 @@
                         <h4>Load your Metric from a file:</h4>
 
                         <input type='file' accept='text/*' onchange='openFile(event)'><br>
-                        <script>
+                        <script type="text/javascript">
                                 var CodeMirrorPython = CodeMirror.fromTextArea(document.getElementById('code'), {
                                     mode:  "python", indentUnit: 4, lineWrapping: true, lineNumbers: true
                                 });
