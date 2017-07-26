@@ -26,7 +26,8 @@
 {% for group in groups %}
     <div class="col-md-4">
         <a class="btn btn-block warning-color"
-           style="color:white;background-color:#{{ group.get_color }};" >
+           style="color:white;background-color:#{{ group.get_color }};"
+           href="{% url 'wizard:create_from_group' group_id=group.id %}">
             <i class="fa fa-plus" aria-hidden="true"></i>
             Create a New "{{ group.name }}"
         </a>

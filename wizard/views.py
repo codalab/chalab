@@ -13,6 +13,7 @@ from django.views.generic import UpdateView
 
 from bundler.models import BundleTaskModel
 from chalab import errors
+from group.models import GroupModel
 from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
@@ -72,6 +73,76 @@ class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
         r = super(ChallengeDescriptionCreate, self).form_valid(form)
         self.object.generate_default_phases()
         return r
+
+
+@login_required
+def challenge_create_from_group(request, group_id):
+    group = get_object_or_404(GroupModel, id=group_id)
+    base_challenge = group.base_challenge
+
+    # Initialisation
+    base_challenge.id = None
+    base_challenge.created_by = request.user
+    base_challenge.origin_group = group
+
+    # Deep copy
+
+    if base_challenge.dataset is not None:
+        # base_challenge.dataset
+        data = base_challenge.dataset
+        data.id = None
+        # Option copie à faire sur les MatrixModel
+        data.input = None
+        data.target = None
+
+        data.save()
+        base_challenge.dataset = data
+
+        if not base_challenge.dataset.fixed_split:
+            task = base_challenge.task
+            task.id = None
+            task.dataset = data # Ref le dataset sup après
+            task.save()
+            base_challenge.task = task
+    else:
+        base_challenge.task = None
+
+    if base_challenge.metric is not None:
+        met = base_challenge.metric
+        met.id = None
+        met.save()
+        base_challenge.metric = met
+
+    if base_challenge.protocol is not None:
+        pro = base_challenge.protocol
+        pro.id = None
+        pro.save()
+        base_challenge.protocol = pro
+
+    if base_challenge.baseline is not None:
+        from django.core.files import File
+        base = BaselineModel(submission=File(open(base_challenge.baseline.submission.path, 'rb')))
+        base.save()
+        base_challenge.baseline = base
+
+    if base_challenge.documentation is not None:
+        doc = base_challenge.documentation
+
+        pages = DocumentationPageModel.objects.filter(documentation=doc)
+
+        doc.id = None
+        doc.save()
+
+        for page in pages:
+            page.id = None
+            page.documentation = doc
+            page.save()
+
+        base_challenge.documentation = doc
+
+    base_challenge.save()
+
+    return redirect(base_challenge.get_absolute_url())
 
 
 class ChallengeDescriptionUpdate(UpdateView, LoginRequiredMixin):
