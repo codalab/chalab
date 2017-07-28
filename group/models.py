@@ -7,6 +7,7 @@ from wizard.models import DatasetModel, MetricModel, ChallengeModel
 palette = ['81c784', 'ffb64c', '4cb5ab', 'b967c7',
            'ef6191', '7884cb', 'dce674', 'a1877e', 'f77b71']
 
+
 class GroupModel(models.Model):
     admins = models.ManyToManyField(User, db_table='admin_group',
                                     related_name='admin_of_group')

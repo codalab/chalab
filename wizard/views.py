@@ -86,26 +86,20 @@ def challenge_create_from_group(request, group_id):
     base_challenge.origin_group = group
 
     # Deep copy
-
+    data = None
     if base_challenge.dataset is not None:
-        # base_challenge.dataset
         data = base_challenge.dataset
         data.id = None
-        # Option copie à faire sur les MatrixModel
-        data.input = None
-        data.target = None
-
+        data.input = data.input.deep_copy()
+        data.target = data.target.deep_copy()
         data.save()
         base_challenge.dataset = data
 
-        if not base_challenge.dataset.fixed_split:
-            task = base_challenge.task
-            task.id = None
-            task.dataset = data # Ref le dataset sup après
-            task.save()
-            base_challenge.task = task
-    else:
-        base_challenge.task = None
+    if base_challenge.task is not None:
+        task = base_challenge.task.deep_copy()
+        task.dataset = data
+        task.save()
+        base_challenge.task = task
 
     if base_challenge.metric is not None:
         met = base_challenge.metric

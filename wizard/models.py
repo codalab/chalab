@@ -120,25 +120,36 @@ class ColumnarFileModel(models.Model):
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'columns'))
     count = models.IntegerField()
 
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
+
     def save(self, *args, **kwargs):
-        self.count = lines_count(self.raw_content)
+        if not('skip_clean' in kwargs and kwargs['skip_clean']):
+            self.count = lines_count(self.raw_content)
+        elif 'skip_clean' in kwargs:
+            kwargs.pop('skip_clean', None)
         super(ColumnarFileModel, self).save(*args, **kwargs)
 
     # Make a deep copy of herself and return it
     def deep_copy(self):
         from django.core.files import File
 
-        new_self = ColumnarFileModel(submission=File(
+        new_self = type(self)(raw_content=File(
             open(self.raw_content.path, 'rb')))
 
         new_self.name = self.name
         new_self.count = self.count
-        new_self.save()
+
+        kwargs = {'skip_clean': True}
+        new_self.save(**kwargs)
 
         return new_self
 
     def delete(self):
-        self.raw_content.delete(save=False)
+        try:
+            self.raw_content.delete(save=False)
+        except:
+            pass
         super().delete()
 
     class Meta:
@@ -166,6 +177,9 @@ class AxisDescriptionModel(models.Model):
                           null=True, on_delete=models.SET_NULL, related_name='axis')
     doc = OneToOneField(ColumnarDocDefinition,
                         null=True, on_delete=models.SET_NULL, related_name='axis')
+
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
 
     def clean(self):
         super().clean()
@@ -201,15 +215,14 @@ class AxisDescriptionModel(models.Model):
 
     # Make a deep copy of herself and return it
     def deep_copy(self):
-        this = AxisDescriptionModel.objects.filter(id=self.id)
-        this.id = None
+        self.id = None
 
-        this.types = this.types.deep_copy() if this.types is not None else None
-        this.names = this.names.deep_copy() if this.names is not None else None
-        this.doc = this.doc.deep_copy() if this.doc is not None else None
+        self.types = self.types.deep_copy() if self.types is not None else None
+        self.names = self.names.deep_copy() if self.names is not None else None
+        self.doc = self.doc.deep_copy() if self.doc is not None else None
 
-        this.save()
-        return this
+        self.save()
+        return self
 
     def delete(self):
         delete_all([self.types, self.names, self.doc])
@@ -284,10 +297,11 @@ class MatrixModel(models.Model):
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'matrix'))
     is_sparse = models.BooleanField(default=False, null=False)
 
-    cols = OneToOneField(AxisDescriptionModel, null=True,
-                         on_delete=models.PROTECT, related_name='matrix_cols')
-    rows = OneToOneField(AxisDescriptionModel, null=True,
-                         on_delete=models.PROTECT, related_name='matrix_rows')
+    cols = OneToOneField(AxisDescriptionModel, null=True, related_name='matrix_cols')
+    rows = OneToOneField(AxisDescriptionModel, null=True, related_name='matrix_rows')
+
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
 
     def clean(self):
         super().clean()  # Called last since we set the default self.columns and self.rows before.
@@ -316,22 +330,37 @@ class MatrixModel(models.Model):
         self.rows.save()
 
     def save(self, *args, **kwargs):
-        self.clean()  # Force clean on save.
+        if not('skip_clean' in kwargs and kwargs['skip_clean']):
+            self.clean()  # Force clean on save.
+        elif 'skip_clean' in kwargs:
+            kwargs.pop('skip_clean', None)
         super().save(*args, **kwargs)
 
     # Make a deep copy of herself and return it
     def deep_copy(self):
-        this = MatrixModel.objects.filter(id=self.id)
-        this.id = None
+        from django.core.files import File
 
-        this.cols = this.cols.deep_copy() if this.cols is not None else None
-        this.rows = this.rows.deep_copy() if this.rows is not None else None
+        new_self = MatrixModel(raw_content=File(
+            open(self.raw_content.path, 'rb')))
 
-        this.save()
-        return this
+        new_self.name = self.name
+        new_self.is_sparse = self.is_sparse
+
+        new_self.cols = self.cols.deep_copy() if self.cols is not None else None
+        new_self.rows = self.rows.deep_copy() if self.rows is not None else None
+
+        kwargs = {'skip_clean': True}
+        new_self.save(**kwargs)
+        return new_self
 
     def delete(self):
         delete_all([self.cols, self.rows])
+
+        try:
+            self.raw_content.delete(save=False)
+        except:
+            pass
+
         super().delete()
 
 class InvalidAutomlFormatException(Exception):
@@ -569,8 +598,9 @@ class DatasetModel(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self):
-        delete_all([self.input, self.target])
-        super().delete()
+        if len(ChallengeModel.objects.filter(dataset=self))<=1:
+            delete_all([self.input, self.target])
+            super().delete()
 
 
 def create_with_file(clss, file_path, **kwargs):
@@ -673,7 +703,7 @@ class TaskModel(models.Model):
         if self.test_ratio is not None and self.train_ratio is not None and self.valid_ratio is not None:
             s = self.test_ratio + self.train_ratio + self.valid_ratio
 
-            if s != 100:
+            if round(s,10) != 100:
                 raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
@@ -728,6 +758,19 @@ class TaskModel(models.Model):
             owner=None, is_public=True, name=name,
             **cls.load_from_chalearn(path)
         )
+
+    def deep_copy(self):
+        self.id = None
+
+        self.input_train = self.input_train.deep_copy() if self.input_train is not None else None
+        self.target_train = self.target_train.deep_copy() if self.target_train is not None else None
+        self.input_test = self.input_test.deep_copy() if self.input_test is not None else None
+        self.target_test = self.target_test.deep_copy() if self.target_test is not None else None
+        self.input_valid = self.input_valid.deep_copy() if self.input_valid is not None else None
+        self.target_valid = self.target_valid.deep_copy() if self.target_valid is not None else None
+
+        self.save()
+        return self
 
     def delete(self):
         delete_all([self.input_train, self.target_train, self.input_test,
@@ -946,7 +989,10 @@ class BaselineModel(models.Model):
     #     super(BaselineModel, self).save(*args, **kwargs)
     #
     # def delete(self):
-    #     self.submission.delete(save=False)
+    #     try:
+    #         self.submission.delete(save=False)
+    #     except:
+    #         pass
     #     super().delete()
 
     def __str__(self):
@@ -1073,12 +1119,8 @@ class ChallengeModel(models.Model):
         return cls.objects.get(pk=pk)
 
     def delete(self):
-        if self.origin_group is None:
-            delete_all([self.task, self.metric, self.protocol,
-                        self.baseline, self.documentation])
-        else:
-            # TODO inteligent deletion when copy for group
-            pass
+        delete_all([self.task, self.metric, self.protocol,
+                    self.baseline, self.documentation])
         super().delete()
 
 
