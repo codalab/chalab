@@ -286,7 +286,7 @@ def gen_leaderboard(challenge):
         'columns': {
             'set1_score':
                 {'leaderboard': leaderboard_Results,
-                 'label': 'Precision',
+                 'label': 'Prediction score',
                  'numeric_format': 4,
                  'rank': 2},
             'Duration':
@@ -313,12 +313,12 @@ def create_bundle(bt, output_dir, challenge):
         'has_registration': False,
         'force_submission_to_leaderboard': True,
         'disallow_leaderboard_modifying': True,
-        'allow_teams': True,
+        'allow_teams': False,
         'enable_detailed_results': True,
         'show_datasets_from_yaml': True,
         'allow_public_submissions': True,
         'anonymous_leaderboard': False,
-        'enable_per_submission_metadata': True,
+        'enable_per_submission_metadata': False,
         'enable_forum': True,
         'end_date': None,
         'admin_names': 'guyon,lsenta'  # temporary default admins.
