@@ -9,9 +9,11 @@ log = logging.getLogger('wizard.commands.load_default_metrics')
 METRICS = {
     'example': {
         'description': """A example of a metric using the mean square error""",
-        'code': """def example(solution, prediction):
-    metric_value = mean((solution-prediction)**2)
-    return metric_value""",
+        'code': """import numpy as np
+
+def example(solution, prediction):
+    mse = np.mean((solution-prediction)**2)
+    return np.mean(mss)""",
         'is_default': True
     },
     'bac_binary': {
