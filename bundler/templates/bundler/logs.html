@@ -15,4 +15,8 @@
         </pre>
 </div>
 {% endfor %}
+<a href="{% url 'wizard:challenge' challenge.pk %}">
+    <i class="fa fa-cubes" aria-hidden="true"></i>
+    Go back to the challenge
+</a>
 {% endblock %}

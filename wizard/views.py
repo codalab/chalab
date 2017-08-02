@@ -36,12 +36,23 @@ Processing of the archive failed because of:
 </p>
 
 <p>
+You must put all files in a single folder named with your dataset name.
+<br/>
 The expected automl archive is of the form:
 <pre>
-dataset_name/
-    dataset_name.data
-    dataset_name.solution
+DataName/
+    DataName.data
+    DataName.solution
 </pre>
+
+Or, if data are already splitted, the zip file must contain :
+<pre>DataName/
+    DataName_train.data
+    DataName_train.solution
+    DataName_valid.data
+    DataName_valid.solution
+    DataName_test.data
+    DataName_test.solution</pre>
 
 You can check the archive actual content using <code>`unzip -l ./my_archive.zip'</code>.
 <p>
@@ -308,7 +319,6 @@ def update_chalenge_dataset(chalenge, new_dataset):
 
     if new_dataset.fixed_split or new_dataset.is_public:
         chalenge.task = get_object_or_404(TaskModel, dataset=new_dataset.id)
-        print("fixed task")
 
     chalenge.save()
 

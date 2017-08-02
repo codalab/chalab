@@ -80,7 +80,7 @@ def logs(request, pk):
     if b is None:
         raise Http404('Bundler not found')
 
-    return render(request, 'bundler/logs.html', dict(task=b))
+    return render(request, 'bundler/logs.html', dict(task=b, challenge=c))
 
 
 @login_required

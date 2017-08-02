@@ -29,7 +29,7 @@
 
             <h4>Code:</h4>
 
-            <textarea name="code" id="code" class="form-control" cols="20" rows="20">
+            <textarea name="code" style="resize:none;" id="code" class="form-control" cols="20" rows="20">
 {% if metric %}{{ metric.code }}{% endif %}</textarea>
 
             <p class="text-muted text-center">
@@ -62,13 +62,13 @@
                                 var metrics_list = {
                                     "" : [["",""]],
                                     "other" : [["",""],{% for metric in public_metrics %}{% if not metric.classification and not metric.regression %}
-                                        [{{ metric.pk }}, "{{ metric.description }} ({{ metric.name }})"],
+                                        [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
                                         {% endif %}{% endfor %}],
                                     "regression" : [["",""],{% for metric in public_metrics %}{% if metric.regression %}
-                                        [{{ metric.pk }}, "{{ metric.description }} ({{ metric.name }})"],
+                                        [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
                                         {% endif %}{% endfor %}],
                                     "classification" : [["",""],{% for metric in public_metrics %}{% if metric.classification %}
-                                        [{{ metric.pk }}, "{{ metric.description }} ({{ metric.name }})"],
+                                        [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
                                         {% endif %}{% endfor %}]
                                 }
 
@@ -88,7 +88,7 @@
                         </script>
 
                         <select onchange="fillWithListMetric(this)" class="form-control" id="type_metric">
-                            <option value="" selected></option>
+                            <option value="">---------</option>
                             <option value="other">Other</option>
                             <option value="classification">Classification</option>
                             <option value="regression">Regression</option>
@@ -96,6 +96,17 @@
 
                         <select onchange="fillWithMetric(this)" class="form-control" id="name_metric">
                         </select>
+
+                        <script>
+                        {% if c.dataset.default_metric.classification %}
+                        $("#type_metric select").val("classification").change();
+                        {% endif %}
+                        {% if c.dataset.default_metric.regression %}
+                        $("#type_metric select").val("regression").change();
+                        {% endif %}
+                        </script>
+
+                        {{ c.dataset.default_metric.name }}
                     </div>
                 </div>
 
@@ -105,9 +116,9 @@
                         {% if private_metric %}
                         <div class="form-group">
                             <label>Metric: </label>
-                            <select name="metricPrivate" id="metricPrivatePicker">
+                            <select name="metricPrivate" class="form-control" id="metricPrivatePicker">
                                 {% for metric in private_metric %}
-                                <option value="{{ metric.pk }}">{{ metric.name }}</option>
+                                <option value="{{ metric.pk }}">{{ metric.name }} : {{ metric.description }}</option>
                                 {% endfor %}
                             </select>
                         </div>
