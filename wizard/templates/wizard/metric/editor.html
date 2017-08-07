@@ -19,8 +19,49 @@
 
             <h4>Name of the metric function:</h4>
 
-            <input name="name" id="name" type="text" class="form-control" value="
-{% if metric %}{{ metric.name }}{% endif %}">
+            <div class="" id="div_name">
+                <input name="name" id="name" type="text" class="form-control"
+                       value="{% if metric %}{{ metric.name }}{% endif %}"
+                        onkeyup="verif_name();">
+                <span class="help-block" id="span_name"></span>
+            </div>
+
+            <script>
+                var regex_find_function = /(^|[\r\n]+)def\s+(\w+)\([^,\)]+,[^,\)]+\)\s*:/g;
+
+                function verify_function_exist(name, code){
+                    var boolean = false;
+                    while (matches = regex_find_function.exec(code)) {
+                        if(matches[2].trim() == name){
+                            boolean = true;
+                        }
+                    }
+                    return boolean;
+                }
+
+                function verif_name(){
+                    name = $('#name').val();
+                    code = CodeMirrorPython.getValue();
+
+                    if(verify_function_exist(name, code)){
+                        $('#div_name').attr('class', '');
+                        $('#span_name').text('');
+                    }else{
+                        $('#div_name').attr('class', 'form-group has-error');
+                        $('#span_name').text('Any function with this name in your code');
+                    }
+                }
+
+                var regex_find_fun_with_comment = /(^|(#(.*))?[\r\n]+)def\s+(\w+)\([^,\)]+,[^,\)]+\)\s*:/g;
+
+                function get_name_and_comment(code){
+                    var last_res;
+                    while (matches = regex_find_fun_with_comment.exec(code)) {
+                        last_res = matches;
+                    }
+                    return {'name':last_res[4].trim(), 'comment': last_res[3].trim()};
+                }
+            </script>
 
             <h4>Description:</h4>
 
@@ -29,7 +70,8 @@
 
             <h4>Code:</h4>
 
-            <textarea name="code" style="resize:none;" id="code" class="form-control" cols="20" rows="20">
+            <textarea name="code" style="resize:none;" id="code" class="form-control"
+                      cols="20" rows="20" onchange="verif_name();">
 {% if metric %}{{ metric.code }}{% endif %}</textarea>
 
             <p class="text-muted text-center">
@@ -78,9 +120,10 @@
                                     data: { 'metric_id': id },
                                     dataType: 'json',
                                     success: function(data) {
-                                    $('#name').val(data.name);
-                                    $('#description').val(data.description);
-                                    CodeMirrorPython.setValue(data.code);
+                                        $('#name').val(data.name);
+                                        $('#description').val(data.description);
+                                        CodeMirrorPython.setValue(data.code);
+                                        verif_name();
                                     }
                                 });
                             }
@@ -165,17 +208,20 @@
                                     mode:  "python", indentUnit: 4, lineWrapping: true, lineNumbers: true
                                 });
 
-                                var findName = function(code) {};
+                                // It could be a good things to limit the number of executions of this
+                                CodeMirrorPython.on('change', function(cmp){verif_name();});
 
-                                var findDescription = function(code) {};
+                                verif_name();
 
                                 var openFile = function() {
                                     var reader = new FileReader();
 
                                     reader.onload = function(){
+                                        nc = get_name_and_comment(reader.result);
                                         CodeMirrorPython.setValue(reader.result);
-                                        $('#name').val(findName(reader.result));
-                                        $('#description').val(findDescription(reader.result));
+                                        $('#name').val(nc.name);
+                                        $('#description').val(nc.comment);
+                                        verif_name();
                                     };
 
                                     reader.readAsText($('#fileload').prop('files')[0]);
