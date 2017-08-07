@@ -43,47 +43,57 @@
                         <h4>Use a Public Metric:</h4>
 
                         <script>
-                                var metrics_pk = {
-                                {% for metric in public_metrics %}
-                                    {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
-                                {% endfor %}
-                                {% for metric in private_metric %}
-                                    {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
-                                {% endfor %}
-                                }
+                            // using jQuery
+                            var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
 
-                                function fillWithMetric(s) {
-                                    metric = metrics_pk[s.value];
-                                    document.getElementById('name').value = metric[0];
-                                    document.getElementById('description').value = metric[1];
-                                    CodeMirrorPython.setValue(metric[2]);
-                                }
+                            function csrfSafeMethod(method) {
+                                // these HTTP methods do not require CSRF protection
+                                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                            }
 
-                                var metrics_list = {
-                                    "" : [["",""]],
-                                    "other" : [["",""],{% for metric in public_metrics %}{% if not metric.classification and not metric.regression %}
-                                        [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
-                                        {% endif %}{% endfor %}],
-                                    "regression" : [["",""],{% for metric in public_metrics %}{% if metric.regression %}
-                                        [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
-                                        {% endif %}{% endfor %}],
-                                    "classification" : [["",""],{% for metric in public_metrics %}{% if metric.classification %}
-                                        [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
-                                        {% endif %}{% endfor %}]
-                                }
-
-                                function fillWithListMetric(s) {
-                                    metric = metrics_list[s.value];
-
-                                    var sel = document.getElementById('name_metric');
-                                    sel.options.length = 0;
-                                    for(var i = 0; i < metric.length; i++) {
-                                        var opt = document.createElement('option');
-                                        opt.innerHTML = metric[i][1];
-                                        opt.value = metric[i][0];
-                                        sel.appendChild(opt);
+                            $.ajaxSetup({
+                                beforeSend: function(xhr, settings) {
+                                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
                                     }
                                 }
+                            });
+
+                            var public_metrics_list = {
+                                "" : [["",""]],
+                                "other" : [["",""],{% for metric in public_metrics %}{% if not metric.classification and not metric.regression %}
+                                    [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
+                                    {% endif %}{% endfor %}],
+                                "regression" : [["",""],{% for metric in public_metrics %}{% if metric.regression %}
+                                    [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
+                                    {% endif %}{% endfor %}],
+                                "classification" : [["",""],{% for metric in public_metrics %}{% if metric.classification %}
+                                    [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
+                                    {% endif %}{% endfor %}]
+                            }
+
+                            function fillWithMetric(id) {
+                                $.ajax({
+                                    url: '{% url 'wizard:challenge:get_metric' challenge.pk%}',
+                                    data: { 'metric_id': id },
+                                    dataType: 'json',
+                                    success: function(data) {
+                                    $('#name').val(data.name);
+                                    $('#description').val(data.description);
+                                    CodeMirrorPython.setValue(data.code);
+                                    }
+                                });
+                            }
+
+                            function fillWithListMetric(s) {
+                                metrics = public_metrics_list[s.value];
+
+                                var options = $("#name_metric");
+                                options.empty();
+                                $.each(metrics, function() {
+                                    options.append(new Option(this[1], this[0]));
+                                });
+                            }
 
                         </script>
 
@@ -94,19 +104,18 @@
                             <option value="regression">Regression</option>
                         </select>
 
-                        <select onchange="fillWithMetric(this)" class="form-control" id="name_metric">
+                        <select onchange="$('#buttondefaultload').attr('class', 'primaryAction btn btn-primary');"
+                        class="form-control" id="name_metric">
                         </select>
 
-                        <script>
-                        {% if c.dataset.default_metric.classification %}
-                        $("#type_metric select").val("classification").change();
-                        {% endif %}
-                        {% if c.dataset.default_metric.regression %}
-                        $("#type_metric select").val("regression").change();
-                        {% endif %}
-                        </script>
+                        <br/>
 
-                        {{ c.dataset.default_metric.name }}
+                        {% buttons %}
+                        <button onclick="fillWithMetric($('#name_metric').val())" id="buttondefaultload"
+                                class="primaryAction btn btn-outline-primary" type="button">
+                            Load
+                        </button>
+                        {% endbuttons %}
                     </div>
                 </div>
 
@@ -124,7 +133,7 @@
                         </div>
 
                         {% buttons %}
-                        <button onclick="fillWithMetric(document.getElementById('metricPrivatePicker'))"
+                        <button onclick="fillWithMetric($('#metricPrivatePicker').val());"
                                 class="primaryAction btn btn-primary" type="button">
                             Load
                         </button>
@@ -143,27 +152,43 @@
                     <div class="form-block">
                         <h4>Load your Metric from a file:</h4>
 
-                        <input type='file' accept='text/*' onchange='openFile(event)'><br>
+                        <input type='file' accept='text/*' id='fileload'
+                               onchange="$('#buttonfileload').attr('class', 'primaryAction btn btn-primary');" ><br>
+                        {% buttons %}
+                        <button onclick='openFile()' id="buttonfileload"
+                                class="primaryAction btn btn-outline-primary" type="button">
+                            Load
+                        </button>
+                        {% endbuttons %}
                         <script>
                                 var CodeMirrorPython = CodeMirror.fromTextArea(document.getElementById('code'), {
                                     mode:  "python", indentUnit: 4, lineWrapping: true, lineNumbers: true
                                 });
 
-                                var openFile = function(event) {
+                                var findName = function(code) {};
+
+                                var findDescription = function(code) {};
+
+                                var openFile = function() {
                                     var reader = new FileReader();
 
                                     reader.onload = function(){
                                         CodeMirrorPython.setValue(reader.result);
+                                        $('#name').val(findName(reader.result));
+                                        $('#description').val(findDescription(reader.result));
                                     };
 
-                                    reader.readAsText(event.target.files[0]);
+                                    reader.readAsText($('#fileload').prop('files')[0]);
                                 };
 
+                                if($('#fileload').prop('files')[0] != null){
+                                    $('#fileload').trigger("change");
+                                }
                         </script>
                     </div>
                 </div>
             </div>
-
+            <br/>
             {% buttons %}
             <div class="form-group">
                 <button class="primaryAction btn btn-primary" name="button" value="save" type="submit">

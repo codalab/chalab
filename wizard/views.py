@@ -27,17 +27,16 @@ log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
 
 AUTOML_ERROR = \
-    """
-<p>
+    """<p>
 Processing of the archive failed because of:
 <pre>
 %s
 </pre>
+Expected a directory structure with dataname/ at the top, 
+did you forget the put all your data files in a directory before zipping?
 </p>
 
 <p>
-You must put all files in a single folder named with your dataset name.
-<br/>
 The expected automl archive is of the form:
 <pre>
 DataName/
@@ -45,7 +44,7 @@ DataName/
     DataName.solution
 </pre>
 
-Or, if data are already splitted, the zip file must contain :
+Or, if data are already splitted, the zip file must contain:
 <pre>DataName/
     DataName_train.data
     DataName_train.solution
@@ -55,8 +54,7 @@ Or, if data are already splitted, the zip file must contain :
     DataName_test.solution</pre>
 
 You can check the archive actual content using <code>`unzip -l ./my_archive.zip'</code>.
-<p>
-    """
+<p>"""
 
 
 @login_required
@@ -452,7 +450,7 @@ def metric(request, pk):
     public_metrics = MetricModel.objects.all().filter(is_public=True,
                                                       is_ready=True)
 
-    private_metric = MetricModel.objects.all().filter(owner=request.user)
+    private_metric = MetricModel.objects.all().filter(owner=request.user).exclude(id=c.metric.id)
 
     context = {'challenge': c, 'public_metrics': public_metrics,
                'flow': flow.Flow(flow.MetricFlowItem, c),
@@ -467,6 +465,22 @@ def metric(request, pk):
         context['is_ready'] = context['metric'].is_ready
 
     return render(request, 'wizard/metric/editor.html', context)
+
+
+@login_required
+def get_metric(request, pk):
+    from django.http import JsonResponse
+    metric_id = request.GET.get('metric_id', None)
+
+    metric = get_object_or_404(MetricModel, id=metric_id)
+
+    data = {
+        'name': metric.name,
+        'description': metric.description,
+        'code': metric.code
+    }
+
+    return JsonResponse(data)
 
 
 class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin,
