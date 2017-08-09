@@ -107,7 +107,13 @@ class Command(BaseCommand):
     help = 'Load the default metrics'
 
     def add_arguments(self, parser):
-        pass
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            dest='force',
+            default=False,
+            help='Force to load metrics',
+        )
 
     def _warn(self, message):
         self.stderr.write(self.style.WARNING(message))
@@ -120,7 +126,7 @@ class Command(BaseCommand):
         #           "You need to remove previous metrics by hand.")
 
         # Verify if we already have some MetricModel
-        if models.MetricModel.objects.exists():
+        if models.MetricModel.objects.exists() and not options['force']:
             self._warn("Database already initialised, skipping initialization.")
         else:
             for (name, content) in METRICS.items():
