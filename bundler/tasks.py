@@ -177,14 +177,15 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
         p['scoring_program'] = os.path.basename(archive_path)
 
-    p['datasets'] = {
-        1: {
-            'name': 'baseline',
-            'url': challenge.baseline.absolute_uri,
-            'description': 'Everything needed to gets started,'
-                           ' except eventually the training data'
-        }
-    }
+    baseline = challenge.baseline.submission
+    name = os.path.basename(baseline.path)
+    try:
+        bt.add_log('Load the challenge baseline')
+        baseline.open()
+        copy_file_field(baseline.file, path.join(output_dir, name))
+        p['starting_kit'] = name
+    finally:
+        baseline.close()
 
     return p
 
@@ -286,7 +287,7 @@ def gen_leaderboard(challenge):
         'columns': {
             'set1_score':
                 {'leaderboard': leaderboard_Results,
-                 'label': 'Precision',
+                 'label': 'Prediction score',
                  'numeric_format': 4,
                  'rank': 2},
             'Duration':
@@ -313,12 +314,12 @@ def create_bundle(bt, output_dir, challenge):
         'has_registration': False,
         'force_submission_to_leaderboard': True,
         'disallow_leaderboard_modifying': True,
-        'allow_teams': True,
+        'allow_teams': False,
         'enable_detailed_results': True,
         'show_datasets_from_yaml': True,
         'allow_public_submissions': True,
         'anonymous_leaderboard': False,
-        'enable_per_submission_metadata': True,
+        'enable_per_submission_metadata': False,
         'enable_forum': True,
         'end_date': None,
         'admin_names': 'guyon,lsenta'  # temporary default admins.

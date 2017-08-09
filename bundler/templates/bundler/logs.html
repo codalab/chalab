@@ -7,6 +7,10 @@
 {% block panel_name %}bundler-logs{% endblock %}
 
 {% block content %}
+<a href="{% url 'wizard:challenge:build' challenge.pk %}">
+    <i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Go back to the build page
+</a>
 <h1>Logs</h1>
 {% for log in task.logs %}
 <div class="row">
@@ -15,4 +19,8 @@
         </pre>
 </div>
 {% endfor %}
+<a href="{% url 'wizard:challenge:build' challenge.pk %}">
+    <i class="fa fa-arrow-left" aria-hidden="true"></i>
+    Go back to the build page
+</a>
 {% endblock %}

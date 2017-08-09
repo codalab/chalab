@@ -28,25 +28,34 @@ log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler())
 
 AUTOML_ERROR = \
-    """
-<p>
+    """<p>
 Processing of the archive failed because of:
 <pre>
 %s
 </pre>
+Expected a directory structure with dataname/ at the top, 
+did you forget the put all your data files in a directory before zipping?
 </p>
 
 <p>
 The expected automl archive is of the form:
 <pre>
-dataset_name/
-    dataset_name.data
-    dataset_name.solution
+DataName/
+    DataName.data
+    DataName.solution
 </pre>
 
+Or, if data are already splitted, the zip file must contain:
+<pre>DataName/
+    DataName_train.data
+    DataName_train.solution
+    DataName_valid.data
+    DataName_valid.solution
+    DataName_test.data
+    DataName_test.solution</pre>
+
 You can check the archive actual content using <code>`unzip -l ./my_archive.zip'</code>.
-<p>
-    """
+<p>"""
 
 
 @login_required
@@ -379,7 +388,6 @@ def update_chalenge_dataset(chalenge, new_dataset):
 
     if new_dataset.fixed_split or new_dataset.is_public:
         chalenge.task = get_object_or_404(TaskModel, dataset=new_dataset.id)
-        print("fixed task")
 
     chalenge.save()
 
@@ -513,7 +521,7 @@ def metric(request, pk):
     public_metrics = MetricModel.objects.all().filter(is_public=True,
                                                       is_ready=True)
 
-    private_metric = MetricModel.objects.all().filter(owner=request.user)
+    private_metric = MetricModel.objects.all().filter(owner=request.user).exclude(id=c.metric.id)
 
     context = {'challenge': c, 'public_metrics': public_metrics,
                'flow': flow.Flow(flow.MetricFlowItem, c),
@@ -528,6 +536,22 @@ def metric(request, pk):
         context['is_ready'] = context['metric'].is_ready
 
     return render(request, 'wizard/metric/editor.html', context)
+
+
+@login_required
+def get_metric(request, pk):
+    from django.http import JsonResponse
+    metric_id = request.GET.get('metric_id', None)
+
+    metric = get_object_or_404(MetricModel, id=metric_id)
+
+    data = {
+        'name': metric.name,
+        'description': metric.description,
+        'code': metric.code
+    }
+
+    return JsonResponse(data)
 
 
 class ChallengeProtocolUpdate(FlowOperationMixin, LoginRequiredMixin,
