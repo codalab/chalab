@@ -863,18 +863,22 @@ class BaselineModel(models.Model):
                                   verbose_name='baseline submission',
                                   blank=True, null=True)
 
-    # Let comment until we put the baseline in the bundle
-    #
-    #
-    # def save(self, *args, **kwargs):
-    #     # delete old file when replacing by updating the file
-    #     try:
-    #         this = BaselineModel.objects.get(id=self.id)
-    #         if this.submission != self.submission:
-    #             this.submission.delete(save=False)
-    #     except:
-    #         pass  # when new baseline then we do nothing, normal case
-    #     super(BaselineModel, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        # delete old file when replacing by updating the file
+        try:
+            this = BaselineModel.objects.get(id=self.id)
+            if this.submission != self.submission:
+                this.submission.delete(save=False)
+        except:
+            pass  # when new baseline then we do nothing, normal case
+        super(BaselineModel, self).save(*args, **kwargs)
+
+    def delete(self):
+        try:
+            self.submission.delete(save=False)
+        except:
+            pass
+        super().delete()
 
     @property
     def absolute_uri(self):

@@ -177,14 +177,15 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
         p['scoring_program'] = os.path.basename(archive_path)
 
-    p['datasets'] = {
-        1: {
-            'name': 'baseline',
-            'url': challenge.baseline.absolute_uri,
-            'description': 'Everything needed to gets started,'
-                           ' except eventually the training data'
-        }
-    }
+    baseline = challenge.baseline.submission
+    name = os.path.basename(baseline.path)
+    try:
+        bt.add_log('Load the challenge baseline')
+        baseline.open()
+        copy_file_field(baseline.file, path.join(output_dir, name))
+        p['starting_kit'] = name
+    finally:
+        baseline.close()
 
     return p
 
