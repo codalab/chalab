@@ -396,7 +396,7 @@ def default_metric(metric, task):
 
 
 class DatasetModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
@@ -404,15 +404,15 @@ class DatasetModel(models.Model):
     preparation = models.TextField(null=True, blank=True, default=None)
     license = models.CharField(max_length=256, null=True, blank=True, default=None)
 
-    keywords = models.CharField(max_length=256, default="")
-    authors = models.CharField(max_length=256, default="")
+    keywords = models.CharField(max_length=256, default="", blank=True)
+    authors = models.CharField(max_length=256, default="", blank=True)
 
     resource_created = models.DateField(null=True, blank=True, default=None)
     resource_url = models.URLField(null=True, blank=True, default=None)
     contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
     contact_url = models.URLField(max_length=256, null=True, blank=True, default=None)
 
-    default_metric = models.ForeignKey('MetricModel', null=True, on_delete=models.SET_NULL)
+    default_metric = models.ForeignKey('MetricModel', null=True, blank=True, on_delete=models.SET_NULL)
 
     fixed_split = models.BooleanField(default=False, null=False)
 
@@ -643,7 +643,7 @@ def load_chalearn(path, suffix, clss=MatrixModel, any_prefix=False, **kwargs):
 
 
 class TaskModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
@@ -779,10 +779,10 @@ class TaskModel(models.Model):
 
 
 class MetricModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     name = models.CharField(max_length=256, null=False)
-    description = models.TextField(null=False, default="")
-    code = models.TextField(null=False, default="")
+    description = models.TextField(null=False, default="", blank=True)
+    code = models.TextField(null=False, default="", blank=True)
 
     is_default = models.BooleanField(default=False, null=False)
     is_public = models.BooleanField(default=False, null=False)
@@ -1020,11 +1020,11 @@ class BaselineModel(models.Model):
 
 class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
-    organization_name = models.CharField(max_length=80)
-    description = models.TextField(max_length=255)
+    organization_name = models.CharField(max_length=80, blank=True)
+    description = models.TextField(max_length=255, blank=True)
     logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
 
-    origin_group = models.ForeignKey('group.GroupModel', null=True, on_delete=models.SET_NULL)
+    origin_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 

@@ -14,6 +14,7 @@ from django.views.generic import UpdateView
 from bundler.models import BundleTaskModel
 from chalab import errors
 from group.models import GroupModel
+from user.models import ProfileModel
 from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
@@ -64,9 +65,11 @@ def home(request):
 
     challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at')
 
+    profile, created = ProfileModel.objects.get_or_create(user=u)
+
     context = {
         'object_list': challenges,
-        'groups': u.admin_of_group.all()
+        'actual_group': profile.actual_group,
         }
 
     return render(request, 'wizard/home.html', context=context)
@@ -521,7 +524,10 @@ def metric(request, pk):
     public_metrics = MetricModel.objects.all().filter(is_public=True,
                                                       is_ready=True)
 
-    private_metric = MetricModel.objects.all().filter(owner=request.user).exclude(id=c.metric.id)
+    private_metric = MetricModel.objects.all().filter(owner=request.user)
+
+    if c.metric is not None:
+        private_metric = private_metric.exclude(id=c.metric.id)
 
     context = {'challenge': c, 'public_metrics': public_metrics,
                'flow': flow.Flow(flow.MetricFlowItem, c),

@@ -14,25 +14,15 @@
 </div>
 
 <div class="row top10">
-
     <div class="col-md-4 {% if not groups %}col-md-offset-4{% endif %}">
         <a class="create-challenge btn btn-block btn-primary"
-           href="{% url 'wizard:create' %}">
+           {% if actual_group is None %}href="{% url 'wizard:create' %}">
+           {% else %}href="{% url 'wizard:create_from_group' group_id=actual_group.id %}">
+           {% endif %}
             <i class="fa fa-plus" aria-hidden="true"></i>
             Create a New Challenge
         </a>
     </div>
-
-{% for group in groups %}
-    <div class="col-md-4">
-        <a class="btn btn-block warning-color"
-           style="color:white;background-color:#{{ group.get_color }};"
-           href="{% url 'wizard:create_from_group' group_id=group.id %}">
-            <i class="fa fa-plus" aria-hidden="true"></i>
-            Create a New "{{ group.name }}"
-        </a>
-    </div>
-{% endfor %}
 </div>
 
 <div class="challenges">

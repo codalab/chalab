@@ -8,7 +8,7 @@ class ProfileUpdate(UpdateView, LoginRequiredMixin):
     template_name = 'user/editor.html'
     model = ProfileModel
 
-    fields = ['first_name', 'last_name', 'affiliation', 'expertise']
+    fields = ['first_name', 'last_name', 'affiliation', 'expertise', 'actual_group']
 
     def get_object(self, queryset=None):
         u = self.request.user

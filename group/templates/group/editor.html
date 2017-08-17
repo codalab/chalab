@@ -41,7 +41,8 @@
 
         <div style="display: inline-block">
             <input class="form-control" id="add_user" name="add_user" maxlength="30"
-                   name="add_user" type="text" placeholder="Username or Email" />
+                   name="add_user" type="text" placeholder="Username or Email"
+                    onkeypress="handle(event)" autocomplete="off"/>
         </div>
 
         <div style="display: inline-block">
@@ -112,13 +113,20 @@ $("#click_add_user").click(function () {
         success: function (data) {
           if (data.is_taken) {
             alert("Pseudo valide");
+            $("#add_user").val('');
           }else{
             alert("Unknow username or email");
           }
         }
       });
-
     });
+
+    function handle(e){
+        if(e.keyCode === 13){
+            e.preventDefault(); // Ensure it is only this code that rusn
+            $("#click_add_user").trigger( "click" );
+        }
+    }
 </script>
 
 {% endblock %}
