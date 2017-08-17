@@ -1,5 +1,6 @@
 {% load bootstrap3 %}
 {% load static %}
+{% load user_extras %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -41,6 +42,10 @@
                 {% if user.is_authenticated %}
                 <li id="home"><a href="{% url 'home' %}">Home</a></li>
                 <li id="profile"><a href="{% url 'user:profile' %}">Profile</a></li>
+                {% can_create_group user as manage_group %}
+                {% if manage_group %}
+                <li id="logout"><a href="{% url 'group:group' %}">Groups</a></li>
+                {% endif %}
                 <li id="logout"><a href="{% url 'account_logout' %}">Logout</a></li>
                 {% else %}
                 <li id="home"><a href="{% url 'home' %}">Home</a></li>

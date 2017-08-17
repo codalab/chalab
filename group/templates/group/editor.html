@@ -15,6 +15,10 @@
                class="focus">{{ group.name }}</a>
         </li>
         {% endfor %}
+        <li role="presentation"
+            class="nav-page">
+            <a href="{% url 'group:create' %}">Create new group</a>
+        </li>
     </ul>
 </div>
 <div class="page">
@@ -31,6 +35,7 @@
                value="{{ current_group.name }}" type="text" required />
     </div>
 
+        {% comment %}
     <div class="form-group">
         <label class="control-label" for="id_users">Users in this group</label>
         <select multiple="multiple" class="form-control" id="id_users" >
@@ -69,9 +74,20 @@
 
     <div class="form-group">
         <label class="control-label" for="id_default_metric">Default metrics</label>
-        <select multiple="multiple" class="form-control" id="id_default_metric" >
+        <select multiple class="form-control" id="id_default_metric" >
             {% for mt in default_metric %}
             <option value="{{ mt.id }}">{{ mt.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+        {% endcomment %}
+
+    <div class="form-group">
+        <label class="control-label" for="id_template">Template used</label>
+        <select class="form-control" id="id_template" name="id_template">
+            <option value="" {% if actual_template is None %}selected {% endif %}>--------</option>
+            {% for template in all_template %}
+            <option value="{{ template.id }}" {% if template.title == actual_template.title %}selected {% endif %}>{{ template.title }}</option>
             {% endfor %}
         </select>
     </div>

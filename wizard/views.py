@@ -90,49 +90,49 @@ class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
 @login_required
 def challenge_create_from_group(request, group_id):
     group = get_object_or_404(GroupModel, id=group_id)
-    base_challenge = group.base_challenge
+    template = group.template
 
     # Initialisation
-    base_challenge.id = None
-    base_challenge.created_by = request.user
-    base_challenge.origin_group = group
+    template.id = None
+    template.created_by = request.user
+    template.origin_group = group
 
     # Deep copy
     data = None
-    if base_challenge.dataset is not None:
-        data = base_challenge.dataset
+    if template.dataset is not None:
+        data = template.dataset
         data.id = None
         data.input = data.input.deep_copy()
         data.target = data.target.deep_copy()
         data.save()
-        base_challenge.dataset = data
+        template.dataset = data
 
-    if base_challenge.task is not None:
-        task = base_challenge.task.deep_copy()
+    if template.task is not None:
+        task = template.task.deep_copy()
         task.dataset = data
         task.save()
-        base_challenge.task = task
+        template.task = task
 
-    if base_challenge.metric is not None:
-        met = base_challenge.metric
+    if template.metric is not None:
+        met = template.metric
         met.id = None
         met.save()
-        base_challenge.metric = met
+        template.metric = met
 
-    if base_challenge.protocol is not None:
-        pro = base_challenge.protocol
+    if template.protocol is not None:
+        pro = template.protocol
         pro.id = None
         pro.save()
-        base_challenge.protocol = pro
+        template.protocol = pro
 
-    if base_challenge.baseline is not None:
+    if template.baseline is not None:
         from django.core.files import File
-        base = BaselineModel(submission=File(open(base_challenge.baseline.submission.path, 'rb')))
+        base = BaselineModel(submission=File(open(template.baseline.submission.path, 'rb')))
         base.save()
-        base_challenge.baseline = base
+        template.baseline = base
 
-    if base_challenge.documentation is not None:
-        doc = base_challenge.documentation
+    if template.documentation is not None:
+        doc = template.documentation
 
         pages = DocumentationPageModel.objects.filter(documentation=doc)
 
@@ -144,11 +144,11 @@ def challenge_create_from_group(request, group_id):
             page.documentation = doc
             page.save()
 
-        base_challenge.documentation = doc
+        template.documentation = doc
 
-    base_challenge.save()
+    template.save()
 
-    return redirect(base_challenge.get_absolute_url())
+    return redirect(template.get_absolute_url())
 
 
 class ChallengeDescriptionUpdate(UpdateView, LoginRequiredMixin):

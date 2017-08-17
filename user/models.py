@@ -24,5 +24,6 @@ class ProfileModel(models.Model):
 
     actual_group = models.ForeignKey('group.GroupModel', null=True, blank=True)
 
-    def get_absolute_url(self):
+    @staticmethod
+    def get_absolute_url():
         return reverse('user:profile')

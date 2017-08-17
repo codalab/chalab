@@ -27,7 +27,7 @@ class GroupModel(models.Model):
     default_metric = models.ManyToManyField(MetricModel, blank=True,
                                             db_table='metric_group')
 
-    base_challenge = models.ForeignKey(ChallengeModel, null=True)
+    template = models.ForeignKey(ChallengeModel, null=True, blank=True)
 
     def __str__(self):
         admin = self.admins.first()
