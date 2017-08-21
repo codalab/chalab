@@ -208,7 +208,9 @@
                                     mode:  "python", indentUnit: 4, lineWrapping: true, lineNumbers: true
                                 });
 
+                                {% comment %}
                                 // It could be a good things to limit the number of executions of this
+                                {% endcomment %}
                                 CodeMirrorPython.on('change', function(cmp){verif_name();});
 
                                 verif_name();

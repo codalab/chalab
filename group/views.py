@@ -6,7 +6,7 @@ from group.models import GroupModel
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 
-from wizard.models import ChallengeModel
+from wizard.models import ChallengeModel, DatasetModel, MetricModel
 
 
 @login_required
@@ -24,7 +24,7 @@ def redirect_groups(request, *args):
     all = u.admin_of_group.all()
 
     if all.exists() == 0:
-        return redirect('/')
+        return redirect('group:create')
     else:
         return redirect(all.first())
 
@@ -36,7 +36,11 @@ def create_new_group(request):
     new_group.save()
     new_group.admins.add(u)
     new_group.users.add(u)
-    return redirect(new_group.get_absolute_url())
+    for dataset in DatasetModel.objects.filter(owner=u):
+        new_group.default_dataset.add(dataset)
+    for metric in MetricModel.objects.filter(owner=u):
+        new_group.default_metric.add(metric)
+    return redirect(new_group)
 
 
 @login_required

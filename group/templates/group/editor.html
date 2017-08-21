@@ -62,11 +62,12 @@
             </button>
         </div>
     </div>
+        {% endcomment %}
 
     <div class="form-group">
         <label class="control-label" for="id_default_dataset">Default datasets</label>
         <select multiple="multiple" class="form-control" id="id_default_dataset" >
-            {% for dt in default_dataset %}
+            {% for dt in default_datasets %}
             <option value="{{ dt.id }}">{{ dt.name }}</option>
             {% endfor %}
         </select>
@@ -80,7 +81,6 @@
             {% endfor %}
         </select>
     </div>
-        {% endcomment %}
 
     <div class="form-group">
         <label class="control-label" for="id_template">Template used</label>

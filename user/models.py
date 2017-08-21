@@ -22,7 +22,7 @@ class ProfileModel(models.Model):
     affiliation = models.CharField(max_length=80, null=True, blank=True)
     expertise = models.CharField(max_length=2, choices=EXPERTISE_CHOICES, default=EX_NOVICE)
 
-    actual_group = models.ForeignKey('group.GroupModel', null=True, blank=True)
+    actual_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 
     @staticmethod
     def get_absolute_url():

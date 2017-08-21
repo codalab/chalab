@@ -458,7 +458,12 @@ def data_picker(request, pk):
 
         return redirect('wizard:challenge:data', pk=pk)
     else:
-        pubds = models.DatasetModel.objects.all().filter(is_public=True)
+
+        if c.origin_group is not None:
+            pubds = c.origin_group.default_dataset.all()
+        else:
+            pubds = models.DatasetModel.objects.all().filter(is_public=True)
+            
         prids = models.DatasetModel.objects.all().filter(
             is_public=False, owner=request.user.id).exclude(input=None)
 
@@ -521,7 +526,10 @@ def metric(request, pk):
     else:
         pass
 
-    public_metrics = MetricModel.objects.all().filter(is_public=True,
+    if c.origin_group is not None:
+        public_metrics = c.origin_group.default_metric.all()
+    else:
+        public_metrics = MetricModel.objects.all().filter(is_public=True,
                                                       is_ready=True)
 
     private_metric = MetricModel.objects.all().filter(owner=request.user)
