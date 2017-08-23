@@ -1,0 +1,27 @@
+{% extends 'chalab/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Delete {{ challenge.title }}{% endblock %}
+{% block app_name %}wizard{% endblock %}
+{% block panel_name %}challenge{% endblock %}
+{% block module_name %}editor{% endblock %}
+
+{% block content %}
+<h1>Delete "{{ challenge.title }}"</h1>
+Are you sure you want to delete this challenge?
+<br/>
+<form class="picker" method="POST" action="#">
+    {% csrf_token %}
+    {% buttons %}
+    <button class="primaryAction btn btn-danger"
+            name="button" value="delete"
+            type="submit">Delete
+    </button>
+    <button class="primaryAction btn btn-primary"
+            name="button" value="previous"
+            type="submit">Go to previous page
+    </button>
+    {% endbuttons %}
+</form>
+
+{% endblock %}

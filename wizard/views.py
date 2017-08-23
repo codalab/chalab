@@ -75,6 +75,19 @@ def home(request):
     return render(request, 'wizard/home.html', context=context)
 
 
+@login_required
+def delete_challenge(request, pk):
+    u = request.user
+    c = get_object_or_404(ChallengeModel, id=pk, created_by=u)
+
+    if request.method == 'POST':
+        if request.POST['button'] == 'delete':
+            c.delete()
+        return home(request)
+    else:
+        return render(request, 'wizard/challenge/delete.html', context={'challenge': c})
+
+
 class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
     template_name = 'wizard/challenge/create.html'
     model = ChallengeModel

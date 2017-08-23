@@ -6,6 +6,8 @@ from . import views
 app_name = 'wizard'
 
 challenge_wizard = [
+    url(r'^delete$', views.delete_challenge, name='delete'),
+
     url(r'^edit$', views.ChallengeDescriptionUpdate.as_view(), name='edit'),
 
     url(r'^data/pick$', views.data_picker, name='data.pick'),
