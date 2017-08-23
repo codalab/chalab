@@ -8,8 +8,13 @@
 
 {% block content %}
 <h1>Delete "{{ challenge.title }}"</h1>
+<p>
 Are you sure you want to delete this challenge?
 <br/>
+{% if groups %}
+It's actually used in some groups: "{{ groups | join:"\", \"" }}"
+{% endif %}
+</p>
 <form class="picker" method="POST" action="#">
     {% csrf_token %}
     {% buttons %}

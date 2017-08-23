@@ -85,7 +85,11 @@ def delete_challenge(request, pk):
             c.delete()
         return home(request)
     else:
-        return render(request, 'wizard/challenge/delete.html', context={'challenge': c})
+        context = {
+            'challenge': c,
+            'groups': [g.name for g in GroupModel.objects.filter(template=c)]
+        }
+        return render(request, 'wizard/challenge/delete.html', context=context)
 
 
 class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
