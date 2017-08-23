@@ -21,8 +21,10 @@
         </li>
     </ul>
 </div>
-<div class="page">
 
+{% if groups %}
+
+<div class="page">
     <form class='editor' action="#" method="post">
     {% confirm_form %}
     {% csrf_token %}
@@ -32,7 +34,7 @@
     <div class="form-group">
         <label class="control-label" for="id_name">Name:</label>
         <input class="form-control" id="id_name" maxlength="30" name="name"
-               value="{{ current_group.name }}" type="text" required />
+               value="{{ current_group.name }}" type="text" required autocomplete="off"/>
     </div>
 
         {% comment %}
@@ -86,8 +88,9 @@
         <label class="control-label" for="id_template">Template used</label>
         <select class="form-control" id="id_template" name="id_template">
             <option value="" {% if actual_template is None %}selected {% endif %}>--------</option>
-            {% for template in all_template %}
-            <option value="{{ template.id }}" {% if template.title == actual_template.title %}selected {% endif %}>{{ template.title }}</option>
+            {% for template, build in all_template %}
+            <option value="{{ template.id }}" {% if template.title == actual_template.title %}selected {% endif %}>
+                {{ template.title }}{% if not build %} (never build){% endif %}</option>
             {% endfor %}
         </select>
     </div>
@@ -144,5 +147,6 @@ $("#click_add_user").click(function () {
         }
     }
 </script>
+{% endif %}
 
 {% endblock %}

@@ -92,8 +92,12 @@ def challenge_create_from_group(request, group_id):
     group = get_object_or_404(GroupModel, id=group_id)
     template = group.template
 
+    if template is None:
+        template = ChallengeModel(title='New Challenge')
+    else:
+        template.id = None
+
     # Initialisation
-    template.id = None
     template.created_by = request.user
     template.origin_group = group
 
