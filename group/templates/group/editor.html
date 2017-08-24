@@ -139,6 +139,7 @@
         <br/>
         <div class="form-group">
             <label class="control-label" for="id_default_datasets">Default datasets:</label>
+            <button type="button" class="btn btn-default" style="width:100%;" id="button_temp_dataset">Loading...</button>
             <select multiple id="id_default_datasets" name="id_default_datasets" hidden>
                 {% for label, list in default_datasets %}
                 <optgroup label="{{ label }}">
@@ -153,8 +154,14 @@
                 $('#id_default_datasets').multiselect({
                     includeSelectAllOption:true,
                     buttonWidth: '100%',
-                    maxHeight: 300
-                }).show();
+                    enableClickableOptGroups:true,
+                    disableIfEmpty: true,
+                    maxHeight: 300,
+                    numberDisplayed:7,
+                    onInitialized: function(select, container){
+                        $('#id_default_datasets').show();
+                        $('#button_temp_dataset').hide();}
+                });
             });
             </script>
         </div>
@@ -162,6 +169,7 @@
 
         <div class="form-group">
             <label class="control-label" for="id_default_metrics">Default metrics:</label>
+            <button type="button" class="btn btn-default" style="width:100%;" id="button_temp_metrics">Loading...</button>
             <select multiple id="id_default_metrics" name="id_default_metrics" hidden>
                 {% for label, list in default_metrics %}
                 <optgroup label="{{ label }}">
@@ -176,8 +184,14 @@
                 $('#id_default_metrics').multiselect({
                     includeSelectAllOption:true,
                     buttonWidth: '100%',
-                    maxHeight: 300
-                }).show();
+                    enableClickableOptGroups:true,
+                    disableIfEmpty: true,
+                    maxHeight: 300,
+                    numberDisplayed:7,
+                    onInitialized: function(select, container){
+                        $('#id_default_metrics').show();
+                        $('#button_temp_metrics').hide();}
+                });
             });
             </script>
         </div>
