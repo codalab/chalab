@@ -5,101 +5,133 @@
 {% block panel_name %}editor{% endblock %}
 
 {% block content %}
-<div class="nav-pages">
-    <ul class="nav nav-tabs">
-        {% for group in groups %}
-        <li role="presentation"
-            class="nav-page {% if group.id == current %}active{% endif %}">
-            <a href="{% url 'group:edit' group_id=group.id %}"
-               style="color:#{{ group.get_color }}"
-               class="focus">{{ group.name }}</a>
-        </li>
-        {% endfor %}
-        <li role="presentation"
-            class="nav-page">
-            <a href="{% url 'group:create' %}">Create new group</a>
-        </li>
-    </ul>
-</div>
+<ul class="nav nav-tabs">
+    {% for group in groups %}
+    <li {% if group.id == current %}class="active"{% endif %}>
+        <a href="{% url 'group:edit' group_id=group.id %}">{{ group.name }}</a>
+    </li>
+    {% endfor %}
+    <li>
+        <a href="{% url 'group:create' %}">{% bootstrap_icon "plus" %} Create new group</a>
+    </li>
+</ul>
 
 {% if groups %}
-
 <div class="page">
     <form class='editor' action="#" method="post">
-    {% confirm_form %}
-    {% csrf_token %}
+        {% confirm_form %}
+        {% csrf_token %}
+        <br/>
+        <div class="form-group">
+            <label class="control-label" for="id_name">Name:</label>
+            <input class="form-control" id="id_name" maxlength="30" name="name"
+                   value="{{ current_group.name }}" type="text" required autocomplete="off"/>
+        </div>
 
-    <br/>
+        <div class="form-group">
+            <label class="control-label" for="button_visibility">Visibility:</label>
+            <button class="btn btn-danger" id="button_visibility">
+            </button>
+            <input type="hidden" id="input_visibility" name="visibility" value="private"/>
+        </div>
 
-    <div class="form-group">
-        <label class="control-label" for="id_name">Name:</label>
-        <input class="form-control" id="id_name" maxlength="30" name="name"
-               value="{{ current_group.name }}" type="text" required autocomplete="off"/>
-    </div>
+        <script type="text/javascript">
+            var b = $("#button_visibility");
+            var i = $("#input_visibility");
+
+            function set_visibility(new_state, opposite){
+                if(new_state == 'public' ^ opposite){
+                    i.val('public');
+                    b.html('{% bootstrap_icon "eye-open" %} Public');
+                    $("#div_users").hide('fast');
+                }else{
+                    i.val('private');
+                    b.html('{% bootstrap_icon "eye-close" %} Private');
+                    $("#div_users").show('fast');
+                }
+            };
+
+            b.click(function (){
+                set_visibility(i.val(), true);
+                return false;
+            });
+
+            set_visibility({% if current_group.public %}'public'{% else %}'private'{% endif %}, false);
+        </script>
 
         {% comment %}
-    <div class="form-group">
-        <label class="control-label" for="id_users">Users in this group</label>
-        <select multiple="multiple" class="form-control" id="id_users" >
-            {% for user in users %}
-            <option value="{{ user.id }}">{{ user.username }}</option>
-            {% endfor %}
-        </select>
+        <div class="form-group" id="div_users" name="div_users">
+            <label class="control-label" for="id_users">Users in this group</label>
+            <select multiple="multiple" class="form-control" id="id_users" >
+                {% for user in users %}
+                <option value="{{ user.id }}">{{ user.username }}</option>
+                {% endfor %}
+            </select>
 
-        <div style="display: inline-block">
-            <input class="form-control" id="add_user" name="add_user" maxlength="30"
-                   name="add_user" type="text" placeholder="Username or Email"
-                    onkeypress="handle(event)" autocomplete="off"/>
+            <div style="display: inline-block">
+                <input class="form-control" id="add_user" name="add_user" maxlength="30"
+                       name="add_user" type="text" placeholder="Username or Email"
+                        onkeypress="handle(event)" autocomplete="off"/>
+            </div>
+
+            <div style="display: inline-block">
+                <button type=button class="btn btn-default" id="click_add_user">
+                {% bootstrap_icon "plus" %} Add
+                </button>
+            </div>
+
+            <div style="display: inline-block">
+                <button type=button class="btn btn-default" id="click_remove_user">
+                {% bootstrap_icon "minus" %} Remove
+                </button>
+            </div>
         </div>
 
-        <div style="display: inline-block">
-            <button type=button class="btn btn-default" id="click_add_user">
-            {% bootstrap_icon "plus" %} Add
-            </button>
-        </div>
-
-        <div style="display: inline-block">
-            <button type=button class="btn btn-default" id="click_remove_user">
-            {% bootstrap_icon "minus" %} Remove
-            </button>
-        </div>
-    </div>
+        <script type="text/javascript">
+            {% if current_group.public %}$("#div_users").hide();{% endif %}
+        </script>
         {% endcomment %}
 
-    <div class="form-group">
-        <label class="control-label" for="id_default_dataset">Default datasets</label>
-        <select multiple="multiple" class="form-control" id="id_default_dataset" >
-            {% for dt in default_datasets %}
-            <option value="{{ dt.id }}">{{ dt.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
+        <div class="form-group">
+            <label class="control-label" for="id_default_dataset">Default datasets</label>
+            <select multiple="multiple" class="form-control" id="id_default_dataset" >
+                {% for dt in default_datasets %}
+                <option value="{{ dt.id }}">{{ dt.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <div class="form-group">
-        <label class="control-label" for="id_default_metric">Default metrics</label>
-        <select multiple class="form-control" id="id_default_metric" >
-            {% for mt in default_metric %}
-            <option value="{{ mt.id }}">{{ mt.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
+        <div class="form-group">
+            <label class="control-label" for="id_default_metric">Default metrics</label>
+            <select multiple class="form-control" id="id_default_metric" >
+                {% for mt in default_metric %}
+                <option value="{{ mt.id }}">{{ mt.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <div class="form-group">
-        <label class="control-label" for="id_template">Template used</label>
-        <select class="form-control" id="id_template" name="id_template">
-            <option value="" {% if actual_template is None %}selected {% endif %}>--------</option>
-            {% for template, build in all_template %}
-            <option value="{{ template.id }}" {% if template.title == actual_template.title %}selected {% endif %}>
-                {{ template.title }}{% if not build %} (never build){% endif %}</option>
-            {% endfor %}
-        </select>
-    </div>
+        <div class="form-group">
+            <label class="control-label" for="id_template">Template used</label>
+            <select class="form-control" id="id_template" name="id_template">
+                <option value="" {% if actual_template is None %}selected {% endif %}>--------</option>
+                {% for template, build in all_template %}
+                <option value="{{ template.id }}" {% if template.title == current_group.template.title %}selected {% endif %}>
+                    {{ template.title }}{% if not build %} (never build){% endif %}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    {% buttons %}
-    <button type="submit" class="btn btn-primary">
-        {% bootstrap_icon "star" %} Update
-    </button>
-    {% endbuttons %}
+        {% buttons %}
+        <button type="submit" class="btn btn-primary"
+            name="button" value="update">
+            {% bootstrap_icon "star" %} Update
+        </button>
+        <button type="submit" class="btn btn-danger"
+                onclick="return confirm('Do you really want to delete this group?')"
+                name="button" value="delete">
+            {% bootstrap_icon "trash" %} Delete
+        </button>
+        {% endbuttons %}
     </form>
 </div>
 
@@ -112,7 +144,6 @@ function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
-
 
 $.ajaxSetup({
     beforeSend: function(xhr, settings) {
@@ -142,7 +173,7 @@ $("#click_add_user").click(function () {
 
     function handle(e){
         if(e.keyCode === 13){
-            e.preventDefault(); // Ensure it is only this code that rusn
+            e.preventDefault(); // Ensure it is only this code that run
             $("#click_add_user").trigger( "click" );
         }
     }

@@ -15,12 +15,12 @@ class ProfileFormUpdate(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProfileFormUpdate, self).__init__(*args, **kwargs)
-        # if self.instance:
-        #     if self.instance.expertise == self.Meta.model.EX_NOVICE:
-        #         del self.fields['expertise']
-        #     else:
-        #         u = self.instance.user
-        #         self.fields['actual_group'].queryset = GroupModel.objects.filter((Q(users=u) | Q(admins=u)) & Q(template__isnull=False))
+        if self.instance:
+            if not self.instance.expertise == self.Meta.model.EX_NOVICE:
+                u = self.instance.user
+                self.fields['actual_group'].queryset = GroupModel.objects.filter(
+                    (Q(public=True) | Q(admins=u) | Q(users=u))).order_by('-public', 'name')
+                #  & Q(template__isnull=False)
 
 
 class ProfileUpdate(UpdateView, LoginRequiredMixin):

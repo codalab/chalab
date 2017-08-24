@@ -47,16 +47,22 @@ def create_new_group(request):
 @login_required
 def groups(request, group_id):
     u = request.user
-    current_group = get_object_or_404(GroupModel, id=group_id)
+    current_group = get_object_or_404(GroupModel, id=group_id, admins=u)
 
     if request.method == 'POST':
-        current_group.name = request.POST['name']
-        if request.POST['id_template']:
-            current_group.template = get_object_or_404(ChallengeModel, id=request.POST['id_template'])
-        else:
-            current_group.template = None
-        current_group.save()
-        print(request.POST)
+        if request.POST['button'] == 'update':
+            print(request.POST)
+            current_group.public = request.POST['visibility'] == 'public'
+
+            current_group.name = request.POST['name']
+            if request.POST['id_template']:
+                current_group.template = get_object_or_404(ChallengeModel, id=request.POST['id_template'])
+            else:
+                current_group.template = None
+            current_group.save()
+        elif request.POST['button'] == 'delete':
+            current_group.delete()
+            return redirect_groups(request)
 
     all_template = [(c, not BundleTaskModel.objects.filter(challenge=c).first() is None) for c in ChallengeModel.objects.filter(created_by=u.id)]
 
@@ -66,7 +72,6 @@ def groups(request, group_id):
                'users': current_group.users.all(),
                'default_datasets': current_group.default_dataset.all(),
                'default_metric': current_group.default_metric.all(),
-               'actual_template': current_group.template,
                'all_template': all_template}
 
     return render(request, 'group/editor.html', context=context)

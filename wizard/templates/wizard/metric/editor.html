@@ -14,6 +14,7 @@
     <div class="public">
 
         <form class="picker" method="POST" action="#">
+            {% confirm_form %}
             {% csrf_token %}
             <input type="hidden" name="kind" value="public"/>
 
