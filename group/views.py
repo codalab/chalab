@@ -11,11 +11,15 @@ from wizard.models import ChallengeModel, DatasetModel, MetricModel
 
 
 @login_required
-def add_user_to_group(request):
+def add_user_to_group(request, group_id):
+    u = request.user
+    current_group = get_object_or_404(GroupModel, id=group_id, admins=u)
+
     asked_user = request.GET.get('add_user', None)
 
     data = {
         'is_taken': User.objects.filter(username__iexact=asked_user).exists()
+
     }
     return JsonResponse(data)
 
@@ -55,6 +59,17 @@ def groups(request, group_id):
             current_group.public = request.POST['visibility'] == 'public'
 
             current_group.name = request.POST['name']
+
+            current_group.default_dataset.clear()
+            if 'id_default_datasets' in request.POST.dict():
+                for id_dataset in request.POST.getlist('id_default_datasets'):
+                    current_group.default_dataset.add(get_object_or_404(DatasetModel, id=id_dataset))
+
+            current_group.default_metric.clear()
+            if 'id_default_metrics' in request.POST.dict():
+                for id_metric in request.POST.getlist('id_default_metrics'):
+                    current_group.default_metric.add(get_object_or_404(MetricModel, id=id_metric))
+
             if request.POST['id_template']:
                 current_group.template = get_object_or_404(ChallengeModel, id=request.POST['id_template'])
             else:
@@ -70,8 +85,15 @@ def groups(request, group_id):
                'current': int(group_id),
                'current_group': current_group,
                'users': current_group.users.all(),
-               'default_datasets': current_group.default_dataset.all(),
-               'default_metric': current_group.default_metric.all(),
+
+               'default_datasets': [('Default', DatasetModel.objects.filter(is_public=True)),
+                                    ('My datasets', DatasetModel.objects.filter(is_public=False, owner=u))],
+               'selected_datasets': current_group.default_dataset.all(),
+
+               'default_metrics': [('Default', MetricModel.objects.filter(is_default=True)),
+                                    ('My metrics', MetricModel.objects.filter(is_default=False, owner=u))],
+               'selected_metrics': current_group.default_metric.all(),
+
                'all_template': all_template}
 
     return render(request, 'group/editor.html', context=context)

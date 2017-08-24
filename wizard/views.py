@@ -148,7 +148,9 @@ def challenge_create_from_group(request, group_id):
 
     if template.baseline is not None:
         from django.core.files import File
-        base = BaselineModel(submission=File(open(template.baseline.submission.path, 'rb')))
+        base = BaselineModel()
+        if bool(template.baseline.submission):
+            base.submission=File(open(template.baseline.submission.path, 'rb'))
         base.save()
         template.baseline = base
 

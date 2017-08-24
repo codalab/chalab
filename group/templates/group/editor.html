@@ -1,4 +1,5 @@
 {% extends 'chalab/base.html' %}
+{% load static %}
 {% load bootstrap3 %}
 
 {% block app_name %}profile{% endblock %}
@@ -17,18 +18,29 @@
 </ul>
 
 {% if groups %}
+<script type="text/javascript" src="{% static 'chalab/Bootstrap-multiselect/bootstrap-multiselect.js' %}"></script>
+<link rel="stylesheet" href="{% static 'chalab/Bootstrap-multiselect/bootstrap-multiselect.css' %}" type="text/css"/>
+
+<style type="text/css">
+    .multiselect-container {
+        width: 100% !important;
+    }
+</style>
+
 <div class="page">
     <form class='editor' action="#" method="post">
         {% confirm_form %}
         {% csrf_token %}
-        <br/>
+
         <div class="form-group">
+            <br/>
             <label class="control-label" for="id_name">Name:</label>
             <input class="form-control" id="id_name" maxlength="30" name="name"
                    value="{{ current_group.name }}" type="text" required autocomplete="off"/>
         </div>
 
         <div class="form-group">
+            <br/>
             <label class="control-label" for="button_visibility">Visibility:</label>
             <button class="btn btn-danger" id="button_visibility">
             </button>
@@ -60,55 +72,102 @@
         </script>
 
         {% comment %}
-        <div class="form-group" id="div_users" name="div_users">
-            <label class="control-label" for="id_users">Users in this group</label>
-            <select multiple="multiple" class="form-control" id="id_users" >
+
+        <div class="form-group" id="div_users" name="div_users" {% if current_group.public %}hidden{% endif %}>
+            <br/>
+            <label class="control-label">Users in this group:</label>
+            <br/>
+            <div class="pick row">
+                <div class="col-sm-9">
+                    <textarea class="form-control" style="resize:vertical;" rows="1"
+                              placeholder="Email of users separated with coma"></textarea>
+                </div>
+
+                <div class="col-sm-3">
+                    <button type=button class="btn btn-primary btn-block" id="click_add_user" >
+                    {% bootstrap_icon "plus" %} Add
+                    </button>
+                </div>
+            </div>
+
+            <br/>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status <button type=button class="btn btn-link btn-xs">
+                            {% bootstrap_icon "refresh" %}</button></th>
+                        <th class="min"><input type="checkbox"></th>
+                    </tr>
+                </thead>
+                <tbody>
                 {% for user in users %}
-                <option value="{{ user.id }}">{{ user.username }}</option>
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>Added</td>
+                        <td><input type="checkbox"></td>
+                    </tr>
                 {% endfor %}
-            </select>
+                </tbody>
+            </table>
 
-            <div style="display: inline-block">
-                <input class="form-control" id="add_user" name="add_user" maxlength="30"
-                       name="add_user" type="text" placeholder="Username or Email"
-                        onkeypress="handle(event)" autocomplete="off"/>
-            </div>
-
-            <div style="display: inline-block">
-                <button type=button class="btn btn-default" id="click_add_user">
-                {% bootstrap_icon "plus" %} Add
-                </button>
-            </div>
-
-            <div style="display: inline-block">
-                <button type=button class="btn btn-default" id="click_remove_user">
+            <div style="align:left;">
+                <button type=button class="btn btn-danger" id="click_remove_user">
                 {% bootstrap_icon "minus" %} Remove
                 </button>
             </div>
         </div>
 
-        <script type="text/javascript">
-            {% if current_group.public %}$("#div_users").hide();{% endif %}
-        </script>
         {% endcomment %}
 
+        <br/>
         <div class="form-group">
-            <label class="control-label" for="id_default_dataset">Default datasets</label>
-            <select multiple="multiple" class="form-control" id="id_default_dataset" >
-                {% for dt in default_datasets %}
-                <option value="{{ dt.id }}">{{ dt.name }}</option>
+            <label class="control-label" for="id_default_datasets">Default datasets</label>
+            <select multiple id="id_default_datasets" name="id_default_datasets">
+                {% for label, list in default_datasets %}
+                <optgroup label="{{ label }}">
+                    {% for dt in list %}
+                    <option value="{{ dt.id }}" {% if dt in selected_datasets %}selected{% endif %}>{{ dt.name }}</option>
+                    {% endfor %}
+                </optgroup>
                 {% endfor %}
             </select>
+            <script>
+            $(function() {
+                $('#id_default_datasets').multiselect({
+                    includeSelectAllOption:true,
+                    buttonWidth: '100%',
+                    maxHeight: 300
+                });
+            });
+            </script>
         </div>
+        <br/>
 
         <div class="form-group">
-            <label class="control-label" for="id_default_metric">Default metrics</label>
-            <select multiple class="form-control" id="id_default_metric" >
-                {% for mt in default_metric %}
-                <option value="{{ mt.id }}">{{ mt.name }}</option>
+            <label class="control-label" for="id_default_metrics">Default metrics</label>
+            <select multiple id="id_default_metrics" name="id_default_metrics">
+                {% for label, list in default_metrics %}
+                <optgroup label="{{ label }}">
+                    {% for mt in list %}
+                    <option value="{{ mt.id }}" {% if mt in selected_metrics %}selected{% endif %}>{{ mt.name }}</option>
+                    {% endfor %}
+                </optgroup>
                 {% endfor %}
             </select>
+            <script>
+            $(function() {
+                $('#id_default_metrics').multiselect({
+                    includeSelectAllOption:true,
+                    buttonWidth: '100%',
+                    maxHeight: 300
+                });
+            });
+            </script>
         </div>
+        <br/>
 
         <div class="form-group">
             <label class="control-label" for="id_template">Template used</label>
@@ -153,30 +212,30 @@ $.ajaxSetup({
     }
 });
 
-$("#click_add_user").click(function () {
-      $.ajax({
-        url: '{% url 'group:add_user' %}',
+$("#click_add_user").click(function() {
+    $.ajax({
+        url: '{% url 'group:add_user' group_id=current_group.id %}',
         data: {
-          'add_user': $("#add_user").val()
+            'add_user': $("#add_user").val()
         },
         dataType: 'json',
-        success: function (data) {
-          if (data.is_taken) {
-            alert("Pseudo valide");
-            $("#add_user").val('');
-          }else{
-            alert("Unknow username or email");
-          }
+        success: function(data) {
+            if (data.is_taken) {
+                alert("Pseudo valide");
+                $("#add_user").val('');
+            } else {
+                alert("Unknow username or email");
+            }
         }
-      });
     });
+});
 
-    function handle(e){
-        if(e.keyCode === 13){
-            e.preventDefault(); // Ensure it is only this code that run
-            $("#click_add_user").trigger( "click" );
-        }
+function handle(e) {
+    if (e.keyCode === 13) {
+        e.preventDefault(); // Ensure it is only this code that run
+        $("#click_add_user").trigger("click");
     }
+}
 </script>
 {% endif %}
 
