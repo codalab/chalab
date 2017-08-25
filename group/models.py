@@ -9,8 +9,8 @@ class GroupModel(models.Model):
     admins = models.ManyToManyField(User, db_table='admin_group',
                                     related_name='admin_of_group')
 
-    public = models.BooleanField(null=False, default=True)
-    hidden = models.BooleanField(null=False, default=False)
+    public = models.BooleanField(null=False, default=False)
+    hidden = models.BooleanField(null=False, default=True)
 
     users = models.ManyToManyField(User, db_table='user_group', blank=True,
                                    related_name='user_of_group')

@@ -72,10 +72,9 @@ def create_new_group(request):
     new_group = GroupModel()
     new_group.save()
     new_group.admins.add(u)
-    new_group.users.add(u)
-    for dataset in DatasetModel.objects.filter(owner=u):
+    for dataset in DatasetModel.objects.filter(is_public=True):
         new_group.default_dataset.add(dataset)
-    for metric in MetricModel.objects.filter(owner=u):
+    for metric in MetricModel.objects.filter(is_default=True):
         new_group.default_metric.add(metric)
     return redirect(new_group)
 
