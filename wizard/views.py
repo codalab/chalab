@@ -123,8 +123,10 @@ def challenge_create_from_group(request, group_id):
     if template.dataset is not None:
         data = template.dataset
         data.id = None
-        data.input = data.input.deep_copy()
-        data.target = data.target.deep_copy()
+        if not data.input is None:
+            data.input = data.input.deep_copy()
+        if not data.target is None:
+            data.target = data.target.deep_copy()
         data.save()
         template.dataset = data
 
