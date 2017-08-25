@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 
 from bundler.models import BundleTaskModel
 from group.models import GroupModel
@@ -11,17 +12,48 @@ from wizard.models import ChallengeModel, DatasetModel, MetricModel
 
 
 @login_required
-def add_user_to_group(request, group_id):
+def change_user_in_group(request, group_id):
     u = request.user
     current_group = get_object_or_404(GroupModel, id=group_id, admins=u)
 
-    asked_user = request.GET.get('add_user', None)
+    if request.GET.get('action', None) == 'add':
+        asked_users = request.GET.get('add_user', None)
 
-    data = {
-        'is_taken': User.objects.filter(username__iexact=asked_user).exists()
+        list_users = [x.strip() for x in asked_users.split(',')]
 
-    }
-    return JsonResponse(data)
+        list_users_added = []
+        list_users_unknow = []
+
+        for user in list_users:
+            find_user = User.objects.filter(Q(username__iexact=user) | Q(email=user))
+            if find_user.exists():
+                find_user = find_user.first()
+                if not current_group.users.filter(id=find_user.id):
+                    current_group.users.add(find_user)
+                    list_users_added.append({
+                        'user_id': find_user.id,
+                        'user_name': find_user.username,
+                        'user_email': find_user.email
+                    })
+            else:
+                list_users_unknow.append(user)
+        current_group.save()
+        data = {
+            'done': True,
+            'added': list_users_added,
+            'unknown': list_users_unknow
+        }
+        return JsonResponse(data)
+    elif request.GET.get('action', None) == 'remove':
+        if request.GET.get('all', None) == 'true':
+            current_group.users.clear()
+        else:
+            asked_user = get_object_or_404(User, id=request.GET.get('user', None))
+            current_group.users.remove(asked_user)
+        current_group.save()
+        return JsonResponse({'done': True})
+    else:
+        return JsonResponse({'done': False, 'error': 'Invalide request'})
 
 
 def redirect_groups(request, *args):
@@ -81,10 +113,12 @@ def groups(request, group_id):
 
     all_template = [(c, not BundleTaskModel.objects.filter(challenge=c).first() is None) for c in ChallengeModel.objects.filter(created_by=u.id)]
 
+    big_list_users = list(current_group.users.all())
+
     context = {'groups': u.admin_of_group.order_by('id'),
                'current': int(group_id),
                'current_group': current_group,
-               'users': current_group.users.all(),
+               'users': big_list_users,
 
                'default_datasets': [('Default', DatasetModel.objects.filter(is_public=True)),
                                     ('My datasets', DatasetModel.objects.filter(is_public=False, owner=u))],

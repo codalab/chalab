@@ -19,7 +19,7 @@ class ProfileFormUpdate(ModelForm):
             if not self.instance.expertise == self.Meta.model.EX_NOVICE:
                 u = self.instance.user
                 self.fields['actual_group'].queryset = GroupModel.objects.filter(
-                    (Q(public=True) | Q(admins=u) | Q(users=u))).order_by('-public', 'name')
+                    (Q(public=True) | Q(admins=u) | Q(users=u))).distinct().order_by('-public', 'name')
                 #  & Q(template__isnull=False)
 
 

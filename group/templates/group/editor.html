@@ -81,7 +81,8 @@
             <br/>
             <div class="pick row">
                 <div class="col-sm-9">
-                    <input class="form-control" placeholder="Email of users separated with coma"/>
+                    <input class="form-control" placeholder="Email (or pseudo) of users separated with coma."
+                           id="add_user" onkeydown="handle(event);" autocomplete="off"/>
                 </div>
 
                 <div class="col-sm-3">
@@ -110,24 +111,24 @@
             </style>
 
             <br/>
-            <table class="table table-striped">
+            <table id="table_users" class="table table-striped">
                 <thead>
                     <tr>
                         <th style="width: 35%;">Username</th>
                         <th style="width: 45%;">Email</th>
                         <th style="width: 20%;text-align:center;">
-                            <button type=button class="btn btn-danger btn-xs">
+                            <button type=button class="btn btn-danger btn-xs" onclick="remove_ajax('all');">
                             {% bootstrap_icon "minus" %} Remove everyone
-                            </button></td></th>
+                            </button></th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for user in users %}
-                    <tr>
+                    <tr id="table_row_user_{{ user.id }}">
                         <td style="width: 35%;">{{ user.username }}</td>
                         <td style="width: 45%;">{{ user.email }}</td>
                         <td style="width: 20%;text-align:center;">
-                            <button type=button class="btn btn-danger btn-xs">
+                            <button type=button class="btn btn-danger btn-xs" onclick="remove_ajax({{ user.id }});">
                             {% bootstrap_icon "minus" %} Remove
                             </button></td>
                     </tr>
@@ -242,21 +243,50 @@ $.ajaxSetup({
 
 $("#click_add_user").click(function() {
     $.ajax({
-        url: '{% url 'group:add_user' group_id=current_group.id %}',
+        url: '{% url 'group:user' group_id=current_group.id %}',
         data: {
+            'action': 'add',
             'add_user': $("#add_user").val()
         },
         dataType: 'json',
         success: function(data) {
-            if (data.is_taken) {
-                alert("Pseudo valide");
-                $("#add_user").val('');
-            } else {
-                alert("Unknow username or email");
+            $("#add_user").val('');
+            for(user of data.added){
+                $('#table_users > tbody:last-child').append('\
+                   <tr id="table_row_user_'+user.user_id+'">\
+                        <td style="width: 35%;">'+user.user_name+'</td>\
+                        <td style="width: 45%;">'+user.user_email+'</td>\
+                        <td style="width: 20%;text-align:center;">\
+                            <button type=button class="btn btn-danger btn-xs" onclick="remove_ajax('+user.user_id+');">\
+                            {% bootstrap_icon "minus" %} Remove\
+                            </button></td>\
+                    </tr>');
+            }
+            if(data.unknown.length > 0){
+                alert("Thoses people are unknow and haven't been added: "+data.unknown.join(', '));
             }
         }
     });
 });
+
+function remove_ajax(id_user){
+    $.ajax({
+        url: '{% url 'group:user' group_id=current_group.id %}',
+        data: {
+            'action': 'remove',
+            'all': (id_user=='all'),
+            'user': id_user
+        },
+        dataType: 'json',
+        success: function(data) {
+            if(data.done && id_user!='all') {
+                $('#table_row_user_' + id_user).remove();
+            }else if(data.done){
+                $("#table_users tbody tr").remove();
+            }
+        }
+    });
+}
 
 function handle(e) {
     if (e.keyCode === 13) {
