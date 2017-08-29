@@ -13,6 +13,8 @@ from django.views.generic import UpdateView
 
 from bundler.models import BundleTaskModel
 from chalab import errors
+from group.models import GroupModel
+from user.models import ProfileModel
 from . import models, flow
 from .flow import FlowOperationMixin
 from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
@@ -59,10 +61,35 @@ You can check the archive actual content using <code>`unzip -l ./my_archive.zip'
 
 @login_required
 def home(request):
-    challenges = ChallengeModel.objects.filter(created_by=request.user)\
-        .order_by('-created_at')
-    return render(request, 'wizard/home.html',
-                  context={'object_list': challenges})
+    u = request.user
+
+    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at')
+
+    profile, created = ProfileModel.objects.get_or_create(user=u)
+
+    context = {
+        'object_list': challenges,
+        'actual_group': profile.actual_group,
+        }
+
+    return render(request, 'wizard/home.html', context=context)
+
+
+@login_required
+def delete_challenge(request, pk):
+    u = request.user
+    c = get_object_or_404(ChallengeModel, id=pk, created_by=u)
+
+    if request.method == 'POST':
+        if request.POST['button'] == 'delete':
+            c.delete()
+        return home(request)
+    else:
+        context = {
+            'challenge': c,
+            'groups': [g.name for g in GroupModel.objects.filter(template=c)]
+        }
+        return render(request, 'wizard/challenge/delete.html', context=context)
 
 
 class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
@@ -75,6 +102,78 @@ class ChallengeDescriptionCreate(CreateView, LoginRequiredMixin):
         r = super(ChallengeDescriptionCreate, self).form_valid(form)
         self.object.generate_default_phases()
         return r
+
+
+@login_required
+def challenge_create_from_group(request, group_id):
+    group = get_object_or_404(GroupModel, id=group_id)
+    template = group.template
+
+    if template is None:
+        template = ChallengeModel(title='New Challenge')
+    else:
+        template.id = None
+
+    # Initialisation
+    template.created_by = request.user
+    template.origin_group = group
+
+    # Deep copy
+    data = None
+    if template.dataset is not None:
+        data = template.dataset
+        data.id = None
+        if not data.input is None:
+            data.input = data.input.deep_copy()
+        if not data.target is None:
+            data.target = data.target.deep_copy()
+        data.save()
+        template.dataset = data
+
+    if template.task is not None:
+        task = template.task.deep_copy()
+        task.dataset = data
+        task.save()
+        template.task = task
+
+    if template.metric is not None:
+        met = template.metric
+        met.id = None
+        met.save()
+        template.metric = met
+
+    if template.protocol is not None:
+        pro = template.protocol
+        pro.id = None
+        pro.save()
+        template.protocol = pro
+
+    if template.baseline is not None:
+        from django.core.files import File
+        base = BaselineModel()
+        if bool(template.baseline.submission):
+            base.submission=File(open(template.baseline.submission.path, 'rb'))
+        base.save()
+        template.baseline = base
+
+    if template.documentation is not None:
+        doc = template.documentation
+
+        pages = DocumentationPageModel.objects.filter(documentation=doc)
+
+        doc.id = None
+        doc.save()
+
+        for page in pages:
+            page.id = None
+            page.documentation = doc
+            page.save()
+
+        template.documentation = doc
+
+    template.save()
+
+    return redirect(template.get_absolute_url())
 
 
 class ChallengeDescriptionUpdate(UpdateView, LoginRequiredMixin):
@@ -384,7 +483,12 @@ def data_picker(request, pk):
 
         return redirect('wizard:challenge:data', pk=pk)
     else:
-        pubds = models.DatasetModel.objects.all().filter(is_public=True)
+
+        if c.origin_group is not None:
+            pubds = c.origin_group.default_dataset.all()
+        else:
+            pubds = models.DatasetModel.objects.all().filter(is_public=True)
+            
         prids = models.DatasetModel.objects.all().filter(
             is_public=False, owner=request.user.id).exclude(input=None)
 
@@ -447,10 +551,16 @@ def metric(request, pk):
     else:
         pass
 
-    public_metrics = MetricModel.objects.all().filter(is_public=True,
+    if c.origin_group is not None:
+        public_metrics = c.origin_group.default_metric.all()
+    else:
+        public_metrics = MetricModel.objects.all().filter(is_public=True,
                                                       is_ready=True)
 
-    private_metric = MetricModel.objects.all().filter(owner=request.user).exclude(id=c.metric.id)
+    private_metric = MetricModel.objects.all().filter(owner=request.user)
+
+    if c.metric is not None:
+        private_metric = private_metric.exclude(id=c.metric.id)
 
     context = {'challenge': c, 'public_metrics': public_metrics,
                'flow': flow.Flow(flow.MetricFlowItem, c),

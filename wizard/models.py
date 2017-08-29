@@ -30,6 +30,10 @@ def build_absolute_uri(path):
     url = 'http://{site}{path}'.format(site=site, path=path)
     return url
 
+def delete_all(list):
+    for obj in list:
+        if obj is not None:
+            obj.delete()
 
 @deconstructible
 class StorageNameFactory(object):
@@ -116,9 +120,37 @@ class ColumnarFileModel(models.Model):
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'columns'))
     count = models.IntegerField()
 
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
+
     def save(self, *args, **kwargs):
-        self.count = lines_count(self.raw_content)
+        if not('skip_clean' in kwargs and kwargs['skip_clean']):
+            self.count = lines_count(self.raw_content)
+        elif 'skip_clean' in kwargs:
+            kwargs.pop('skip_clean', None)
         super(ColumnarFileModel, self).save(*args, **kwargs)
+
+    # Make a deep copy of herself and return it
+    def deep_copy(self):
+        from django.core.files import File
+
+        new_self = type(self)(raw_content=File(
+            open(self.raw_content.path, 'rb')))
+
+        new_self.name = self.name
+        new_self.count = self.count
+
+        kwargs = {'skip_clean': True}
+        new_self.save(**kwargs)
+
+        return new_self
+
+    def delete(self):
+        try:
+            self.raw_content.delete(save=False)
+        except:
+            pass
+        super().delete()
 
     class Meta:
         abstract = True
@@ -145,6 +177,9 @@ class AxisDescriptionModel(models.Model):
                           null=True, on_delete=models.SET_NULL, related_name='axis')
     doc = OneToOneField(ColumnarDocDefinition,
                         null=True, on_delete=models.SET_NULL, related_name='axis')
+
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
 
     def clean(self):
         super().clean()
@@ -177,6 +212,21 @@ class AxisDescriptionModel(models.Model):
             x['names'] = names
 
         return cls.objects.create(**x)
+
+    # Make a deep copy of herself and return it
+    def deep_copy(self):
+        self.id = None
+
+        self.types = self.types.deep_copy() if self.types is not None else None
+        self.names = self.names.deep_copy() if self.names is not None else None
+        self.doc = self.doc.deep_copy() if self.doc is not None else None
+
+        self.save()
+        return self
+
+    def delete(self):
+        delete_all([self.types, self.names, self.doc])
+        super().delete()
 
 
 import re
@@ -247,10 +297,11 @@ class MatrixModel(models.Model):
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'matrix'))
     is_sparse = models.BooleanField(default=False, null=False)
 
-    cols = OneToOneField(AxisDescriptionModel, null=True,
-                         on_delete=models.PROTECT, related_name='matrix_cols')
-    rows = OneToOneField(AxisDescriptionModel, null=True,
-                         on_delete=models.PROTECT, related_name='matrix_rows')
+    cols = OneToOneField(AxisDescriptionModel, null=True, related_name='matrix_cols')
+    rows = OneToOneField(AxisDescriptionModel, null=True, related_name='matrix_rows')
+
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
 
     def clean(self):
         super().clean()  # Called last since we set the default self.columns and self.rows before.
@@ -279,9 +330,38 @@ class MatrixModel(models.Model):
         self.rows.save()
 
     def save(self, *args, **kwargs):
-        self.clean()  # Force clean on save.
+        if not('skip_clean' in kwargs and kwargs['skip_clean']):
+            self.clean()  # Force clean on save.
+        elif 'skip_clean' in kwargs:
+            kwargs.pop('skip_clean', None)
         super().save(*args, **kwargs)
 
+    # Make a deep copy of herself and return it
+    def deep_copy(self):
+        from django.core.files import File
+
+        new_self = MatrixModel(raw_content=File(
+            open(self.raw_content.path, 'rb')))
+
+        new_self.name = self.name
+        new_self.is_sparse = self.is_sparse
+
+        new_self.cols = self.cols.deep_copy() if self.cols is not None else None
+        new_self.rows = self.rows.deep_copy() if self.rows is not None else None
+
+        kwargs = {'skip_clean': True}
+        new_self.save(**kwargs)
+        return new_self
+
+    def delete(self):
+        delete_all([self.cols, self.rows])
+
+        try:
+            self.raw_content.delete(save=False)
+        except:
+            pass
+
+        super().delete()
 
 class InvalidAutomlFormatException(Exception):
     def __init__(self, cause):
@@ -316,7 +396,7 @@ def default_metric(metric, task):
 
 
 class DatasetModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
@@ -324,20 +404,23 @@ class DatasetModel(models.Model):
     preparation = models.TextField(null=True, blank=True, default=None)
     license = models.CharField(max_length=256, null=True, blank=True, default=None)
 
-    keywords = models.CharField(max_length=256, default="")
-    authors = models.CharField(max_length=256, default="")
+    keywords = models.CharField(max_length=256, default="", blank=True)
+    authors = models.CharField(max_length=256, default="", blank=True)
 
     resource_created = models.DateField(null=True, blank=True, default=None)
     resource_url = models.URLField(null=True, blank=True, default=None)
     contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
     contact_url = models.URLField(max_length=256, null=True, blank=True, default=None)
 
-    default_metric = models.ForeignKey('MetricModel', null=True, on_delete=models.SET_NULL)
+    default_metric = models.ForeignKey('MetricModel', null=True, blank=True, on_delete=models.SET_NULL)
 
     fixed_split = models.BooleanField(default=False, null=False)
 
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
+
+    def __str__(self):
+        return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
 
     @classmethod
     def available(cls, user):
@@ -514,8 +597,10 @@ class DatasetModel(models.Model):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
+    def delete(self):
+        if len(ChallengeModel.objects.filter(dataset=self))<=1:
+            delete_all([self.input, self.target])
+            super().delete()
 
 
 def create_with_file(clss, file_path, **kwargs):
@@ -558,7 +643,7 @@ def load_chalearn(path, suffix, clss=MatrixModel, any_prefix=False, **kwargs):
 
 
 class TaskModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
@@ -588,6 +673,9 @@ class TaskModel(models.Model):
     input_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated')
     target_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated_target')
 
+    def __str__(self):
+        return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
+
     @property
     def has_content(self):
         return not None in [
@@ -615,7 +703,7 @@ class TaskModel(models.Model):
         if self.test_ratio is not None and self.train_ratio is not None and self.valid_ratio is not None:
             s = self.test_ratio + self.train_ratio + self.valid_ratio
 
-            if s != 100:
+            if round(s,10) != 100:
                 raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
@@ -631,9 +719,6 @@ class TaskModel(models.Model):
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
 
     def update_from_chalearn(self, path):
         loaded = self.load_from_chalearn(path)
@@ -674,12 +759,30 @@ class TaskModel(models.Model):
             **cls.load_from_chalearn(path)
         )
 
+    def deep_copy(self):
+        self.id = None
+
+        self.input_train = self.input_train.deep_copy() if self.input_train is not None else None
+        self.target_train = self.target_train.deep_copy() if self.target_train is not None else None
+        self.input_test = self.input_test.deep_copy() if self.input_test is not None else None
+        self.target_test = self.target_test.deep_copy() if self.target_test is not None else None
+        self.input_valid = self.input_valid.deep_copy() if self.input_valid is not None else None
+        self.target_valid = self.target_valid.deep_copy() if self.target_valid is not None else None
+
+        self.save()
+        return self
+
+    def delete(self):
+        delete_all([self.input_train, self.target_train, self.input_test,
+                    self.target_test, self.input_valid, self.target_valid])
+        super().delete()
+
 
 class MetricModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     name = models.CharField(max_length=256, null=False)
-    description = models.TextField(null=False, default="")
-    code = models.TextField(null=False, default="")
+    description = models.TextField(null=False, default="", blank=True)
+    code = models.TextField(null=False, default="", blank=True)
 
     is_default = models.BooleanField(default=False, null=False)
     is_public = models.BooleanField(default=False, null=False)
@@ -687,6 +790,9 @@ class MetricModel(models.Model):
 
     classification = models.BooleanField(default=False, null=False)
     regression = models.BooleanField(default=False, null=False)
+
+    def __str__(self):
+        return "<%s: \"%s\"; id=%s>" % (type(self).__name__, self.name, self.id)
 
     @property
     def template_mapping(self):
@@ -696,8 +802,9 @@ class MetricModel(models.Model):
     def template_doc(self):
         return {'metric_name': ''}
 
-    def __str__(self):
-        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
+    def delete(self):
+        if not self.is_default and not self.is_public:
+            super().delete()
 
 
 DEV_PHASE_DESC = """Development phase: create models and submit them or directly submit results on validation and/or test data; feed-back are provided on the validation set only."""
@@ -721,6 +828,9 @@ class ProtocolModel(models.Model):
 
     max_submissions_per_day = models.PositiveIntegerField(null=True, default=5, blank=True)
     max_submissions = models.PositiveIntegerField(null=True, default=10, blank=True)
+
+    def __str__(self):
+        return "<%s: id=%s; ready=%s>" % (type(self).__name__, self.id, self.is_ready)
 
     def clean(self):
         super().clean()
@@ -747,6 +857,9 @@ class ProtocolModel(models.Model):
 class DocumentationModel(models.Model):
     default_pages = docs.DEFAULT_PAGES
     is_ready = models.BooleanField(default=True, null=False)
+
+    def __str__(self):
+        return "<%s: id=%s; ready=%s>" % (type(self).__name__, self.id, self.is_ready)
 
     @property
     def pages(self):
@@ -819,12 +932,11 @@ class DocumentationPageModel(models.Model):
     content = HTMLField()
     rendered = HTMLField(null=True, blank=True)
 
-    documentation = models.ForeignKey(DocumentationModel)
+    documentation = models.ForeignKey(DocumentationModel, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '<DocumentationPage[%s, %s]: %s>' % (self.documentation.challenge.title,
-                                                    self.pos,
-                                                    self.name)
+        return "<%s: \"%s\"; pos=%s>" % (type(self).__name__,
+                                                  self.name, self.pos)
 
     def render(self, mapping_values):
         template = string.Template(self.content)
@@ -880,6 +992,9 @@ class BaselineModel(models.Model):
             pass
         super().delete()
 
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
+
     @property
     def absolute_uri(self):
         if self.submission:
@@ -905,9 +1020,11 @@ class BaselineModel(models.Model):
 
 class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
-    organization_name = models.CharField(max_length=80)
-    description = models.TextField(max_length=255)
+    organization_name = models.CharField(max_length=80, blank=True)
+    description = models.TextField(max_length=255, blank=True)
     logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
+
+    origin_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -916,15 +1033,20 @@ class ChallengeModel(models.Model):
 
     build_at = models.DateTimeField(default=timezone.now)
 
-    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.PROTECT)
+    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL)
     task = models.ForeignKey(TaskModel, null=True, blank=True, on_delete=models.SET_NULL)
     metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL)
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
-                                 related_name='challenge')
+                                 related_name='challenge', on_delete=models.SET_NULL)
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,
-                                    related_name='challenge')
-    documentation = models.OneToOneField(DocumentationModel, null=True, blank=True,
-                                         related_name='challenge')
+                                    related_name='challenge', on_delete=models.SET_NULL)
+    documentation = models.OneToOneField(DocumentationModel, null=True,
+                                         blank=True, related_name='challenge', on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return "<%s: \"%s\"; id=%s>" % (type(self).__name__,
+                                                 self.title,
+                                                 self.id)
 
     def save(self, *args, **kwargs):
         # delete old file when replacing by updating the file
@@ -993,10 +1115,26 @@ class ChallengeModel(models.Model):
     def get(cls, pk):
         return cls.objects.get(pk=pk)
 
+    def delete(self):
+        delete_all([self.task, self.metric, self.protocol,
+                    self.baseline, self.documentation])
+
+        try:
+            self.logo.delete(save=False)
+        except:
+            pass
+
+        super().delete()
+
 
 class PhaseModel(models.Model):
     name = models.CharField(max_length=60)
     challenge = models.ForeignKey(ChallengeModel, related_name='phases')
+
+    def __str__(self):
+        return "<%s: \"%s\"; chal=%s>" % (type(self).__name__,
+                                                 self.name,
+                                                 self.challenge)
 
     @classmethod
     def create(cls, name, challenge, position):

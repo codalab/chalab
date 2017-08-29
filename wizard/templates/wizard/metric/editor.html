@@ -14,6 +14,7 @@
     <div class="public">
 
         <form class="picker" method="POST" action="#">
+            {% confirm_form %}
             {% csrf_token %}
             <input type="hidden" name="kind" value="public"/>
 
@@ -73,11 +74,6 @@
             <textarea name="code" style="resize:none;" id="code" class="form-control"
                       cols="20" rows="20" onchange="verif_name();">
 {% if metric %}{{ metric.code }}{% endif %}</textarea>
-
-            <p class="text-muted text-center">
-                The list of wanted answer are in 'solution'
-                and the list of answer give by the user are listed in 'prediction'
-            </p>
 
             <div class="pick row">
                 <div class="col-sm-4 public">
@@ -208,7 +204,9 @@
                                     mode:  "python", indentUnit: 4, lineWrapping: true, lineNumbers: true
                                 });
 
+                                {% comment %}
                                 // It could be a good things to limit the number of executions of this
+                                {% endcomment %}
                                 CodeMirrorPython.on('change', function(cmp){verif_name();});
 
                                 verif_name();

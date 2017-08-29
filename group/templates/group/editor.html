@@ -1,0 +1,300 @@
+{% extends 'chalab/base.html' %}
+{% load static %}
+{% load bootstrap3 %}
+
+{% block app_name %}profile{% endblock %}
+{% block panel_name %}editor{% endblock %}
+
+{% block content %}
+<ul class="nav nav-tabs">
+    {% for group in groups %}
+    <li {% if group.id == current %}class="active"{% endif %}>
+        <a href="{% url 'group:edit' group_id=group.id %}">{{ group.name }}</a>
+    </li>
+    {% endfor %}
+    <li>
+        <a href="{% url 'group:create' %}">{% bootstrap_icon "plus" %} Create new group</a>
+    </li>
+</ul>
+
+{% if groups %}
+<script type="text/javascript" src="{% static 'chalab/Bootstrap-multiselect/bootstrap-multiselect.js' %}"></script>
+<link rel="stylesheet" href="{% static 'chalab/Bootstrap-multiselect/bootstrap-multiselect.css' %}" type="text/css"/>
+
+<style type="text/css">
+    .multiselect-container {
+        width: 100% !important;
+    }
+</style>
+
+<div class="page">
+    <form class='editor' action="#" method="post">
+        {% confirm_form %}
+        {% csrf_token %}
+
+        <div class="form-group">
+            <br/>
+            <label class="control-label" for="id_name">Name:</label>
+            <input class="form-control" id="id_name" maxlength="30" name="name"
+                   value="{{ current_group.name }}" type="text" required autocomplete="off"/>
+        </div>
+
+        <div class="form-group">
+            <br/>
+            <label class="control-label" for="button_visibility">Visibility:</label>
+            <button class="btn btn-danger" id="button_visibility">
+            </button>
+            <input type="hidden" id="input_visibility" name="visibility" value="private"/>
+        </div>
+
+        <script type="text/javascript">
+            var b = $("#button_visibility");
+            var i = $("#input_visibility");
+
+            function set_visibility(new_state, opposite){
+                if(new_state == 'public' ^ opposite){
+                    i.val('public');
+                    b.html('{% bootstrap_icon "eye-open" %} Public');
+                    b.removeClass('btn-danger');
+                    b.addClass('btn-success');
+                    $("#div_users").hide('fast');
+                }else{
+                    i.val('private');
+                    b.html('{% bootstrap_icon "eye-close" %} Private');
+                    b.removeClass('btn-success');
+                    b.addClass('btn-danger');
+                    $("#div_users").show('fast');
+                }
+            };
+
+            b.click(function (){
+                set_visibility(i.val(), true);
+                return false;
+            });
+
+            set_visibility({% if current_group.public %}'public'{% else %}'private'{% endif %}, false);
+        </script>
+
+        <div class="form-group" id="div_users" name="div_users" {% if current_group.public %}hidden{% endif %}>
+            <br/>
+            <label class="control-label">Users in this group:</label>
+            <br/>
+            <div class="pick row">
+                <div class="col-sm-10">
+                    <input class="form-control" placeholder="Email (or pseudo) of users separated with coma."
+                           id="add_user" onkeydown="handle(event);" autocomplete="off"/>
+                </div>
+
+                <div class="col-sm-2">
+                    <button type=button class="btn btn-primary btn-block" id="click_add_user" >
+                    {% bootstrap_icon "plus" %} Add
+                    </button>
+                </div>
+            </div>
+
+            <style type="text/css">
+                thead, tbody, tr, td, th { display: block; }
+                tr:after {
+                    content: ' ';
+                    display: block;
+                    visibility: hidden;
+                    clear: both;
+                }
+                thead th { height: 35px; }
+
+                tbody {
+                    max-height: 200px;
+                    overflow-y: auto;
+                }
+
+                tbody td, thead th { float: left; }
+            </style>
+
+            <br/>
+            <table id="table_users" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Username</th>
+                        <th style="width: 45%;">Email</th>
+                        <th style="width: 20%;text-align:center;">
+                            <button type=button class="btn btn-danger btn-xs" onclick="remove_ajax('all');">
+                            {% bootstrap_icon "minus" %} Remove everyone
+                            </button></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr id="table_row_user_{{ user.id }}">
+                        <td style="width: 35%;">{{ user.username }}</td>
+                        <td style="width: 45%;">{{ user.email }}</td>
+                        <td style="width: 20%;text-align:center;">
+                            <button type=button class="btn btn-danger btn-xs" onclick="remove_ajax({{ user.id }});">
+                            {% bootstrap_icon "minus" %} Remove
+                            </button></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <br/>
+        <div class="form-group">
+            <label class="control-label" for="id_default_datasets">Default datasets:</label>
+            <button type="button" class="btn btn-default" style="width:100%;" id="button_temp_dataset">Loading...</button>
+            <select multiple id="id_default_datasets" name="id_default_datasets" hidden>
+                {% for label, list in default_datasets %}
+                <optgroup label="{{ label }}">
+                    {% for dt in list %}
+                    <option value="{{ dt.id }}" {% if dt in selected_datasets %}selected{% endif %}>{{ dt.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
+            <script>
+            $(function() {
+                $('#id_default_datasets').multiselect({
+                    includeSelectAllOption:true,
+                    buttonWidth: '100%',
+                    enableClickableOptGroups:true,
+                    disableIfEmpty: true,
+                    maxHeight: 300,
+                    numberDisplayed:7,
+                    onInitialized: function(select, container){
+                        $('#id_default_datasets').show();
+                        $('#button_temp_dataset').hide();}
+                });
+            });
+            </script>
+        </div>
+        <br/>
+
+        <div class="form-group">
+            <label class="control-label" for="id_default_metrics">Default metrics:</label>
+            <button type="button" class="btn btn-default" style="width:100%;" id="button_temp_metrics">Loading...</button>
+            <select multiple id="id_default_metrics" name="id_default_metrics" hidden>
+                {% for label, list in default_metrics %}
+                <optgroup label="{{ label }}">
+                    {% for mt in list %}
+                    <option value="{{ mt.id }}" {% if mt in selected_metrics %}selected{% endif %}>{{ mt.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
+            <script>
+            $(function() {
+                $('#id_default_metrics').multiselect({
+                    includeSelectAllOption:true,
+                    buttonWidth: '100%',
+                    enableClickableOptGroups:true,
+                    disableIfEmpty: true,
+                    maxHeight: 300,
+                    numberDisplayed:7,
+                    onInitialized: function(select, container){
+                        $('#id_default_metrics').show();
+                        $('#button_temp_metrics').hide();}
+                });
+            });
+            </script>
+        </div>
+        <br/>
+
+        <div class="form-group">
+            <label class="control-label" for="id_template">Template used:</label>
+            <select class="form-control" id="id_template" name="id_template">
+                <option value="" {% if actual_template is None %}selected {% endif %}>--------</option>
+                {% for template, build in all_template %}
+                <option value="{{ template.id }}" {% if template.title == current_group.template.title %}selected {% endif %}>
+                    {{ template.title }}{% if not build %} (never build){% endif %}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% buttons %}
+        <button type="submit" class="btn btn-primary"
+            name="button" value="update">
+            {% bootstrap_icon "star" %} Update
+        </button>
+        <button type="submit" class="btn btn-danger"
+                onclick="return confirm('Do you really want to delete this group?')"
+                name="button" value="delete">
+            {% bootstrap_icon "trash" %} Delete
+        </button>
+        {% endbuttons %}
+    </form>
+</div>
+
+
+<script type="text/javascript">
+// using jQuery
+var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+$("#click_add_user").click(function() {
+    $.ajax({
+        url: '{% url 'group:user' group_id=current_group.id %}',
+        data: {
+            'action': 'add',
+            'add_user': $("#add_user").val()
+        },
+        dataType: 'json',
+        success: function(data) {
+            $("#add_user").val('');
+            for(user of data.added){
+                $('#table_users > tbody:last-child').append('\
+                   <tr id="table_row_user_'+user.user_id+'">\
+                        <td style="width: 35%;">'+user.user_name+'</td>\
+                        <td style="width: 45%;">'+user.user_email+'</td>\
+                        <td style="width: 20%;text-align:center;">\
+                            <button type=button class="btn btn-danger btn-xs" onclick="remove_ajax('+user.user_id+');">\
+                            {% bootstrap_icon "minus" %} Remove\
+                            </button></td>\
+                    </tr>');
+            }
+            if(data.unknown.length > 0){
+                alert("These people are unknown and have NOT been added: "+data.unknown.join(', '));
+            }
+        }
+    });
+});
+
+function remove_ajax(id_user){
+    $.ajax({
+        url: '{% url 'group:user' group_id=current_group.id %}',
+        data: {
+            'action': 'remove',
+            'all': (id_user=='all'),
+            'user': id_user
+        },
+        dataType: 'json',
+        success: function(data) {
+            if(data.done && id_user!='all') {
+                $('#table_row_user_' + id_user).remove();
+            }else if(data.done){
+                $("#table_users tbody tr").remove();
+            }
+        }
+    });
+}
+
+function handle(e) {
+    if (e.keyCode === 13) {
+        e.preventDefault(); // Ensure it is only this code that run
+        $("#click_add_user").trigger("click");
+    }
+}
+</script>
+{% endif %}
+
+{% endblock %}

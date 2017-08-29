@@ -164,6 +164,7 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
             zipdir(bt, output_dir, input_data, d)
             p['input_data'] = input_data + '.zip'
+            p['public_data'] = input_data + '.zip'
         finally:
             task.input_train.raw_content.close()
             task.input_valid.raw_content.close()

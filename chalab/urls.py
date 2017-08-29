@@ -29,6 +29,7 @@ urlpatterns = [
     url(r'^accounts/', include('allauth.urls')),
     url(r'^wizard/', include('wizard.urls', namespace='wizard')),
     url(r'^user/', include('user.urls', namespace='user')),
+    url(r'^group/', include('group.urls', namespace='group')),
 ]
 
 if settings.DEBUG:

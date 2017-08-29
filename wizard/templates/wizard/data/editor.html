@@ -31,6 +31,7 @@
         </table>
     </div>
 
+    {% comment %}
     {% if not object.is_public %}
     <h3>Dataset Format:</h3>
     <p>
@@ -53,13 +54,10 @@
     DataName_valid.solution
     DataName_test.data
     DataName_test.solution</pre>
-
-    Please check the <a href="{% static 'chalab/resource/iris.zip' %}">Iris Dataset</a>
-    for an example.
-    </p>
     {% endif %}
+    {% endcomment %}
 
-    <h3>Edit the dataset:</h3>
+    <h3>Dataset submission:</h3>
     <form class='editor' action="#" method="post" enctype="multipart/form-data">
         {% confirm_form %}
         {% csrf_token %}

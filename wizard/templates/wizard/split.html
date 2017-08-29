@@ -46,10 +46,10 @@ function myFunction(){
     var valid = Math.trunc({{ rows }} * {{ object.valid_ratio }} / 100);
     var test = Math.trunc({{ rows }} - train - valid);
 
-    document.getElementById("train_row").innerHTML = train;
-    document.getElementById("valid_row").innerHTML = valid;
-    document.getElementById("test_row").innerHTML = test;
-    document.getElementById("total_row").innerHTML = {{ rows }};
+    $('#train_row').text(train);
+    $('#valid_row').text(valid);
+    $('#test_row').text(test);
+    $('#total_row').text({{ rows }});
 }
 myFunction();
 </script>

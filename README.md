@@ -18,6 +18,7 @@ Structure
 - `landing`: the home page app,
 - `wizard`: the wizard app,
 - `user`: user profile app,
+- `group`: the group app,
 - `bundler`: the challenge -> bundles (zipfiles) app,
 - `instances`: the module containing the settings per environment:
     - `local`: the settings to run django on your local machine,
