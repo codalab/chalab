@@ -19,7 +19,7 @@ def change_user_in_group(request, group_id):
     if request.GET.get('action', None) == 'add':
         asked_users = request.GET.get('add_user', None)
 
-        list_users = [x.strip() for x in asked_users.split(',')]
+        list_users = [x.strip() for x in asked_users.split(',') if len(x.strip()) > 0]
 
         list_users_added = []
         list_users_unknow = []

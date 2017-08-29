@@ -1118,6 +1118,12 @@ class ChallengeModel(models.Model):
     def delete(self):
         delete_all([self.task, self.metric, self.protocol,
                     self.baseline, self.documentation])
+
+        try:
+            self.logo.delete(save=False)
+        except:
+            pass
+
         super().delete()
 
 

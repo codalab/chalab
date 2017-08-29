@@ -80,14 +80,14 @@
             <label class="control-label">Users in this group:</label>
             <br/>
             <div class="pick row">
-                <div class="col-sm-9">
+                <div class="col-sm-10">
                     <input class="form-control" placeholder="Email (or pseudo) of users separated with coma."
                            id="add_user" onkeydown="handle(event);" autocomplete="off"/>
                 </div>
 
-                <div class="col-sm-3">
+                <div class="col-sm-2">
                     <button type=button class="btn btn-primary btn-block" id="click_add_user" >
-                    {% bootstrap_icon "plus" %} Add everyone
+                    {% bootstrap_icon "plus" %} Add
                     </button>
                 </div>
             </div>
@@ -263,7 +263,7 @@ $("#click_add_user").click(function() {
                     </tr>');
             }
             if(data.unknown.length > 0){
-                alert("Thoses people are unknow and haven't been added: "+data.unknown.join(', '));
+                alert("These people are unknown and have NOT been added: "+data.unknown.join(', '));
             }
         }
     });

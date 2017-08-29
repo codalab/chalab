@@ -12,7 +12,10 @@
 Are you sure you want to delete this challenge?
 <br/>
 {% if groups %}
-It's actually used in some groups: "{{ groups | join:"\", \"" }}"
+
+<div class="alert alert-danger">
+  <strong>Warning!</strong> It's actually used in some groups: "{{ groups | join:"\", \"" }}"
+</div>
 {% endif %}
 </p>
 <form class="picker" method="POST" action="#">

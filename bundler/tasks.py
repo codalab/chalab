@@ -232,7 +232,6 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
     scoring_program = 'scoring_program_1_2.zip'
 
     p['input_data'] = input_data
-    p['public_data'] = input_data
     p['scoring_program'] = scoring_program
 
     with TemporaryDirectory() as d:
