@@ -14,7 +14,7 @@
                 <input type="hidden" name="kind" value="public"/>
 
                 <div class="form-group">
-                    <script>
+                    <script type="text/javascript">
                             function showDescription(s) {
                                 var description = {
                                     {% for dataset in public_datasets %}
@@ -23,10 +23,9 @@
                                 };
 
                                 if (description[s.value] != 'None' && description[s.value]) {
-                                    document.getElementById('datasetDescription').innerHTML =
-                                    '<strong>Description: </strong>' + description[s.value];
+                                    $('#datasetDescription').html('<strong>Description: </strong>' + description[s.value]);
                                 }else{
-                                    document.getElementById('datasetDescription').innerHTML = '';
+                                    $('#datasetDescription').html('');
                                 }
                             }
                     </script>
@@ -39,8 +38,8 @@
                     </select>
                     <br/>
                     <h5 id="datasetDescription"></h5>
-                    <script>
-                            showDescription(document.getElementById('datasetPublicPicker'));
+                    <script type="text/javascript">
+                            $('#datasetPublicPicker').trigger("change");
                     </script>
                 </div>
 
@@ -89,17 +88,11 @@
     </div>
     <div class="col-sm-4 create">
         <div class="form-block">
-            <h4>Create a Dataset:</h4>
+            <h4>Create a new Dataset:</h4>
 
             <form class="creator" method="POST" action="#">
                 {% csrf_token %}
                 <input type="hidden" name="kind" value="create"/>
-
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" class="form-control" name="name"
-                           id="name" placeholder="Name">
-                </div>
 
                 {% buttons %}
                 <button class="primaryAction btn btn-primary"

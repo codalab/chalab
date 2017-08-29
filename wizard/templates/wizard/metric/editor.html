@@ -14,13 +14,55 @@
     <div class="public">
 
         <form class="picker" method="POST" action="#">
+            {% confirm_form %}
             {% csrf_token %}
             <input type="hidden" name="kind" value="public"/>
 
             <h4>Name of the metric function:</h4>
 
-            <input name="name" id="name" type="text" class="form-control" value="
-{% if metric %}{{ metric.name }}{% endif %}">
+            <div class="" id="div_name">
+                <input name="name" id="name" type="text" class="form-control"
+                       value="{% if metric %}{{ metric.name }}{% endif %}"
+                        onkeyup="verif_name();">
+                <span class="help-block" id="span_name"></span>
+            </div>
+
+            <script>
+                var regex_find_function = /(^|[\r\n]+)def\s+(\w+)\([^,\)]+,[^,\)]+\)\s*:/g;
+
+                function verify_function_exist(name, code){
+                    var boolean = false;
+                    while (matches = regex_find_function.exec(code)) {
+                        if(matches[2].trim() == name){
+                            boolean = true;
+                        }
+                    }
+                    return boolean;
+                }
+
+                function verif_name(){
+                    name = $('#name').val();
+                    code = CodeMirrorPython.getValue();
+
+                    if(verify_function_exist(name, code)){
+                        $('#div_name').attr('class', '');
+                        $('#span_name').text('');
+                    }else{
+                        $('#div_name').attr('class', 'form-group has-error');
+                        $('#span_name').text('Any function with this name in your code');
+                    }
+                }
+
+                var regex_find_fun_with_comment = /(^|(#(.*))?[\r\n]+)def\s+(\w+)\([^,\)]+,[^,\)]+\)\s*:/g;
+
+                function get_name_and_comment(code){
+                    var last_res;
+                    while (matches = regex_find_fun_with_comment.exec(code)) {
+                        last_res = matches;
+                    }
+                    return {'name':last_res[4].trim(), 'comment': last_res[3].trim()};
+                }
+            </script>
 
             <h4>Description:</h4>
 
@@ -29,13 +71,9 @@
 
             <h4>Code:</h4>
 
-            <textarea name="code" id="code" class="form-control" cols="20" rows="20">
+            <textarea name="code" style="resize:none;" id="code" class="form-control"
+                      cols="20" rows="20" onchange="verif_name();">
 {% if metric %}{{ metric.code }}{% endif %}</textarea>
-
-            <p class="text-muted text-center">
-                The list of wanted answer are in 'solution'
-                and the list of answer give by the user are listed in 'prediction'
-            </p>
 
             <div class="pick row">
                 <div class="col-sm-4 public">
@@ -43,56 +81,100 @@
                         <h4>Use a Public Metric:</h4>
 
                         <script>
-                                var metrics = {
-                                {% for metric in public_metrics %}
-                                    {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
-                                {% endfor %}
-                                {% for metric in private_metric %}
-                                    {{ metric.pk }} : ["{{ metric.name }}", "{{ metric.description }}", "{{ metric.code|escapejs }}"],
-                                {% endfor %}
-                                }
+                            // using jQuery
+                            var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
 
-                                function fillWithMetric(s) {
-                                    metric = metrics[s.value];
-                                    document.getElementById('name').value = metric[0];
-                                    document.getElementById('description').value = metric[1];
-                                    CodeMirrorPython.setValue(metric[2]);
+                            function csrfSafeMethod(method) {
+                                // these HTTP methods do not require CSRF protection
+                                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                            }
+
+                            $.ajaxSetup({
+                                beforeSend: function(xhr, settings) {
+                                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                                    }
                                 }
+                            });
+
+                            var public_metrics_list = {
+                                "" : [["",""]],
+                                "other" : [["",""],{% for metric in public_metrics %}{% if not metric.classification and not metric.regression %}
+                                    [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
+                                    {% endif %}{% endfor %}],
+                                "regression" : [["",""],{% for metric in public_metrics %}{% if metric.regression %}
+                                    [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
+                                    {% endif %}{% endfor %}],
+                                "classification" : [["",""],{% for metric in public_metrics %}{% if metric.classification %}
+                                    [{{ metric.pk }}, "{{ metric.name }} : {{ metric.description }}"],
+                                    {% endif %}{% endfor %}]
+                            }
+
+                            function fillWithMetric(id) {
+                                $.ajax({
+                                    url: '{% url 'wizard:challenge:get_metric' challenge.pk%}',
+                                    data: { 'metric_id': id },
+                                    dataType: 'json',
+                                    success: function(data) {
+                                        $('#name').val(data.name);
+                                        $('#description').val(data.description);
+                                        CodeMirrorPython.setValue(data.code);
+                                        verif_name();
+                                    }
+                                });
+                            }
+
+                            function fillWithListMetric(s) {
+                                metrics = public_metrics_list[s.value];
+
+                                var options = $("#name_metric");
+                                options.empty();
+                                $.each(metrics, function() {
+                                    options.append(new Option(this[1], this[0]));
+                                });
+                            }
 
                         </script>
 
-                        <select onchange="fillWithMetric(this)" class="form-control" name="metric">
-                            {% for metric in public_metrics %}
-                            <option data-name="{{ metric.name }}" value="{{ metric.pk }}">
-                                {% if metric.classification %}
-                                Classification:
-                                {% elif metric.regression %}
-                                Regression:
-                                {% endif %}
-                                {{ metric.description }} ({{ metric.name }})
-                            </option>
-                            {% endfor %}
+                        <select onchange="fillWithListMetric(this)" class="form-control" id="type_metric">
+                            <option value="">---------</option>
+                            <option value="other">Other</option>
+                            <option value="classification">Classification</option>
+                            <option value="regression">Regression</option>
                         </select>
+
+                        <select onchange="$('#buttondefaultload').attr('class', 'primaryAction btn btn-primary');"
+                        class="form-control" id="name_metric">
+                        </select>
+
+                        <br/>
+
+                        {% buttons %}
+                        <button onclick="fillWithMetric($('#name_metric').val())" id="buttondefaultload"
+                                class="primaryAction btn btn-outline-primary" type="button">
+                            Load
+                        </button>
+                        {% endbuttons %}
                     </div>
                 </div>
 
                 <div class="col-sm-4 private">
                     <div class="form-block">
-                        <h4>Use one of your Metric</h4>
+                        <h4>Load one of your Metrics</h4>
                         {% if private_metric %}
                         <div class="form-group">
                             <label>Metric: </label>
-                            <select name="metricPrivate" id="metricPrivatePicker">
+                            <select name="metricPrivate" class="form-control" id="metricPrivatePicker">
                                 {% for metric in private_metric %}
-                                <option value="{{ metric.pk }}">{{ metric.name }}</option>
+                                <option value="{{ metric.pk }}">{{ metric.name }} : {{ metric.description }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         {% buttons %}
-                        <button onclick="fillWithMetric(document.getElementById('metricPrivatePicker'))"
+                        <button onclick="fillWithMetric($('#metricPrivatePicker').val());"
                                 class="primaryAction btn btn-primary" type="button">
-                            Use
+                            Load
                         </button>
                         <button class="primaryAction btn btn-danger"
                                 name="button" value="delete" type="submit">
@@ -109,27 +191,48 @@
                     <div class="form-block">
                         <h4>Load your Metric from a file:</h4>
 
-                        <input type='file' accept='text/*' onchange='openFile(event)'><br>
+                        <input type='file' accept='text/*' id='fileload'
+                               onchange="$('#buttonfileload').attr('class', 'primaryAction btn btn-primary');" ><br>
+                        {% buttons %}
+                        <button onclick='openFile()' id="buttonfileload"
+                                class="primaryAction btn btn-outline-primary" type="button">
+                            Load
+                        </button>
+                        {% endbuttons %}
                         <script>
                                 var CodeMirrorPython = CodeMirror.fromTextArea(document.getElementById('code'), {
                                     mode:  "python", indentUnit: 4, lineWrapping: true, lineNumbers: true
                                 });
 
-                                var openFile = function(event) {
+                                {% comment %}
+                                // It could be a good things to limit the number of executions of this
+                                {% endcomment %}
+                                CodeMirrorPython.on('change', function(cmp){verif_name();});
+
+                                verif_name();
+
+                                var openFile = function() {
                                     var reader = new FileReader();
 
                                     reader.onload = function(){
+                                        nc = get_name_and_comment(reader.result);
                                         CodeMirrorPython.setValue(reader.result);
+                                        $('#name').val(nc.name);
+                                        $('#description').val(nc.comment);
+                                        verif_name();
                                     };
 
-                                    reader.readAsText(event.target.files[0]);
+                                    reader.readAsText($('#fileload').prop('files')[0]);
                                 };
 
+                                if($('#fileload').prop('files')[0] != null){
+                                    $('#fileload').trigger("change");
+                                }
                         </script>
                     </div>
                 </div>
             </div>
-
+            <br/>
             {% buttons %}
             <div class="form-group">
                 <button class="primaryAction btn btn-primary" name="button" value="save" type="submit">

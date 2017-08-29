@@ -31,6 +31,7 @@
         </table>
     </div>
 
+    {% comment %}
     {% if not object.is_public %}
     <h3>Dataset Format:</h3>
     <p>
@@ -39,32 +40,28 @@
     </p>
 
     <p>
-        Only <code>AutoML</code>, <code>CSV</code> and <code>ARFF</code> archives are currently supported. All archives
-        will be converted
-        automatically into AutoML. They are defined as a zip file containing at least:
-    <pre>dataset_name/
-   dataset_name.data
-   dataset_name.solution</pre>
-    Please check the <a href="{% static 'chalab/resource/iris.zip' %}">Iris Dataset</a>
-    for an example.
-    </p>
-    {% endif %}
+        Only <code>AutoML</code> archives are currently supported.
+        They are defined as a zip file containing at least:
+    <pre>DataName/
+    DataName.data
+    DataName.solution</pre>
 
-    <h3>Edit the dataset:</h3>
+        Or, if data are already splitted, the zip file must contain :
+    <pre>DataName/
+    DataName_train.data
+    DataName_train.solution
+    DataName_valid.data
+    DataName_valid.solution
+    DataName_test.data
+    DataName_test.solution</pre>
+    {% endif %}
+    {% endcomment %}
+
+    <h3>Dataset submission:</h3>
     <form class='editor' action="#" method="post" enctype="multipart/form-data">
+        {% confirm_form %}
         {% csrf_token %}
         {% bootstrap_form form %}
-
-        {% if not form.disabled %}
-        <label>Format of the data: </label>
-        <select name="data_format" id="data_format" {% if form.disabled %}disabled{% endif %}>
-            <option value="auto" selected>Auto</option>
-            <option value="automl">AutoML</option>
-            <option value="csv">CSV</option>
-            <option value="arff">ARFF</option>
-            <option value="libsvm">LIBSVM</option>
-        </select>
-        {% endif %}
 
         {% buttons %}
         <div class="buttons">

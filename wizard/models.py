@@ -30,6 +30,10 @@ def build_absolute_uri(path):
     url = 'http://{site}{path}'.format(site=site, path=path)
     return url
 
+def delete_all(list):
+    for obj in list:
+        if obj is not None:
+            obj.delete()
 
 @deconstructible
 class StorageNameFactory(object):
@@ -82,6 +86,23 @@ def columns_count_first_line(file_field):
         file_field.close()
 
 
+def columns_count_sparse(file_field):
+    maximum = 0
+
+    file_field.open('r')
+    lines = file_field.readlines()
+    file_field.close()
+
+    try:
+        for line in lines:
+            list_val = list(map(int, line.split()))
+            maximum = max(maximum, max(list_val))
+    except:
+        return None
+
+    return maximum
+
+
 def columns_all_the_same_count(file_field, cols):
     file_field.open('r')
     lines = file_field.readlines()
@@ -99,9 +120,37 @@ class ColumnarFileModel(models.Model):
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'columns'))
     count = models.IntegerField()
 
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
+
     def save(self, *args, **kwargs):
-        self.count = lines_count(self.raw_content)
+        if not('skip_clean' in kwargs and kwargs['skip_clean']):
+            self.count = lines_count(self.raw_content)
+        elif 'skip_clean' in kwargs:
+            kwargs.pop('skip_clean', None)
         super(ColumnarFileModel, self).save(*args, **kwargs)
+
+    # Make a deep copy of herself and return it
+    def deep_copy(self):
+        from django.core.files import File
+
+        new_self = type(self)(raw_content=File(
+            open(self.raw_content.path, 'rb')))
+
+        new_self.name = self.name
+        new_self.count = self.count
+
+        kwargs = {'skip_clean': True}
+        new_self.save(**kwargs)
+
+        return new_self
+
+    def delete(self):
+        try:
+            self.raw_content.delete(save=False)
+        except:
+            pass
+        super().delete()
 
     class Meta:
         abstract = True
@@ -129,24 +178,23 @@ class AxisDescriptionModel(models.Model):
     doc = OneToOneField(ColumnarDocDefinition,
                         null=True, on_delete=models.SET_NULL, related_name='axis')
 
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
+
     def clean(self):
         super().clean()
 
         # Check that this object and the nested objects all share the same counts.
         c1 = self.types.count if self.types is not None else None
         c2 = self.names.count if self.names is not None else None
-        c3 = self.doc.count if self.doc is not None else None
 
-        self.count = self.count or c1 or c2 or c3
+        self.count = self.count or c1 or c2
 
         if not (c1 == self.count or c1 is None):
-            raise ValidationError("the size of the `types' data "
+            raise ValidationError("the size of the 'types' data "
                                   "doesn't match the others definitions.")
         if not (c2 == self.count or c2 is None):
-            raise ValidationError("the size of the `names' data "
-                                  "doesn't match the others definitions.")
-        if not (c3 == self.count or c3 is None):
-            raise ValidationError("the size of the `doc' data "
+            raise ValidationError("the size of the 'names' data "
                                   "doesn't match the others definitions.")
 
     def save(self, *args, **kwargs):
@@ -164,6 +212,21 @@ class AxisDescriptionModel(models.Model):
             x['names'] = names
 
         return cls.objects.create(**x)
+
+    # Make a deep copy of herself and return it
+    def deep_copy(self):
+        self.id = None
+
+        self.types = self.types.deep_copy() if self.types is not None else None
+        self.names = self.names.deep_copy() if self.names is not None else None
+        self.doc = self.doc.deep_copy() if self.doc is not None else None
+
+        self.save()
+        return self
+
+    def delete(self):
+        delete_all([self.types, self.names, self.doc])
+        super().delete()
 
 
 import re
@@ -234,18 +297,23 @@ class MatrixModel(models.Model):
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'matrix'))
     is_sparse = models.BooleanField(default=False, null=False)
 
-    cols = OneToOneField(AxisDescriptionModel, null=True,
-                         on_delete=models.PROTECT, related_name='matrix_cols')
-    rows = OneToOneField(AxisDescriptionModel, null=True,
-                         on_delete=models.PROTECT, related_name='matrix_rows')
+    cols = OneToOneField(AxisDescriptionModel, null=True, related_name='matrix_cols')
+    rows = OneToOneField(AxisDescriptionModel, null=True, related_name='matrix_rows')
+
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
 
     def clean(self):
         super().clean()  # Called last since we set the default self.columns and self.rows before.
 
         rows = lines_count(self.raw_content)
-        cols = columns_count_first_line(self.raw_content)
 
-        if not columns_all_the_same_count(self.raw_content, cols):
+        if self.is_sparse:
+            cols = columns_count_sparse(self.raw_content)
+        else:
+            cols = columns_count_first_line(self.raw_content)
+
+        if not columns_all_the_same_count(self.raw_content, cols) and not self.is_sparse:
             pass
             # raise InvalidAutomlFormatException("Number of cols non coherent in %s" % self.raw_content)
 
@@ -254,8 +322,7 @@ class MatrixModel(models.Model):
         if self.rows is None:
             self.rows = AxisDescriptionModel.objects.create()
 
-        if not self.is_sparse:
-            self.cols.count = cols
+        self.cols.count = cols
 
         self.rows.count = rows
 
@@ -263,9 +330,38 @@ class MatrixModel(models.Model):
         self.rows.save()
 
     def save(self, *args, **kwargs):
-        self.clean()  # Force clean on save.
+        if not('skip_clean' in kwargs and kwargs['skip_clean']):
+            self.clean()  # Force clean on save.
+        elif 'skip_clean' in kwargs:
+            kwargs.pop('skip_clean', None)
         super().save(*args, **kwargs)
 
+    # Make a deep copy of herself and return it
+    def deep_copy(self):
+        from django.core.files import File
+
+        new_self = MatrixModel(raw_content=File(
+            open(self.raw_content.path, 'rb')))
+
+        new_self.name = self.name
+        new_self.is_sparse = self.is_sparse
+
+        new_self.cols = self.cols.deep_copy() if self.cols is not None else None
+        new_self.rows = self.rows.deep_copy() if self.rows is not None else None
+
+        kwargs = {'skip_clean': True}
+        new_self.save(**kwargs)
+        return new_self
+
+    def delete(self):
+        delete_all([self.cols, self.rows])
+
+        try:
+            self.raw_content.delete(save=False)
+        except:
+            pass
+
+        super().delete()
 
 class InvalidAutomlFormatException(Exception):
     def __init__(self, cause):
@@ -300,7 +396,7 @@ def default_metric(metric, task):
 
 
 class DatasetModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
@@ -308,19 +404,23 @@ class DatasetModel(models.Model):
     preparation = models.TextField(null=True, blank=True, default=None)
     license = models.CharField(max_length=256, null=True, blank=True, default=None)
 
-    keywords = models.CharField(max_length=256, default="")
-    authors = models.CharField(max_length=256, default="")
-
-    updated_at = models.DateTimeField(auto_now=True)
+    keywords = models.CharField(max_length=256, default="", blank=True)
+    authors = models.CharField(max_length=256, default="", blank=True)
 
     resource_created = models.DateField(null=True, blank=True, default=None)
     resource_url = models.URLField(null=True, blank=True, default=None)
     contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
     contact_url = models.URLField(max_length=256, null=True, blank=True, default=None)
 
+    default_metric = models.ForeignKey('MetricModel', null=True, blank=True, on_delete=models.SET_NULL)
+
+    fixed_split = models.BooleanField(default=False, null=False)
+
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
-    default_metric = models.ForeignKey('MetricModel', null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
 
     @classmethod
     def available(cls, user):
@@ -333,65 +433,87 @@ class DatasetModel(models.Model):
 
     @property
     def template_doc(self):
-        return {'dataset_name': ""}
+        return {'dataset_name': ''}
 
-    def update_from_chalearn(self, fp_zip, data_format='auto'):
+    def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
-            if data_format == 'libsvm':
-                pass
-            else:
-                try:
-                    root = fs.sole_path(d)
-                    name = os.path.basename(root)
+            try:
+                root = fs.sole_path(d)
+                name = os.path.basename(root)
 
-                    content = set(x for x in os.listdir(root)
-                                  if not 'DS_Store' in x and not '__MACOS' in x)
-                    expected_suffixes = {'.data', '.solution', '_feat.name',
-                                         '_info.m', '_label.name', '_sample.name'}
-                    expected_files = set('%s%s' % (name, x) for x in expected_suffixes)
-                    expected_files |= {'README', 'README.txt', 'README.md'}
+                content = set(x for x in os.listdir(root))
 
-                    convertible_suffixes = {'.data', '.solution'}
-                    convertible_files = set('%s%s' % (name, x) for x in convertible_suffixes)
+                extensions = ['data', 'solution']
+                parts = ['train', 'valid', 'test']
+                meta = ['feat.name', 'label.name',
+                        'feat.type', 'label.type', 'public.info']
 
-                    unexpected = content - expected_files
+                necessary_wanted = set('%s.%s' % (name, x) for x in extensions)
 
-                    minimum = convertible_files - content
+                pre_split_wanted = set('%s_%s.%s' % (name, p, x)
+                                       for x in extensions for p in parts)
 
-                    if len(unexpected) > 0 or len(minimum) > 0:
-                        raise InvalidAutomlFormatException("Unexpected files: %s" % unexpected)
+                meta_optional = set('%s_%s' % (name, m) for m in meta)
 
-                except fs.InvalidDirectoryException as e:
-                    raise InvalidAutomlFormatException(e) from e
+                total_dataset = len(necessary_wanted - content) == 0
+                pre_split_dataset = len(pre_split_wanted - content) == 0
 
-            # TODO Depends of something, we must convert files before the load
-            # convert
+                if not total_dataset and not pre_split_dataset:
+                    raise InvalidAutomlFormatException(
+                        str(necessary_wanted - content) + ' are missing')
 
-            from chalab.convert_to_automl import convert
-            newroot = root
-            for file in convertible_files:
-                newroot = convert(os.path.join(root, file), data_format)
+            except fs.InvalidDirectoryException as e:
+                raise InvalidAutomlFormatException(e) from e
 
-            input, target, metric, description = self.load_from_automl(newroot, any_prefix=True)
+            if pre_split_dataset:
+
+                if not total_dataset:
+                    # recreate the original .data and .solution (concatenate)
+                    for extension in ['data', 'solution']:
+                        output_name = '%s.%s' % (name, extension)
+                        outfile = open(os.path.join(root, output_name), 'w')
+                        for part in ['train', 'valid', 'test']:
+                            input_name = '%s_%s.%s' % (name, part, extension)
+                            infile = open(os.path.join(root, input_name), 'r')
+                            for line in infile:
+                                outfile.write(line)
+                            infile.close()
+                        outfile.close()
+
+                # Add pre split to database
+                from django.shortcuts import get_object_or_404
+                challenge = get_object_or_404(ChallengeModel, dataset=self.id)
+                task = challenge.task
+                if task is None:
+                    task = TaskModel(owner=self.owner, dataset=self)
+                    task.save()
+                    challenge.task = task
+                    challenge.save()
+                task.update_from_chalearn(root)
+
+            input, target, metric, description = self.load_from_automl(root, any_prefix=False)
 
             self.name = name
             self.input = input
             self.target = target
             self.description = description
+            self.fixed_split = pre_split_dataset
 
             if metric:
                 self.default_metric = metric
 
             self.save()
 
+            return (total_dataset, pre_split_dataset,
+                    content - necessary_wanted - pre_split_wanted - meta_optional)
+
     @classmethod
     def create_from_chalearn(cls, path, name, owner=None, is_public=True):
         input, target, metric, description = cls.load_from_automl(path, any_prefix=False)
         return cls.create(owner=owner,
                           is_public=is_public,
-                          name=name, description=description,
-                          default_metric=metric,
-                          input=input, target=target)
+                          name=name, description=description, fixed_split=True,
+                          default_metric=metric, input=input, target=target)
 
     @classmethod
     def load_from_automl(cls, path, any_prefix=False):
@@ -412,6 +534,15 @@ class DatasetModel(models.Model):
         input = load_chalearn(path, '.data',
                               is_sparse=is_sparse, any_prefix=any_prefix)
 
+        if os.path.isfile(chalearn_path(path, '_public.info')):
+            input.cols.doc = create_with_file(ColumnarDocDefinition, chalearn_path(path, '_public.info'))
+
+        if os.path.isfile(chalearn_path(path, '_feat.type')):
+            input.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_feat.type'))
+
+        if os.path.isfile(chalearn_path(path, '_feat.name')):
+            input.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_feat.name'))
+
         try:
             cols_type = load_chalearn(path, '_feat.type',
                                       clss=ColumnarTypesDefinition,
@@ -422,6 +553,12 @@ class DatasetModel(models.Model):
 
         target = load_chalearn(path, '.solution', any_prefix=any_prefix)
 
+        if os.path.isfile(chalearn_path(path, '_label.type')):
+            target.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_label.type'))
+
+        if os.path.isfile(chalearn_path(path, '_label.name')):
+            target.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_label.name'))
+
         input.save()
         target.save()
 
@@ -429,7 +566,7 @@ class DatasetModel(models.Model):
 
     @classmethod
     def create(cls, name, owner=None, is_public=False, input=None, target=None,
-               default_metric=None, description=None):
+               default_metric=None, description=None, fixed_split=False):
         x = {}
         if input is not None:
             x['input'] = input
@@ -439,7 +576,8 @@ class DatasetModel(models.Model):
             x['description'] = description
 
         return cls.objects.create(name=name, owner=owner, is_public=is_public,
-                                  default_metric=default_metric, **x)
+                                  default_metric=default_metric,
+                                  fixed_split=fixed_split, **x)
 
     def clean(self):
         super().clean()
@@ -459,8 +597,10 @@ class DatasetModel(models.Model):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
+    def delete(self):
+        if len(ChallengeModel.objects.filter(dataset=self))<=1:
+            delete_all([self.input, self.target])
+            super().delete()
 
 
 def create_with_file(clss, file_path, **kwargs):
@@ -503,11 +643,13 @@ def load_chalearn(path, suffix, clss=MatrixModel, any_prefix=False, **kwargs):
 
 
 class TaskModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
-    dataset = models.ForeignKey(DatasetModel, null=True, on_delete=models.PROTECT)
+    dataset = models.ForeignKey(DatasetModel, null=True, on_delete=models.CASCADE)
+
+    updated_at = models.DateTimeField(auto_now=True)
 
     train_ratio = models.FloatField(null=True,
                                     default=85,
@@ -530,6 +672,9 @@ class TaskModel(models.Model):
 
     input_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated')
     target_valid = OneToOneField(MatrixModel, null=True, related_name='model_validated_target')
+
+    def __str__(self):
+        return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
 
     @property
     def has_content(self):
@@ -558,28 +703,22 @@ class TaskModel(models.Model):
         if self.test_ratio is not None and self.train_ratio is not None and self.valid_ratio is not None:
             s = self.test_ratio + self.train_ratio + self.valid_ratio
 
-            if s != 100:
+            if round(s,10) != 100:
                 raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
         # regarding nested fields. We also do not need to duplicate
         # the metadata for the columns between each input.
-        # self.is_ready = (self.input_test is not None and
-        #                  self.target_train is not None and
-        #                  self.input_test is not None and
-        #                  self.input_valid is not None and
-        #                  self.target_valid is not None)
 
-        self.is_ready = (self.test_ratio is not None and
-                         self.train_ratio is not None and
-                         self.valid_ratio is not None)
+        self.is_ready = self.is_ready or (self.input_test is not None and
+                         self.target_train is not None and
+                         self.input_test is not None and
+                         self.input_valid is not None and
+                         self.target_valid is not None)
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
 
     def update_from_chalearn(self, path):
         loaded = self.load_from_chalearn(path)
@@ -593,19 +732,24 @@ class TaskModel(models.Model):
         train_target = load_chalearn(path, '_train.solution')
 
         test = load_chalearn(path, '_test.data')
-
-        try:
-            test_target = load_chalearn(path, '_test.solution')
-        except Exception as e:
-            test_target = None
-            log.error("Failed loading test solution: %r", e)
+        test_target = load_chalearn(path, '_test.solution')
 
         valid = load_chalearn(path, '_valid.data')
         valid_target = load_chalearn(path, '_valid.solution')
 
+        train_count = train.rows.count
+        valid_count = valid.rows.count
+        test_count = test.rows.count
+        total = train_count + valid_count + test_count
+
         return dict(input_train=train, target_train=train_target,
                     input_test=test, target_test=test_target,
-                    input_valid=valid, target_valid=valid_target)
+                    input_valid=valid, target_valid=valid_target,
+                    train_ratio=train_count*100/total,
+                    valid_ratio=valid_count*100/total,
+                    test_ratio=100-(train_count*100/total)
+                               -(valid_count*100/total),
+                    is_ready=True)
 
     @classmethod
     def from_chalearn(cls, dataset, path, name):
@@ -615,12 +759,30 @@ class TaskModel(models.Model):
             **cls.load_from_chalearn(path)
         )
 
+    def deep_copy(self):
+        self.id = None
+
+        self.input_train = self.input_train.deep_copy() if self.input_train is not None else None
+        self.target_train = self.target_train.deep_copy() if self.target_train is not None else None
+        self.input_test = self.input_test.deep_copy() if self.input_test is not None else None
+        self.target_test = self.target_test.deep_copy() if self.target_test is not None else None
+        self.input_valid = self.input_valid.deep_copy() if self.input_valid is not None else None
+        self.target_valid = self.target_valid.deep_copy() if self.target_valid is not None else None
+
+        self.save()
+        return self
+
+    def delete(self):
+        delete_all([self.input_train, self.target_train, self.input_test,
+                    self.target_test, self.input_valid, self.target_valid])
+        super().delete()
+
 
 class MetricModel(models.Model):
-    owner = models.ForeignKey(User, null=True)
+    owner = models.ForeignKey(User, null=True, blank=True)
     name = models.CharField(max_length=256, null=False)
-    description = models.TextField(null=False, default="")
-    code = models.TextField(null=False, default="")
+    description = models.TextField(null=False, default="", blank=True)
+    code = models.TextField(null=False, default="", blank=True)
 
     is_default = models.BooleanField(default=False, null=False)
     is_public = models.BooleanField(default=False, null=False)
@@ -628,6 +790,9 @@ class MetricModel(models.Model):
 
     classification = models.BooleanField(default=False, null=False)
     regression = models.BooleanField(default=False, null=False)
+
+    def __str__(self):
+        return "<%s: \"%s\"; id=%s>" % (type(self).__name__, self.name, self.id)
 
     @property
     def template_mapping(self):
@@ -637,8 +802,9 @@ class MetricModel(models.Model):
     def template_doc(self):
         return {'metric_name': ''}
 
-    def __str__(self):
-        return "<%s: \"%s\"; ready=%s>" % (type(self).__name__, self.name, self.is_ready)
+    def delete(self):
+        if not self.is_default and not self.is_public:
+            super().delete()
 
 
 DEV_PHASE_DESC = """Development phase: create models and submit them or directly submit results on validation and/or test data; feed-back are provided on the validation set only."""
@@ -662,6 +828,9 @@ class ProtocolModel(models.Model):
 
     max_submissions_per_day = models.PositiveIntegerField(null=True, default=5, blank=True)
     max_submissions = models.PositiveIntegerField(null=True, default=10, blank=True)
+
+    def __str__(self):
+        return "<%s: id=%s; ready=%s>" % (type(self).__name__, self.id, self.is_ready)
 
     def clean(self):
         super().clean()
@@ -688,6 +857,9 @@ class ProtocolModel(models.Model):
 class DocumentationModel(models.Model):
     default_pages = docs.DEFAULT_PAGES
     is_ready = models.BooleanField(default=True, null=False)
+
+    def __str__(self):
+        return "<%s: id=%s; ready=%s>" % (type(self).__name__, self.id, self.is_ready)
 
     @property
     def pages(self):
@@ -760,12 +932,11 @@ class DocumentationPageModel(models.Model):
     content = HTMLField()
     rendered = HTMLField(null=True, blank=True)
 
-    documentation = models.ForeignKey(DocumentationModel)
+    documentation = models.ForeignKey(DocumentationModel, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '<DocumentationPage[%s, %s]: %s>' % (self.documentation.challenge.title,
-                                                    self.pos,
-                                                    self.name)
+        return "<%s: \"%s\"; pos=%s>" % (type(self).__name__,
+                                                  self.name, self.pos)
 
     def render(self, mapping_values):
         template = string.Template(self.content)
@@ -811,8 +982,18 @@ class BaselineModel(models.Model):
             if this.submission != self.submission:
                 this.submission.delete(save=False)
         except:
-            pass  # when new photo then we do nothing, normal case
+            pass  # when new baseline then we do nothing, normal case
         super(BaselineModel, self).save(*args, **kwargs)
+
+    def delete(self):
+        try:
+            self.submission.delete(save=False)
+        except:
+            pass
+        super().delete()
+
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
 
     @property
     def absolute_uri(self):
@@ -839,9 +1020,11 @@ class BaselineModel(models.Model):
 
 class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
-    organization_name = models.CharField(max_length=80)
-    description = models.TextField(max_length=255)
+    organization_name = models.CharField(max_length=80, blank=True)
+    description = models.TextField(max_length=255, blank=True)
     logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
+
+    origin_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -850,15 +1033,20 @@ class ChallengeModel(models.Model):
 
     build_at = models.DateTimeField(default=timezone.now)
 
-    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.PROTECT)
-    task = models.ForeignKey(TaskModel, null=True, blank=True)
+    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL)
+    task = models.ForeignKey(TaskModel, null=True, blank=True, on_delete=models.SET_NULL)
     metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL)
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
-                                 related_name='challenge')
+                                 related_name='challenge', on_delete=models.SET_NULL)
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,
-                                    related_name='challenge')
-    documentation = models.OneToOneField(DocumentationModel, null=True, blank=True,
-                                         related_name='challenge')
+                                    related_name='challenge', on_delete=models.SET_NULL)
+    documentation = models.OneToOneField(DocumentationModel, null=True,
+                                         blank=True, related_name='challenge', on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return "<%s: \"%s\"; id=%s>" % (type(self).__name__,
+                                                 self.title,
+                                                 self.id)
 
     def save(self, *args, **kwargs):
         # delete old file when replacing by updating the file
@@ -927,10 +1115,26 @@ class ChallengeModel(models.Model):
     def get(cls, pk):
         return cls.objects.get(pk=pk)
 
+    def delete(self):
+        delete_all([self.task, self.metric, self.protocol,
+                    self.baseline, self.documentation])
+
+        try:
+            self.logo.delete(save=False)
+        except:
+            pass
+
+        super().delete()
+
 
 class PhaseModel(models.Model):
     name = models.CharField(max_length=60)
     challenge = models.ForeignKey(ChallengeModel, related_name='phases')
+
+    def __str__(self):
+        return "<%s: \"%s\"; chal=%s>" % (type(self).__name__,
+                                                 self.name,
+                                                 self.challenge)
 
     @classmethod
     def create(cls, name, challenge, position):

@@ -13,6 +13,15 @@
     </div>
 </div>
 
+{% if actual_group %}
+<div class="text-center">
+    <a class="create-challenge btn btn-primary"
+       href="{% url 'wizard:create_from_group' group_id=actual_group.id %}">
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        Create a New "{{actual_group.name}}" Challenge
+    </a>
+</div>
+{% else %}
 <div class="row top10">
     <div class="col-md-4 col-md-offset-4">
         <a class="create-challenge btn btn-block btn-primary"
@@ -22,11 +31,13 @@
         </a>
     </div>
 </div>
+{% endif %}
 
 <div class="challenges">
     {% for challenge in object_list %}
     <a href="{% url 'wizard:challenge' pk=challenge.pk %}">
         <div class="row top10 challenge">
+
             <div class="col-xs-2 logo">
                 {% if challenge.logo %}
                 <img class="center-block img-rounded img-responsive"
@@ -35,8 +46,15 @@
                 <div class="fake-logo">{{ challenge.title|first }}</div>
                 {% endif %}
             </div>
+
             <div class="col-xs-6 desc">
                 <h3 class="title">{{ challenge.title }}</h3>
+
+                {% if challenge.origin_group %}
+                <p class="org text-muted">From group :
+                    {{ challenge.origin_group.name }}</p>
+                {% endif %}
+
                 <p class="org text-muted">Organized
                     by: {{ challenge.organization_name }}</p>
 
@@ -46,6 +64,15 @@
             </div>
 
             <div class="col-xs-4 infos">
+
+                <div style="right:0;position:absolute;top:0;">
+                    <a href="{% url 'wizard:challenge:delete' pk=challenge.pk %}">
+                    <button type="button" class="btn btn-link btn-xs">
+                        <i class="fa fa-times fa-2x" aria-hidden="true"></i>
+                    </button>
+                    </a>
+                </div>
+
                 <p>
                     Created: {{ challenge.created_at }}
                 </p>

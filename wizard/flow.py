@@ -45,8 +45,8 @@ class DataFlowItem(FlowItem):
         return c.dataset.is_ready
 
 
-class TaskFlowItem(FlowItem):
-    name = 'Task'
+class SplitFlowItem(FlowItem):
+    name = 'Split'
 
     def _is_ready(self, c):
         return c.task.is_ready
@@ -81,7 +81,7 @@ class DocumentationFlowItem(FlowItem):
 
 
 class Flow(object):
-    FLOW = [DataFlowItem, TaskFlowItem, MetricFlowItem, ProtocolFlowItem,
+    FLOW = [DataFlowItem, SplitFlowItem, MetricFlowItem, ProtocolFlowItem,
             BaselineFlowItem, DocumentationFlowItem]
 
     def __init__(self, current_clss, challenge):

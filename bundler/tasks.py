@@ -62,6 +62,48 @@ def gen_reference(output_dir, dataset, phase_id):
     pass
 
 
+def load_metadata_files(data, tmp_dir, name):
+    for ext, ext_name in [(data.input, 'feat'), (data.target, 'label')]:
+        for axis, axis_name in [(ext.cols, 'cols'), (ext.rows, 'rows')]:
+            if axis is not None:
+                for content, cont_name in [(axis.types, 'type'),
+                                           (axis.names, 'name'),
+                                           (axis.doc, 'info')]:
+                    if content is not None:
+                        filename = '%s_%s.%s' % (name, ext_name, cont_name)
+
+                        if cont_name == 'info':
+                            filename = '%s_public.info' % name
+
+                        content.raw_content.open()
+                        copy_file_field(content.raw_content,
+                                        path.join(tmp_dir, filename))
+                        content.raw_content.close()
+
+
+def create_info_file(challenge, tmp_dir):
+    data, task = challenge.dataset, challenge.task
+    name = task.name
+
+    filename = '%s_public.info' % name
+
+    to_write = [
+        'name = %s' % name,
+        'metric = %s' % challenge.metric.name,
+        'feat_num = %s' % data.input.cols.count,
+        'target_num = %s' % data.target.cols.count,
+        'train_num = %s' % task.input_train.rows.count,
+        'valid_num = %s' % task.input_valid.rows.count,
+        'test_num = %s' % task.input_test.rows.count,
+        'is_sparse = %s' % (1 if data.input.is_sparse else 0)
+    ]
+
+    to_write = [line + '\n' for line in to_write]
+
+    with open(path.join(tmp_dir, filename), 'w') as f:
+        f.writelines(to_write)
+
+
 def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
     number = 1
 
@@ -89,7 +131,8 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
     with TemporaryDirectory() as d:
         try:
             task.target_valid.raw_content.open()
-            copy_file_field(task.target_valid.raw_content, path.join(d, '%s_valid.solution' % name))
+            copy_file_field(task.target_valid.raw_content,
+                            path.join(d, '%s_valid.solution' % name))
 
             zipdir(bt, output_dir, ref_data, d)
             p['reference_data'] = ref_data + '.zip'
@@ -114,8 +157,14 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
             copy_file_field(task.target_train.raw_content,
                             path.join(d, '%s_train.solution' % name))
 
+            load_metadata_files(challenge.dataset, d, name)
+
+            if not os.path.isfile(path.join(d, '%s_public.info' % name)):
+                create_info_file(challenge, d)
+
             zipdir(bt, output_dir, input_data, d)
             p['input_data'] = input_data + '.zip'
+            p['public_data'] = input_data + '.zip'
         finally:
             task.input_train.raw_content.close()
             task.input_valid.raw_content.close()
@@ -129,13 +178,15 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         archive_path = zipdir(bt, output_dir, scoring_program, scoring_dir)
         p['scoring_program'] = os.path.basename(archive_path)
 
-    p['datasets'] = {
-        1: {
-            'name': 'baseline',
-            'url': challenge.baseline.absolute_uri,
-            'description': 'Everything needed to gets started, except eventually the training data'
-        }
-    }
+    baseline = challenge.baseline.submission
+    name = os.path.basename(baseline.path)
+    try:
+        bt.add_log('Load the challenge baseline')
+        baseline.open()
+        copy_file_field(baseline.file, path.join(output_dir, name))
+        p['starting_kit'] = name
+    finally:
+        baseline.close()
 
     return p
 
@@ -186,7 +237,8 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
     with TemporaryDirectory() as d:
         try:
             task.target_test.raw_content.open()
-            copy_file_field(task.target_test.raw_content, path.join(d, '%s_test.solution' % name))
+            copy_file_field(task.target_test.raw_content,
+                            path.join(d, '%s_test.solution' % name))
 
             # gen_info_file(path.join(d, '%s_public.info' % name),
             #               {'metric': metric.name,
@@ -236,7 +288,7 @@ def gen_leaderboard(challenge):
         'columns': {
             'set1_score':
                 {'leaderboard': leaderboard_Results,
-                 'label': 'Precision',
+                 'label': 'Prediction score',
                  'numeric_format': 4,
                  'rank': 2},
             'Duration':
@@ -263,12 +315,12 @@ def create_bundle(bt, output_dir, challenge):
         'has_registration': False,
         'force_submission_to_leaderboard': True,
         'disallow_leaderboard_modifying': True,
-        'allow_teams': True,
+        'allow_teams': False,
         'enable_detailed_results': True,
         'show_datasets_from_yaml': True,
         'allow_public_submissions': True,
         'anonymous_leaderboard': False,
-        'enable_per_submission_metadata': True,
+        'enable_per_submission_metadata': False,
         'enable_forum': True,
         'end_date': None,
         'admin_names': 'guyon,lsenta'  # temporary default admins.
@@ -298,31 +350,33 @@ def create_archive(bt, data_dir, output_dir):
 def save_archive(bt, archive, challenge, bundle_task):
     bt.add_log('Export the archive')
     with open(archive, 'rb') as f:
-        bundle_task.output.save('bundle_%s.zip' % (challenge.pk), File(f))
+        bundle_task.output.save('bundle_%s.zip' % challenge.pk, File(f))
 
 
 def generate_task_data(bundle_task, challenge):
     task = challenge.task
     data = challenge.dataset
 
-    if task.has_content and task.is_public:
-        bundle_task.add_log('Skipping task data generation, already present')
+    if task.has_content and data.fixed_split:
+        bundle_task.add_log('Skipping task data splitting, fixed split')
         return
 
-    if data.updated_at <= challenge.build_at:
-        bundle_task.add_log('Skipping task data generation, already generated')
+    if task.updated_at <= challenge.build_at:
+        bundle_task.add_log('Skipping task data splitting, already splinted')
         return
 
-    bundle_task.add_log('Starting task data generation, based on dataset: %s' % (data.pk))
+    bundle_task.add_log('Starting task data generation, '
+                        'based on dataset: %s' % data.pk)
     train, valid, test = task.train_ratio, task.valid_ratio, task.test_ratio
 
-    bundle_task.add_log('Generating content for task: %s(%s)' % (task.name, task.pk))
+    bundle_task.add_log('Generating content for task: %s(%s)'
+                        % (task.name, task.pk))
 
     size = data.input.rows.count
 
     train_size = int(train / 100.0 * size)
     valid_size = int(valid / 100.0 * size)
-    test_size = int(test / 100.0 * size)
+    # test_size = int(test / 100.0 * size)
 
     xs = list(range(size))
     random.shuffle(xs)
@@ -366,7 +420,8 @@ def bundle(bundle_task):
         challenge = bundle_task.challenge
 
         with tmp_dirs(challenge) as (data, output):
-            bundle_task.add_log('Starting bundler for: %s' % (challenge.title,))
+            bundle_task.add_log('Starting bundler for: %s'
+                                % (challenge.title,))
 
             bundle_task.state = bundle_task.STARTED
             bundle_task.save()

@@ -6,14 +6,17 @@ from . import views
 app_name = 'wizard'
 
 challenge_wizard = [
+    url(r'^delete$', views.delete_challenge, name='delete'),
+
     url(r'^edit$', views.ChallengeDescriptionUpdate.as_view(), name='edit'),
 
     url(r'^data/pick$', views.data_picker, name='data.pick'),
     url(r'^data/$', views.ChallengeDataEdit.as_view(), name='data'),
 
-    url(r'^task/$', views.ChallengeTaskUpdate.as_view(), name='task'),
+    url(r'^split/$', views.ChallengeTaskUpdate.as_view(), name='split'),
 
     url(r'^metric$', views.metric, name='metric'),
+    url(r'^metric/ajax/get_metric/$', views.get_metric, name='get_metric'),
 
     url(r'^protocol/$', views.ChallengeProtocolUpdate.as_view(), name='protocol'),
 
@@ -34,6 +37,7 @@ urlpatterns = [
     url(r'^$', views.home, name='home'),
 
     url(r'^create$', views.ChallengeDescriptionCreate.as_view(), name='create'),
+    url(r'^create/group_(?P<group_id>\d+)$', views.challenge_create_from_group, name='create_from_group'),
     url(r'^challenges/(?P<pk>\d+)$', views.ChallengeDescriptionDetail.as_view(), name='challenge'),
     url(r'^challenges/(?P<pk>\d+)/', include(challenge_wizard, namespace='challenge'))
 ]
