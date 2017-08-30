@@ -25,7 +25,13 @@ class Command(BaseCommand):
     help = 'Load the datasets'
 
     def add_arguments(self, parser):
-        pass
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            dest='force',
+            default=False,
+            help='Force to load datasets',
+        )
 
     def _warn(self, message):
         self.stderr.write(self.style.WARNING(message))
@@ -40,7 +46,7 @@ class Command(BaseCommand):
         #           "You need to remove previous datasets by hand.")
 
         # Verify if we already have some TaskModel
-        if models.DatasetModel.objects.exists() and models.TaskModel.objects.exists():
+        if models.DatasetModel.objects.exists() and models.TaskModel.objects.exists() and not options['force']:
             self._warn("Database already initialised, skipping initialization.")
         else:
             for (path, name) in list_folders(PATH_CHALEARN_DATASET):
