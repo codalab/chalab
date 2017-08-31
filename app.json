@@ -1,0 +1,23 @@
+{
+  "name": "chalab",
+  "description": "",
+  "scripts": {
+    "postdeploy": "bin/init_staging"
+  },
+  "env": {
+    "CHALAB_ALLOWED_HOSTS": "*",
+    "CHALAB_SECRET_KEY": {
+      "generator": "secret"
+    }
+  },
+  "formation": {
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
