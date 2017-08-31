@@ -13,7 +13,8 @@
   "formation": {
   },
   "addons": [
-    "heroku-postgresql"
+    "heroku-postgresql",
+    "rabbitmq-bigwig:pipkin"
   ],
   "buildpacks": [
     {
