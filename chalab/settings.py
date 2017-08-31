@@ -118,7 +118,7 @@ import djcelery
 
 djcelery.setup_loader()
 
-BROKER_URL = os.environ.get("BROKER_URL", 'amqp://admin:admin@rabbitmq:5672/chalab')
+BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_URL", 'amqp://admin:admin@rabbitmq:5672/chalab')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 
 # SMTP
