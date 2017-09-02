@@ -124,15 +124,18 @@ CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 # SMTP
 # ====
 
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = os.environ.get("EMAIL_HOST", 'smtp')
+# EMAIL_HOST = os.environ.get("EMAIL_HOST", 'smtp')
+EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_HOST_USER = 'app76036352@heroku.com'
 EMAIL_HOST_PASSWORD = 'yzkv5jku3814'
-EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 587)
+EMAIL_USE_TLS = True
 
-if EMAIL_PORT is not 25:
-    EMAIL_USE_TLS = True
+# if EMAIL_PORT is not 25:
+#     EMAIL_USE_TLS = True
 
 # Password validation
 # ===================
