@@ -5,7 +5,6 @@
 
 {% block head_title %}{% trans "Confirm E-mail Address" %}{% endblock %}
 
-
 {% block content %}
     <h1>{% trans "Confirm E-mail Address" %}</h1>
 
@@ -13,11 +12,9 @@
 
         {% user_display confirmation.email_address.user as user_display %}
 
-
         {% blocktrans with confirmation.email_address.email as email %}
             <p>Please confirm that </p><a href="mailto:{{ email }}">{{ email }}</a><p> is an e-mail address for user {{ user_display }}.</p>
         {% endblocktrans %}
-
 
         <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
             {% csrf_token %}
@@ -28,11 +25,9 @@
 
         {% url 'account_email' as email_url %}
 
-
         {% blocktrans %}
             <p>This e-mail confirmation link expired or is invalid. Please </p> <a href="{{ email_url }}">issue a new e-mail confirmation request</a>.
         {% endblocktrans %}
-
 
     {% endif %}
 
