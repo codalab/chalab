@@ -15,9 +15,7 @@
 
 
         {% blocktrans with confirmation.email_address.email as email %}
-            <p>Please confirm that</p>
-            <a href="mailto:{{ email }}">{{ email }}</a>
-            <p>is an e-mail address for user {{ user_display }}.</p>
+            <p>Please confirm that </p><a href="mailto:{{ email }}">{{ email }}</a><p> is an e-mail address for user {{ user_display }}.</p>
         {% endblocktrans %}
 
 
@@ -32,8 +30,7 @@
 
 
         {% blocktrans %}
-            <p>This e-mail confirmation link expired or is invalid. Please </p>
-            <a href="{{ email_url }}">issue a new e-mail confirmation request</a>.
+            <p>This e-mail confirmation link expired or is invalid. Please </p> <a href="{{ email_url }}">issue a new e-mail confirmation request</a>.
         {% endblocktrans %}
 
 
