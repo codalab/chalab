@@ -8,49 +8,56 @@
 
 {% block content %}
 
-<h1>{% trans "Login" %}</h1>
+    <h1>{% trans "Login" %}</h1>
 
-{% get_providers as socialaccount_providers %}
+    {% get_providers as socialaccount_providers %}
 
-{% if socialaccount_providers %}
-<p>{% blocktrans with site.name as site_name %}Please login with one
-    of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
-    for a {{ site_name }} account and login below:{% endblocktrans %}</p>
+    {% if socialaccount_providers %}
 
-<div class="socialaccount_ballot">
+        {% blocktrans with site.name as site_name %}
+            <p>Please login with one of your existing third party accounts. Or,</p>
+            <a href="{{ signup_url }}">sign up</a>
+            <p>for a {{ site_name }} account and login below:</p>
+        {% endblocktrans %}
 
-    <ul class="socialaccount_providers">
-        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
-    </ul>
 
-    <div class="login-or">{% trans 'or' %}</div>
+        <div class="socialaccount_ballot">
 
-</div>
+            <ul class="socialaccount_providers">
+                {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+            </ul>
 
-{% include "socialaccount/snippets/login_extra.html" %}
+            <div class="login-or">{% trans 'or' %}</div>
 
-{% else %}
-<p>{% blocktrans %}If you have not created an account yet, then please
-    <a href="{{ signup_url }}">sign up</a> first.{% endblocktrans %}</p>
-{% endif %}
+        </div>
 
-<form class="login" method="POST" action="{% url 'account_login' %}">
-    {% csrf_token %}
+        {% include "socialaccount/snippets/login_extra.html" %}
 
-    {% bootstrap_form form %}
-    {% if redirect_field_value %}
-    <input type="hidden" name="{{ redirect_field_name }}"
-           value="{{ redirect_field_value }}"/>
+    {% else %}
+
+        {% blocktrans %}
+            If you have not created an account yet, then please <a href="{{ signup_url }}">sign up</a> first.
+        {% endblocktrans %}
+
     {% endif %}
-    {% buttons %}
-    <button class="primaryAction btn btn-primary"
-            type="submit">{% trans "Login" %}
-    </button>
 
-    <a class="button secondaryAction"
-       href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
-    {% endbuttons %}
+    <form class="login" method="POST" action="{% url 'account_login' %}">
+        {% csrf_token %}
 
-</form>
+        {% bootstrap_form form %}
+        {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}"
+                   value="{{ redirect_field_value }}"/>
+        {% endif %}
+        {% buttons %}
+            <button class="primaryAction btn btn-primary"
+                    type="submit">{% trans "Login" %}
+            </button>
+
+            <a class="button secondaryAction"
+               href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+        {% endbuttons %}
+
+    </form>
 
 {% endblock %}
