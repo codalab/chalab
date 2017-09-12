@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'tinymce',
     'bootstrap3',
     'debug_toolbar',
+    'django_extensions',
 
     'landing',
     'user',
