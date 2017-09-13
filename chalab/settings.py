@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-
+import dj_database_url
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -108,6 +108,8 @@ DATABASES = {
         'PORT': 5432
     }
 }
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)
 
 # Celery
 # ======
@@ -116,25 +118,24 @@ import djcelery
 
 djcelery.setup_loader()
 
-BROKER_URL = 'amqp://admin:admin@rabbitmq:5672/chalab'
+BROKER_URL = os.environ.get("RABBITMQ_BIGWIG_URL", 'amqp://admin:admin@rabbitmq:5672/chalab')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 
 # SMTP
 # ====
 
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = 'smtp'
-EMAIL_PORT = 25
-# TODO(laurent): Use ssl with emails
-# EMAIL_HOST_USER
-# EMAIL_HOST_PASSWORD
-# EMAIL_USE_TLS
-# EMAIL_USE_SSL
-# EMAIL_TIMEOUT
-# EMAIL_SSL_KEYFILE
-# EMAIL_SSL_CERTFILE
+# EMAIL_HOST = os.environ.get("EMAIL_HOST", 'smtp')
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')
+EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 587)
+EMAIL_USE_TLS = True
 
+# if EMAIL_PORT is not 25:
+#     EMAIL_USE_TLS = True
 
 # Password validation
 # ===================
@@ -195,5 +196,10 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
+if not DEBUG:
+    ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 LOGIN_REDIRECT_URL = '/wizard/'
