@@ -10,7 +10,13 @@
       "generator": "secret"
     },
     "EMAIL_HOST": "smtp.sendgrid.net",
-    "EMAIL_PORT": "587"
+    "EMAIL_PORT": "587",
+    "HEROKU_APP_NAME": {
+      "required": true
+    },
+    "HEROKU_PARENT_APP_NAME": {
+      "required": true
+    }
   },
   "formation": {
   },

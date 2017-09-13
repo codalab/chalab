@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
 python manage.py migrate
+echo "from django.contrib.sites.models import Site; Site.objects.filter(pk=1).update(domain='${HEROKU_APP_NAME}.herokuapp.com')" | python manage.py shell
