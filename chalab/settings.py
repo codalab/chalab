@@ -204,5 +204,8 @@ DEFAULT_FROM_EMAIL = "Chalab <donotreply@chalab.com>"
 
 if not DEBUG:
     ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+else:
+    ACCOUNT_EMAIL_VERIFICATION = 'optional'
+
 
 LOGIN_REDIRECT_URL = '/wizard/'
