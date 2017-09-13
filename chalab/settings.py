@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'tinymce',
     'bootstrap3',
     'debug_toolbar',
+    'storages',
 
     'landing',
     'user',
@@ -209,3 +210,11 @@ else:
 
 
 LOGIN_REDIRECT_URL = '/wizard/'
+
+# Azure settings
+# ==============
+
+DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+AZURE_ACCOUNT_NAME = os.environ.get("AZURE_ACCOUNT_NAME")
+AZURE_ACCOUNT_KEY = os.environ.get("AZURE_ACCOUNT_KEY")
+AZURE_CONTAINER = os.environ.get("AZURE_CONTAINER")

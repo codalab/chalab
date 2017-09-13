@@ -51,3 +51,5 @@ wcwidth==0.1.7
 git+git://github.com/celery/django-celery.git#egg=django-celery # need the last master (9 sept 2016, to avoid python3 + django 1.10 issues)
 dj-database-url==0.4.2
 gunicorn==19.6.0
+django-storages
+azure
