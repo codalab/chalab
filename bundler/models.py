@@ -31,7 +31,7 @@ class StorageNameFactory(object):
         try:
             # base = os.path.join(*self.prefix, str(instance.challenge.id), '%Y', '%m', '%d',
             #                     filename)
-            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.name, filename, uuid.uuid4()[0:6])
+            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.name, str(uuid.uuid4())[0:6], filename)
             base = strftime(base, gmtime())
             base.strip().replace(" ", "")  # See wizards/models.py
             return storage.get_available_name(base)

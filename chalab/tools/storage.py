@@ -32,12 +32,12 @@ class OverwriteStorage(FileSystemStorage):
 
 def save_to_logo(instance, filename):
     # return "".join(["data/logos/", str(instance.id), "/", filename])
-    return "logo-{0}-{1}".format(instance.id, filename)
+    return "logo-{0}-{1}".format(instance.challenge.id, filename)
 
 
 def save_to_baseline(instance, filename):
     # return "".join(["data/baseline/", str(instance.id), "/", filename])
-    return "baseline-{0}-{1}".format(instance.id, filename)
+    return "baseline-{0}-{1}".format(instance.challenge.id, filename)
 
 
 def save_to_bundle(instance, filename):

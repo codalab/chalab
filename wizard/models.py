@@ -55,7 +55,7 @@ class StorageNameFactory(object):
         try:
             # base = os.path.join(*self.prefix, instance.name, '%Y', '%m', '%d', filename)
             # Possibly implement uuid for this.
-            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.name, filename, uuid.uuid4()[0:6])
+            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.name, str(uuid.uuid4())[0:6], filename)
             base = strftime(base, gmtime())
             base.strip().replace(" ", "") # Explicitly remove all whitespaces for azure. I think it's possible for instance.name to contain spaces.
             print("Filename is {}".format(base))
