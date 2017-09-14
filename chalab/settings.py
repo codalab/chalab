@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'bootstrap3',
     'debug_toolbar',
     'storages',
+    'django_extensions',
 
     'landing',
     'user',

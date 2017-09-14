@@ -9,6 +9,7 @@ services:
     command: /usr/local/bin/gunicorn chalab.wsgi:application -w 2 -b :8000 --reload
     environment:
       - "DJANGO_SETTINGS_MODULE=instances.local_docker"
+    env_file: .env
     volumes:
       - .:/app
     ports:

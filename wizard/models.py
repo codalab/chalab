@@ -613,7 +613,9 @@ def create_with_file(clss, file_path, **kwargs):
     try:
         c = clss(**kwargs)
         base_name = os.path.basename(file_path)
-        with open(file_path, 'r') as f:
+        # with open(file_path, 'r') as f:
+        # `rb` for read bytes. Necessary for azure storage.
+        with open(file_path, 'rb') as f:
             c.raw_content.save(base_name, f)
             c.save()
         return c
