@@ -38,6 +38,7 @@ services:
       - db
     environment:
       - "DJANGO_SETTINGS_MODULE=instances.local_docker"
+    env_file: .env
     volumes:
       - .:/app
     command: celery -A chalab.chacelery worker --loglevel=debug
