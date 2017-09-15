@@ -68,14 +68,11 @@ def home(request):
 
     for challenge in challenges:
         try:
-            bundles = BundleTaskModel.objects.filter(challenge=challenge)  # This is gross...
+            bundles = BundleTaskModel.objects.filter(challenge=challenge).order_by('-created')  # This is gross...
             if len(bundles) > 1:
-                bundle_list.append(bundles.last())
+                bundle_list.append(bundles.first)
             elif len(bundles) == 1:
-                bundle_list.append(bundles)
-            else:
-                print("No bundles.")
-
+                bundle_list.append(bundles[0])
         except ObjectDoesNotExist:
             print("No bundletask for challenge {}".format(challenge.pk))
 

@@ -60,4 +60,4 @@ reset_and_load_data:
                 docker exec -it chalab_web_1 python manage.py reset_db
                 docker exec -it chalab_web_1 python manage.py migrate
                 docker exec -it chalab_web_1 python manage.py load_default_metrics
-                docker exec -it chalab_web_1 python manage.py load_chalearn_dataset
+                docker exec -it chalab_web_1 python manage.py loaddata datasets.json
