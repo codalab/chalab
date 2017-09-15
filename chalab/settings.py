@@ -19,7 +19,12 @@ import requests
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'IAMTHEDEVSECRETKEY'
-DEBUG = os.environ.get("DJANGO_DEBUG")
+
+if os.environ.get('DISABLE_DJANGO_DEBUG'):
+    DEBUG = False
+else:
+    DEBUG = True
+
 ALLOWED_HOSTS = []
 
 # Application definition
