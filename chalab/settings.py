@@ -28,6 +28,7 @@ else:
     DEBUG = True
 
 ALLOWED_HOSTS = []
+ALLOWED_HOSTS.append(os.environ.get("CHALAB_ALLOWED_HOSTS"))
 
 # Application definition
 # ======================
