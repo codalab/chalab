@@ -67,7 +67,8 @@ def download_zip(request, pk, task_id):
                                      content_type='application/zip')
     response['Content-Length'] = b.output.size
 
-    name = 'bundle_%s_%s.zip' % (slugify(c.title), closed.strftime('%Y-%m-%d_%H:%M'))
+    # name = 'bundle_%s_%s.zip' % (slugify(c.title), closed.strftime('%Y-%m-%d_%H:%M'))
+    name = b.output
     response['Content-Disposition'] = "attachment; filename=%s" % name
     return response
 

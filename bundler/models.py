@@ -31,7 +31,7 @@ class StorageNameFactory(object):
         try:
             # base = os.path.join(*self.prefix, str(instance.challenge.id), '%Y', '%m', '%d',
             #                     filename)
-            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.name, str(uuid.uuid4())[0:6], filename)
+            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.challenge.title, str(uuid.uuid4())[0:6], filename)
             base = strftime(base, gmtime())
             base.strip().replace(" ", "")  # See wizards/models.py
             return storage.get_available_name(base)
@@ -75,7 +75,9 @@ class BundleTaskModel(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     closed = models.DateTimeField(null=True)
 
-    output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
+    # output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
+    # We want Azure storage...
+    output = models.FileField(null=True, upload_to=StorageNameFactory('bundle'))
 
     def __str__(self):
         return "<%s: challenge=%s, state=%s>" \
