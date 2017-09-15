@@ -52,10 +52,8 @@ INSTALLED_APPS = [
     'tinymce',
     'bootstrap3',
     'debug_toolbar',
-<<<<<<< HEAD
-=======
+
     'storages',
->>>>>>> AWS-Setup
     'django_extensions',
 
     'landing',

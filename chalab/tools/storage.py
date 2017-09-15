@@ -32,7 +32,7 @@ class OverwriteStorage(FileSystemStorage):
 
 def save_to_logo(instance, filename):
     # return "".join(["data/logos/", str(instance.id), "/", filename])
-    return "logo-{0}-{1}".format(instance.challenge.id, filename)
+    return "logo-{0}-{1}".format(instance.title.strip(), filename)
 
 
 def save_to_baseline(instance, filename):
