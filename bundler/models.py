@@ -1,3 +1,5 @@
+import uuid
+
 from time import gmtime, strftime
 
 from django.core.files.storage import DefaultStorage
@@ -27,9 +29,11 @@ class StorageNameFactory(object):
 
     def __call__(self, instance, filename):
         try:
-            base = os.path.join(*self.prefix, str(instance.challenge.id), '%Y', '%m', '%d',
-                                filename)
+            # base = os.path.join(*self.prefix, str(instance.challenge.id), '%Y', '%m', '%d',
+            #                     filename)
+            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.name, str(uuid.uuid4())[0:6], filename)
             base = strftime(base, gmtime())
+            base.strip().replace(" ", "")  # See wizards/models.py
             return storage.get_available_name(base)
         except TypeError as e:
             raise TypeError("You probably forgot to define the local `name' field.") from e

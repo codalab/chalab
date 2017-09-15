@@ -1,5 +1,6 @@
 import logging
 import string
+import uuid
 from datetime import datetime
 from time import gmtime, strftime
 
@@ -52,8 +53,12 @@ class StorageNameFactory(object):
 
     def __call__(self, instance, filename):
         try:
-            base = os.path.join(*self.prefix, instance.name, '%Y', '%m', '%d', filename)
+            # base = os.path.join(*self.prefix, instance.name, '%Y', '%m', '%d', filename)
+            # Possibly implement uuid for this.
+            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.name, str(uuid.uuid4())[0:6], filename)
             base = strftime(base, gmtime())
+            base.strip().replace(" ", "") # Explicitly remove all whitespaces for azure. I think it's possible for instance.name to contain spaces.
+            print("Filename is {}".format(base))
             return storage.get_available_name(base)
         except TypeError as e:
             raise TypeError("You probably forgot to define the local `name' field.") from e
@@ -613,7 +618,9 @@ def create_with_file(clss, file_path, **kwargs):
     try:
         c = clss(**kwargs)
         base_name = os.path.basename(file_path)
-        with open(file_path, 'r') as f:
+        # with open(file_path, 'r') as f:
+        # `rb` for read bytes. Necessary for azure storage.
+        with open(file_path, 'rb') as f:
             c.raw_content.save(base_name, f)
             c.save()
         return c

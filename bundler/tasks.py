@@ -179,7 +179,8 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         p['scoring_program'] = os.path.basename(archive_path)
 
     baseline = challenge.baseline.submission
-    name = os.path.basename(baseline.path)
+    # name = os.path.basename(baseline.path)
+    name = "baseline-{0}.zip".format(challenge.id)
     try:
         bt.add_log('Load the challenge baseline')
         baseline.open()

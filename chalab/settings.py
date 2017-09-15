@@ -9,8 +9,12 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+import socket
+
 import dj_database_url
 import os
+
+import requests
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -48,6 +52,10 @@ INSTALLED_APPS = [
     'tinymce',
     'bootstrap3',
     'debug_toolbar',
+<<<<<<< HEAD
+=======
+    'storages',
+>>>>>>> AWS-Setup
     'django_extensions',
 
     'landing',
@@ -208,8 +216,12 @@ if not DEBUG:
 else:
     ACCOUNT_EMAIL_VERIFICATION = 'optional'
 
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-
 LOGIN_REDIRECT_URL = '/wizard/'
+
+# Azure settings
+# ==============
+
+DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+AZURE_ACCOUNT_NAME = os.environ.get("AZURE_ACCOUNT_NAME")
+AZURE_ACCOUNT_KEY = os.environ.get("AZURE_ACCOUNT_KEY")
+AZURE_CONTAINER = os.environ.get("AZURE_CONTAINER")
