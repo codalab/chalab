@@ -20,12 +20,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'IAMTHEDEVSECRETKEY'
 
-if os.environ.get('DISABLE_DJANGO_DEBUG'):
-    print("Debugging disabled")
-    DEBUG = False
-else:
+if os.environ.get('ENABLE_DJANGO_DEBUG', False):
     print("Debugging enabled")
     DEBUG = True
+else:
+    print("Debugging disabled")
+    DEBUG = False
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS.append(os.environ.get("CHALAB_ALLOWED_HOSTS"))
