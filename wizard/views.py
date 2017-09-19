@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import CreateView
@@ -64,7 +64,12 @@ def home(request):
     u = request.user
     bundle_list = list()
 
-    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at').prefetch_related('bundle_tasks')
+    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at').prefetch_related(
+        Prefetch(
+            'bundle_tasks',
+            BundleTaskModel.objects.order_by('-created'),
+        )
+    )
 
     profile, created = ProfileModel.objects.get_or_create(user=u)
 
@@ -154,7 +159,8 @@ def challenge_create_from_group(request, group_id):
         from django.core.files import File
         base = BaselineModel()
         if bool(template.baseline.submission):
-            base.submission=File(open(template.baseline.submission.path, 'rb'))
+            # base.submission=File(open(template.baseline.submission.path, 'rb'))
+            base.submission=template.baseline.submission
         base.save()
         template.baseline = base
 

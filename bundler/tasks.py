@@ -186,6 +186,11 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         baseline.open()
         copy_file_field(baseline.file, path.join(output_dir, name))
         p['starting_kit'] = name
+    except IOError:
+        print(
+            "Could not grab file. Please verify you refernced a valid file. "
+            "You should be able to download the baseline independently."
+        )
     finally:
         baseline.close()
 

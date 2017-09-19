@@ -140,8 +140,9 @@ class ColumnarFileModel(models.Model):
     def deep_copy(self):
         from django.core.files import File
 
-        new_self = type(self)(raw_content=File(
-            open(self.raw_content.path, 'rb')))
+        # new_self = type(self)(raw_content=File(
+        #     open(self.raw_content.path, 'rb')))
+        new_self = type(self)(raw_content=self.raw_content)
 
         new_self.name = self.name
         new_self.count = self.count
@@ -346,8 +347,9 @@ class MatrixModel(models.Model):
     def deep_copy(self):
         from django.core.files import File
 
-        new_self = MatrixModel(raw_content=File(
-            open(self.raw_content.path, 'rb')))
+        # new_self = MatrixModel(raw_content=File(
+        #     open(self.raw_content.path, 'rb')))
+        new_self = MatrixModel(raw_content=self.raw_content)
 
         new_self.name = self.name
         new_self.is_sparse = self.is_sparse
