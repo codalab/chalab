@@ -56,6 +56,7 @@ gevent-eventemitter==2.0
 greenlet==0.4.12
 git+https://github.com/guydou/django-storages.git#egg=django-storages # Need this fork to use azure SDK with django storages without issue.
 django-extensions==1.9.0
+whitenoise==3.3.0
 # Azure storage below here...
 azure==2.0.0
 azure-batch==3.0.0
