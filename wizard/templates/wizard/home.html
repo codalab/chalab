@@ -74,7 +74,7 @@
                 </div>
 
                     {% if challenge.bundle_tasks.first %}
-                        <div style="margin-right: 20px;">
+                        <div style="margin-right: 40px;">
                             {% if challenge.bundle_tasks.first.is_download_ready %}
                                 <a href="{% url 'wizard:challenge:bundler:download' challenge.id %}"
                                    id="do-download"
