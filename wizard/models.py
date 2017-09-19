@@ -19,6 +19,7 @@ from tinymce.models import HTMLField
 
 from chalab.tools import archives, fs
 from chalab.tools.storage import *
+from .validators import validate_file_extension_picture
 from . import docs
 
 log = logging.getLogger('wizard/models')
@@ -940,7 +941,7 @@ class DocumentationPageModel(models.Model):
     content = HTMLField()
     rendered = HTMLField(null=True, blank=True)
 
-    documentation = models.ForeignKey(DocumentationModel, on_delete=models.CASCADE)
+    documentation = models.ForeignKey(DocumentationModel, related_name='documentation_pages', on_delete=models.CASCADE)
 
     def __str__(self):
         return "<%s: \"%s\"; pos=%s>" % (type(self).__name__,
@@ -1007,7 +1008,7 @@ class BaselineModel(models.Model):
     def absolute_uri(self):
         if self.submission:
             url = self.submission.url
-            url = build_absolute_uri(url)
+            # url = build_absolute_uri(url)
         else:
             url = "UNDEFINED"
 
@@ -1030,7 +1031,7 @@ class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80, blank=True)
     description = models.TextField(max_length=255, blank=True)
-    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
+    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo, validators=[validate_file_extension_picture])
 
     origin_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 

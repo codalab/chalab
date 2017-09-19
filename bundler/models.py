@@ -68,7 +68,7 @@ class BundleTaskModel(models.Model):
         (FAILED, 'Failed'),
     )
 
-    challenge = models.ForeignKey(ChallengeModel, null=False)
+    challenge = models.ForeignKey(ChallengeModel, null=False, related_name='bundle_tasks')
     state = models.CharField(max_length=10, choices=STATE_CHOICES)
     progress_perc = models.IntegerField(default=0, null=False)
 
@@ -78,6 +78,19 @@ class BundleTaskModel(models.Model):
     # output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
     # We want Azure storage...
     output = models.FileField(null=True, upload_to=StorageNameFactory('bundle'))
+
+    @property
+    def return_size(self):
+        """
+        Credit Rajiv Sharma StackOverflow
+        this function will convert bytes to MB.... GB... etc
+        """
+        num = self.output.size
+
+        for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
+            if num < 1024.0:
+                return "%3.1f %s" % (num, x)
+            num /= 1024.0
 
     def __str__(self):
         return "<%s: challenge=%s, state=%s>" \

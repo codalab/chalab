@@ -73,20 +73,18 @@
                     </a>
                 </div>
 
-                {% for bundle_task in bundle_list %}
-                    {% if bundle_task.challenge == challenge %}
+                    {% if challenge.bundle_tasks %}
                         <div style="margin-right: 20px;">
-                            {% if bundle_task.is_download_ready %}
+                            {% if challenge.bundle_tasks.last.is_download_ready %}
                                 <a href="{% url 'wizard:challenge:bundler:download' challenge.id %}"
                                    id="do-download"
                                    class="btn btn-success btn-block">
                                     <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                                    Download
+                                    Download: {{ challenge.bundle_tasks.last.return_size }}
                                 </a>
                             {% endif %}
                         </div>
                     {% endif %}
-                {% endfor %}
                 <p>
                     Created: {{ challenge.created_at }}
                 </p>

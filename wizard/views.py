@@ -64,17 +64,7 @@ def home(request):
     u = request.user
     bundle_list = list()
 
-    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at')
-
-    for challenge in challenges:
-        try:
-            bundles = BundleTaskModel.objects.filter(challenge=challenge).order_by('-created')  # This is gross...
-            if len(bundles) > 1:
-                bundle_list.append(bundles.first)
-            elif len(bundles) == 1:
-                bundle_list.append(bundles[0])
-        except ObjectDoesNotExist:
-            print("No bundletask for challenge {}".format(challenge.pk))
+    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at').prefetch_related('bundle_tasks')
 
     profile, created = ProfileModel.objects.get_or_create(user=u)
 
@@ -662,6 +652,9 @@ def documentation(request, pk):
     if doc is None:
         doc = DocumentationModel.create()
         c.documentation = doc
+        for page in doc.documentation_pages.all():
+            mappings = challenge_to_mappings(c)
+            page.render(mappings)
         c.save()
 
     current = 'overview'
@@ -679,6 +672,9 @@ def documentation_page(request, pk, page_id):
     p = get_object_or_404(DocumentationPageModel,
                           documentation=c.documentation, id=page_id)
     doc = c.documentation
+    mappings = challenge_to_mappings(c)
+    p.render(mappings)
+    p.save()
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
                'current': p.name, 'current_page': p,
