@@ -75,6 +75,8 @@ class BundleTaskModel(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     closed = models.DateTimeField(null=True)
 
+    current_task_id = models.CharField(null=True, blank=True, max_length=64)
+
     # output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
     # We want Azure storage...
     output = models.FileField(null=True, upload_to=StorageNameFactory('bundle'))

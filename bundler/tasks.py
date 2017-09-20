@@ -12,6 +12,7 @@ from django.core.files import File
 from django.utils import timezone
 
 from chalab.tools import fs
+from .models import BundleTaskModel
 from wizard import resources
 from wizard.models import challenge_to_mappings
 
@@ -420,8 +421,10 @@ def generate_task_data(bundle_task, challenge):
     input.close(), target.close()
 
 
-@shared_task
-def bundle(bundle_task):
+@shared_task(bind=True, default_retry_delay=30, max_retries=0, soft_time_limit=300)
+def bundle(self, bundle_task_pk):
+    bundle_task = BundleTaskModel.objects.get(pk=bundle_task_pk)
+
     try:
         challenge = bundle_task.challenge
 
