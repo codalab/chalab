@@ -67,12 +67,24 @@
 
                 <div style="right:0;position:absolute;top:0;">
                     <a href="{% url 'wizard:challenge:delete' pk=challenge.pk %}">
-                    <button type="button" class="btn btn-link btn-xs">
+                    <button type="button" class="btn btn-danger btn-xs">
                         <i class="fa fa-times fa-2x" aria-hidden="true"></i>
                     </button>
                     </a>
                 </div>
 
+                    {% if challenge.bundle_tasks.first %}
+                        <div style="margin-right: 40px;">
+                            {% if challenge.bundle_tasks.first.is_download_ready %}
+                                <a href="{% url 'wizard:challenge:bundler:download' challenge.id %}"
+                                   id="do-download"
+                                   class="btn btn-success btn-block">
+                                    <i class="fa fa-cloud-download" aria-hidden="true"></i>
+                                    Download: {{ challenge.bundle_tasks.first.return_size }}
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 <p>
                     Created: {{ challenge.created_at }}
                 </p>

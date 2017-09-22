@@ -1,5 +1,6 @@
 import logging
 import string
+import uuid
 from datetime import datetime
 from time import gmtime, strftime
 
@@ -18,6 +19,7 @@ from tinymce.models import HTMLField
 
 from chalab.tools import archives, fs
 from chalab.tools.storage import *
+from .validators import validate_file_extension_picture
 from . import docs
 
 log = logging.getLogger('wizard/models')
@@ -52,8 +54,12 @@ class StorageNameFactory(object):
 
     def __call__(self, instance, filename):
         try:
-            base = os.path.join(*self.prefix, instance.name, '%Y', '%m', '%d', filename)
+            # base = os.path.join(*self.prefix, instance.name, '%Y', '%m', '%d', filename)
+            # Possibly implement uuid for this.
+            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.name, str(uuid.uuid4())[0:6], filename)
             base = strftime(base, gmtime())
+            base.strip().replace(" ", "") # Explicitly remove all whitespaces for azure. I think it's possible for instance.name to contain spaces.
+            print("Filename is {}".format(base))
             return storage.get_available_name(base)
         except TypeError as e:
             raise TypeError("You probably forgot to define the local `name' field.") from e
@@ -134,8 +140,9 @@ class ColumnarFileModel(models.Model):
     def deep_copy(self):
         from django.core.files import File
 
-        new_self = type(self)(raw_content=File(
-            open(self.raw_content.path, 'rb')))
+        # new_self = type(self)(raw_content=File(
+        #     open(self.raw_content.path, 'rb')))
+        new_self = type(self)(raw_content=self.raw_content)
 
         new_self.name = self.name
         new_self.count = self.count
@@ -340,8 +347,9 @@ class MatrixModel(models.Model):
     def deep_copy(self):
         from django.core.files import File
 
-        new_self = MatrixModel(raw_content=File(
-            open(self.raw_content.path, 'rb')))
+        # new_self = MatrixModel(raw_content=File(
+        #     open(self.raw_content.path, 'rb')))
+        new_self = MatrixModel(raw_content=self.raw_content)
 
         new_self.name = self.name
         new_self.is_sparse = self.is_sparse
@@ -613,7 +621,9 @@ def create_with_file(clss, file_path, **kwargs):
     try:
         c = clss(**kwargs)
         base_name = os.path.basename(file_path)
-        with open(file_path, 'r') as f:
+        # with open(file_path, 'r') as f:
+        # `rb` for read bytes. Necessary for azure storage.
+        with open(file_path, 'rb') as f:
             c.raw_content.save(base_name, f)
             c.save()
         return c
@@ -704,6 +714,7 @@ class TaskModel(models.Model):
             s = self.test_ratio + self.train_ratio + self.valid_ratio
 
             if round(s,10) != 100:
+                raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
                 raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
@@ -932,7 +943,7 @@ class DocumentationPageModel(models.Model):
     content = HTMLField()
     rendered = HTMLField(null=True, blank=True)
 
-    documentation = models.ForeignKey(DocumentationModel, on_delete=models.CASCADE)
+    documentation = models.ForeignKey(DocumentationModel, related_name='documentation_pages', on_delete=models.CASCADE)
 
     def __str__(self):
         return "<%s: \"%s\"; pos=%s>" % (type(self).__name__,
@@ -999,7 +1010,7 @@ class BaselineModel(models.Model):
     def absolute_uri(self):
         if self.submission:
             url = self.submission.url
-            url = build_absolute_uri(url)
+            # url = build_absolute_uri(url)
         else:
             url = "UNDEFINED"
 
@@ -1022,7 +1033,7 @@ class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80, blank=True)
     description = models.TextField(max_length=255, blank=True)
-    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
+    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo, validators=[validate_file_extension_picture])
 
     origin_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 

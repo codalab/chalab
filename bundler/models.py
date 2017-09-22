@@ -1,3 +1,5 @@
+import uuid
+
 from time import gmtime, strftime
 
 from django.core.files.storage import DefaultStorage
@@ -27,9 +29,11 @@ class StorageNameFactory(object):
 
     def __call__(self, instance, filename):
         try:
-            base = os.path.join(*self.prefix, str(instance.challenge.id), '%Y', '%m', '%d',
-                                filename)
+            # base = os.path.join(*self.prefix, str(instance.challenge.id), '%Y', '%m', '%d',
+            #                     filename)
+            base = '%Y-%m-%d-{0}-{1}-{2}'.format(instance.challenge.title, str(uuid.uuid4())[0:6], filename)
             base = strftime(base, gmtime())
+            base.strip().replace(" ", "")  # See wizards/models.py
             return storage.get_available_name(base)
         except TypeError as e:
             raise TypeError("You probably forgot to define the local `name' field.") from e
@@ -64,14 +68,31 @@ class BundleTaskModel(models.Model):
         (FAILED, 'Failed'),
     )
 
-    challenge = models.ForeignKey(ChallengeModel, null=False)
+    challenge = models.ForeignKey(ChallengeModel, null=False, related_name='bundle_tasks')
     state = models.CharField(max_length=10, choices=STATE_CHOICES)
     progress_perc = models.IntegerField(default=0, null=False)
 
     created = models.DateTimeField(auto_now_add=True)
     closed = models.DateTimeField(null=True)
 
-    output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
+    current_task_id = models.CharField(null=True, blank=True, max_length=64)
+
+    # output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
+    # We want Azure storage...
+    output = models.FileField(null=True, upload_to=StorageNameFactory('bundle'))
+
+    @property
+    def return_size(self):
+        """
+        Credit Rajiv Sharma StackOverflow
+        this function will convert bytes to MB.... GB... etc
+        """
+        num = self.output.size
+
+        for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
+            if num < 1024.0:
+                return "%3.1f %s" % (num, x)
+            num /= 1024.0
 
     def __str__(self):
         return "<%s: challenge=%s, state=%s>" \

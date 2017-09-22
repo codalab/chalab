@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import CreateView
@@ -62,13 +62,20 @@ You can check the archive actual content using <code>`unzip -l ./my_archive.zip'
 @login_required
 def home(request):
     u = request.user
+    bundle_list = list()
 
-    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at')
+    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at').prefetch_related(
+        Prefetch(
+            'bundle_tasks',
+            BundleTaskModel.objects.order_by('-created'),
+        )
+    )
 
     profile, created = ProfileModel.objects.get_or_create(user=u)
 
     context = {
         'object_list': challenges,
+        'bundle_list': bundle_list,
         'actual_group': profile.actual_group,
         }
 
@@ -152,7 +159,8 @@ def challenge_create_from_group(request, group_id):
         from django.core.files import File
         base = BaselineModel()
         if bool(template.baseline.submission):
-            base.submission=File(open(template.baseline.submission.path, 'rb'))
+            # base.submission=File(open(template.baseline.submission.path, 'rb'))
+            base.submission=template.baseline.submission
         base.save()
         template.baseline = base
 
@@ -650,6 +658,9 @@ def documentation(request, pk):
     if doc is None:
         doc = DocumentationModel.create()
         c.documentation = doc
+        for page in doc.documentation_pages.all():
+            mappings = challenge_to_mappings(c)
+            page.render(mappings)
         c.save()
 
     current = 'overview'
@@ -667,6 +678,9 @@ def documentation_page(request, pk, page_id):
     p = get_object_or_404(DocumentationPageModel,
                           documentation=c.documentation, id=page_id)
     doc = c.documentation
+    mappings = challenge_to_mappings(c)
+    p.render(mappings)
+    p.save()
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
                'current': p.name, 'current_page': p,

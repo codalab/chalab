@@ -55,3 +55,9 @@ CONTAINER_DB_SUFFIXED = chalab_db_volume_1_${NOW}
 backupdb:
 		docker commit -p chalab_db_volume_1 "${CONTAINER_DB_SUFFIXED}"
 		docker save -o "./backups/${CONTAINER_DB_SUFFIXED}.tar" "${CONTAINER_DB_SUFFIXED}"
+
+reset_and_load_data:
+                docker exec -it chalab_web_1 python manage.py reset_db
+                docker exec -it chalab_web_1 python manage.py migrate
+                docker exec -it chalab_web_1 python manage.py load_default_metrics
+                docker exec -it chalab_web_1 python manage.py loaddata datasets.json

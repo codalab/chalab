@@ -9,14 +9,24 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
+import socket
+
 import dj_database_url
 import os
+
+import requests
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'IAMTHEDEVSECRETKEY'
-DEBUG = os.environ.get("DJANGO_DEBUG", True)
+
+if os.environ.get('ENABLE_DJANGO_DEBUG'):
+    DEBUG = True
+else:
+    DEBUG = False
+
 ALLOWED_HOSTS = []
+ALLOWED_HOSTS.append(os.environ.get("CHALAB_ALLOWED_HOSTS"))
 
 # Application definition
 # ======================
@@ -49,6 +59,9 @@ INSTALLED_APPS = [
     'bootstrap3',
     'debug_toolbar',
 
+    'storages',
+    'django_extensions',
+
     'landing',
     'user',
     'wizard',
@@ -67,6 +80,7 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'chalab.errors.ErrorHandlingMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'chalab.urls'
@@ -175,6 +189,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'chalab', 'static')
 ]
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Uploads / Media files
 # =====================
 
@@ -207,5 +223,12 @@ if not DEBUG:
 else:
     ACCOUNT_EMAIL_VERIFICATION = 'optional'
 
-
 LOGIN_REDIRECT_URL = '/wizard/'
+
+# Azure settings
+# ==============
+
+DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+AZURE_ACCOUNT_NAME = os.environ.get("AZURE_ACCOUNT_NAME")
+AZURE_ACCOUNT_KEY = os.environ.get("AZURE_ACCOUNT_KEY")
+AZURE_CONTAINER = os.environ.get("AZURE_CONTAINER")

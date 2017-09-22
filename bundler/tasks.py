@@ -12,6 +12,7 @@ from django.core.files import File
 from django.utils import timezone
 
 from chalab.tools import fs
+from .models import BundleTaskModel
 from wizard import resources
 from wizard.models import challenge_to_mappings
 
@@ -179,12 +180,18 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
         p['scoring_program'] = os.path.basename(archive_path)
 
     baseline = challenge.baseline.submission
-    name = os.path.basename(baseline.path)
+    # name = os.path.basename(baseline.path)
+    name = "baseline-{0}.zip".format(challenge.id)
     try:
         bt.add_log('Load the challenge baseline')
         baseline.open()
         copy_file_field(baseline.file, path.join(output_dir, name))
         p['starting_kit'] = name
+    except IOError:
+        print(
+            "Could not grab file. Please verify you refernced a valid file. "
+            "You should be able to download the baseline independently."
+        )
     finally:
         baseline.close()
 
@@ -414,8 +421,10 @@ def generate_task_data(bundle_task, challenge):
     input.close(), target.close()
 
 
-@shared_task
-def bundle(bundle_task):
+@shared_task(bind=True, default_retry_delay=30, max_retries=0, soft_time_limit=300)
+def bundle(self, bundle_task_pk):
+    bundle_task = BundleTaskModel.objects.get(pk=bundle_task_pk)
+
     try:
         challenge = bundle_task.challenge
 
