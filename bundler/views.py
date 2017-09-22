@@ -34,7 +34,7 @@ def build(request, pk):
 
     if b is None or b.done:
         b = BundleTaskModel.create(c)
-        result = bundle.delay(b)
+        result = bundle.delay(b.pk)
         b.current_task_id = result.task_id
         b.save()
     else:
