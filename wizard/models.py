@@ -427,6 +427,8 @@ class DatasetModel(models.Model):
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
 
+    warnings = models.CharField(blank=True, null=True, max_length=400)
+
     def __str__(self):
         return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
 
@@ -444,12 +446,18 @@ class DatasetModel(models.Model):
         return {'dataset_name': ''}
 
     def update_from_chalearn(self, fp_zip):
+        self.warnings = None
+        self.save()
         with archives.unzip_fp(fp_zip) as d:
             try:
                 root = fs.sole_path(d)
                 name = os.path.basename(root)
-
                 content = set(x for x in os.listdir(root))
+                pre_split_suffixes = ('train', 'valid', 'test')
+                is_pre_split = all(
+                    any(suffix in file_name for file_name in content)
+                    for suffix in pre_split_suffixes
+                )
 
                 extensions = ['data', 'solution']
                 parts = ['train', 'valid', 'test']
@@ -457,14 +465,13 @@ class DatasetModel(models.Model):
                         'feat.type', 'label.type', 'public.info']
 
                 necessary_wanted = set('%s.%s' % (name, x) for x in extensions)
-
                 pre_split_wanted = set('%s_%s.%s' % (name, p, x)
                                        for x in extensions for p in parts)
 
                 meta_optional = set('%s_%s' % (name, m) for m in meta)
-
                 total_dataset = len(necessary_wanted - content) == 0
-                pre_split_dataset = len(pre_split_wanted - content) == 0
+                # pre_split_dataset = len(pre_split_wanted - content) == 0
+                pre_split_dataset = is_pre_split
 
                 if not total_dataset and not pre_split_dataset:
                     raise InvalidAutomlFormatException(
@@ -482,10 +489,18 @@ class DatasetModel(models.Model):
                         outfile = open(os.path.join(root, output_name), 'w')
                         for part in ['train', 'valid', 'test']:
                             input_name = '%s_%s.%s' % (name, part, extension)
-                            infile = open(os.path.join(root, input_name), 'r')
-                            for line in infile:
-                                outfile.write(line)
-                            infile.close()
+                            try:
+                                infile = open(os.path.join(root, input_name), 'r')
+                                for line in infile:
+                                    outfile.write(line)
+                                infile.close()
+                            except FileNotFoundError:
+                                print("Could not find file: {}".format(input_name))
+                                archive_warning = "Warning: expected file {} not found!".format(input_name)
+                                if self.warnings is None:
+                                    self.warnings = "{0}".format(archive_warning)
+                                else:
+                                    self.warnings = "{0} {1}".format(self.warnings, archive_warning)
                         outfile.close()
 
                 # Add pre split to database
@@ -595,7 +610,10 @@ class DatasetModel(models.Model):
         if might_be_ready:
             try:
                 if self.input.rows.count != self.target.rows.count:
-                    raise ValidationError('The number of rows in the input and target do not match')
+                    self.is_ready = True
+                    archive_warning = "Missing data detected. Proceed with caution."
+                    print(archive_warning)
+                    # raise ValidationError('The number of rows in the input and target do not match')
                 else:
                     self.is_ready = True
             except AttributeError:
@@ -623,10 +641,13 @@ def create_with_file(clss, file_path, **kwargs):
         base_name = os.path.basename(file_path)
         # with open(file_path, 'r') as f:
         # `rb` for read bytes. Necessary for azure storage.
-        with open(file_path, 'rb') as f:
-            c.raw_content.save(base_name, f)
-            c.save()
-        return c
+        try:
+            with open(file_path, 'rb') as f:
+                c.raw_content.save(base_name, f)
+                c.save()
+            return c
+        except FileNotFoundError:
+            print("No file found")
     except Exception as e:
         log.error("Problem creating from file: clss=%r, path=%s\n%e", clss, file_path, e)
         raise e

@@ -5,33 +5,40 @@
 {% block module_name %}editor{% endblock %}
 
 {% block flow_content %}
-<div class="update">
-    <h3>Current Dataset:</h3>
-    <div class="desc">
-        <table class="table">
-            <thead>
-            <tr>
-                <th></th>
-                <th>Rows</th>
-                <th>Columns</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Input</td>
-                <td>{{ object.input.rows.count }}</td>
-                <td>{{ object.input.cols.count }}</td>
-            </tr>
-            <tr>
-                <td>Target</td>
-                <td>{{ object.target.rows.count }}</td>
-                <td>{{ object.target.cols.count }}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    {% if datasetmodel.warnings %}
+        <div class="alert-warning">
+            <strong><h3>Persistent Warnings: </h3></strong>{{ datasetmodel.warnings }}
+        </div>
+    {% endif %}
 
-    {% comment %}
+    </div>
+    <div class="update">
+        <h3>Current Dataset:</h3>
+        <div class="desc">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Rows</th>
+                    <th>Columns</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Input</td>
+                    <td>{{ object.input.rows.count }}</td>
+                    <td>{{ object.input.cols.count }}</td>
+                </tr>
+                <tr>
+                    <td>Target</td>
+                    <td>{{ object.target.rows.count }}</td>
+                    <td>{{ object.target.cols.count }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {% comment %}
     {% if not object.is_public %}
     <h3>Dataset Format:</h3>
     <p>
@@ -57,35 +64,35 @@
     {% endif %}
     {% endcomment %}
 
-    <h3>Dataset submission:</h3>
-    <form class='editor' action="#" method="post" enctype="multipart/form-data">
-        {% confirm_form %}
-        {% csrf_token %}
-        {% bootstrap_form form %}
+        <h3>Dataset submission:</h3>
+        <form class='editor' action="#" method="post" enctype="multipart/form-data">
+            {% confirm_form %}
+            {% csrf_token %}
+            {% bootstrap_form form %}
 
-        {% buttons %}
-        <div class="buttons">
-            <button type="submit"
-                    class="btn {% if form.disabled %}btn-disabled{% else %}btn-primary{% endif %}"
-                    {% if object.is_public %}
-                    data-placement="top" data-toggle="tooltip"
-                    data-title="You can't edit public datasets"
-                    disabled
-                    {% elif form.disabled %}
-                    data-placement="top" data-toggle="tooltip"
-                    data-title="An other chalenge use this dataset. Impossible to update it"
-                    disabled
-                    {% endif %}>
-                <i class="fa fa-save"></i> Update
-            </button>
+            {% buttons %}
+                <div class="buttons">
+                    <button type="submit"
+                            class="btn {% if form.disabled %}btn-disabled{% else %}btn-primary{% endif %}"
+                            {% if object.is_public %}
+                            data-placement="top" data-toggle="tooltip"
+                            data-title="You can't edit public datasets"
+                            disabled
+                            {% elif form.disabled %}
+                            data-placement="top" data-toggle="tooltip"
+                            data-title="An other chalenge use this dataset. Impossible to update it"
+                            disabled
+                            {% endif %}>
+                        <i class="fa fa-save"></i> Update
+                    </button>
 
-            <a href="{% url 'wizard:challenge:data.pick' pk=challenge.pk %}"
-               class="btn btn-default picker">
-                <i class="fa fa-times"></i>
-                Pick another dataset
-            </a>
-        </div>
-        {% endbuttons %}
-    </form>
-</div>
+                    <a href="{% url 'wizard:challenge:data.pick' pk=challenge.pk %}"
+                       class="btn btn-default picker">
+                        <i class="fa fa-times"></i>
+                        Pick another dataset
+                    </a>
+                </div>
+            {% endbuttons %}
+        </form>
+    </div>
 {% endblock %}

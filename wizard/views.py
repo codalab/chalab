@@ -297,6 +297,14 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
                     text += ' successfully uploaded'
                     messages.add_message(self.request, messages.INFO, text)
 
+                    if self.object.warnings is not None:
+                        # Add warning message if dataset appears to be missing excluded data.
+                        messages.add_message(
+                            self.request,
+                            messages.WARNING,
+                            "Dataset may be missing some private data, please check persistent warnings"
+                        )
+
                     if len(useless) > 0:
                         messages.add_message(self.request, messages.WARNING,
                                              'Some files have been ignored : '
