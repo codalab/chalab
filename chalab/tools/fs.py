@@ -14,11 +14,17 @@ def sole_path(path):
     l = ls(path)
 
     if len(l) != 1:
-        raise InvalidDirectoryException(
-            "Expected a single file/folder in path, got multiple: %s" % l
-        )
-
-    return os.path.join(path, l[0])
+        # raise InvalidDirectoryException(
+        #     "Expected a single file/folder in path, got multiple: %s" % l
+        # )
+        path = os.path.join(path, "")
+        print("Multiple paths/files found in zip file!")
+        print(path)
+        print(ls(path))
+        return path
+    else:
+        print(os.path.join(path, l[0]))
+        return os.path.join(path, l[0])
 
 
 def ls(*paths, glob=False):

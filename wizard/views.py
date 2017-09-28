@@ -273,6 +273,8 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
         if 'name' in form.fields:
             form.fields['name'].disabled = True
+        else:
+            form.fields['name'].disabled = False
 
         return form
 

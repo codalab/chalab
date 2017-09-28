@@ -448,10 +448,17 @@ class DatasetModel(models.Model):
     def update_from_chalearn(self, fp_zip):
         self.warnings = None
         self.save()
+        print("Above try")
         with archives.unzip_fp(fp_zip) as d:
+            print("Above try, in with")
             try:
                 root = fs.sole_path(d)
-                name = os.path.basename(root)
+                # name = os.path.basename(root)
+                name = str(fp_zip)
+                name = name.split(".")[0]
+                # name = os.path.basename(fp_zip)
+                # name = os.path.splittext(name)[0]
+                print("name is {}".format(name))
                 content = set(x for x in os.listdir(root))
                 pre_split_suffixes = ('train', 'valid', 'test')
                 is_pre_split = all(
@@ -469,9 +476,10 @@ class DatasetModel(models.Model):
                                        for x in extensions for p in parts)
 
                 meta_optional = set('%s_%s' % (name, m) for m in meta)
-                total_dataset = len(necessary_wanted - content) == 0
+                # total_dataset = len(necessary_wanted - content) == 0
                 # pre_split_dataset = len(pre_split_wanted - content) == 0
                 pre_split_dataset = is_pre_split
+                total_dataset = not is_pre_split
 
                 if not total_dataset and not pre_split_dataset:
                     raise InvalidAutomlFormatException(
@@ -480,15 +488,20 @@ class DatasetModel(models.Model):
             except fs.InvalidDirectoryException as e:
                 raise InvalidAutomlFormatException(e) from e
 
+            print("is_pre_split: {}".format(is_pre_split))
+            print("total_dataset: {}".format(total_dataset))
+
             if pre_split_dataset:
 
                 if not total_dataset:
                     # recreate the original .data and .solution (concatenate)
                     for extension in ['data', 'solution']:
                         output_name = '%s.%s' % (name, extension)
+                        print("@@@@@@@@@@@@@@@@@ output_name: {} @@@@@@@@@@@@@@@@@".format(output_name))
                         outfile = open(os.path.join(root, output_name), 'w')
                         for part in ['train', 'valid', 'test']:
                             input_name = '%s_%s.%s' % (name, part, extension)
+                            print("@@@@@@@@@@@@@@@@@ input_name: {} @@@@@@@@@@@@@@@@@".format(input_name))
                             try:
                                 infile = open(os.path.join(root, input_name), 'r')
                                 for line in infile:
@@ -503,6 +516,8 @@ class DatasetModel(models.Model):
                                     self.warnings = "{0} {1}".format(self.warnings, archive_warning)
                         outfile.close()
 
+                # root = os.path.join(root, name)
+                # root = "{0}{1}".format(root, name)
                 # Add pre split to database
                 from django.shortcuts import get_object_or_404
                 challenge = get_object_or_404(ChallengeModel, dataset=self.id)
@@ -512,9 +527,12 @@ class DatasetModel(models.Model):
                     task.save()
                     challenge.task = task
                     challenge.save()
-                task.update_from_chalearn(root)
+                print("Update from chalearn")
+                print("Root is {}".format(root))
+                task.update_from_chalearn(root, name)
 
-            input, target, metric, description = self.load_from_automl(root, any_prefix=False)
+            print("Load_from_automl")
+            input, target, metric, description = self.load_from_automl(root, name, any_prefix=False)
 
             self.name = name
             self.input = input
@@ -532,6 +550,7 @@ class DatasetModel(models.Model):
 
     @classmethod
     def create_from_chalearn(cls, path, name, owner=None, is_public=True):
+        print("path in create_from_chalearn is: {}".format(path))
         input, target, metric, description = cls.load_from_automl(path, any_prefix=False)
         return cls.create(owner=owner,
                           is_public=is_public,
@@ -539,9 +558,12 @@ class DatasetModel(models.Model):
                           default_metric=metric, input=input, target=target)
 
     @classmethod
-    def load_from_automl(cls, path, any_prefix=False):
+    def load_from_automl(cls, path, filename, any_prefix=False):
+        if filename is None:
+            filename = " "
+        print("Path in load_from_automl is: {}".format(path))
         try:
-            i = load_info_file(chalearn_path(path, '_public.info'))
+            i = load_info_file(chalearn_path(path, '_public.info', filename))
             is_sparse = i.getboolean('is_sparse')
             task, metric = i.get('task'), i.get('metric')
             metric = default_metric(metric, task)
@@ -554,33 +576,34 @@ class DatasetModel(models.Model):
         except:
             description = None
 
-        input = load_chalearn(path, '.data',
+        input = load_chalearn(path, '.data', filename,
                               is_sparse=is_sparse, any_prefix=any_prefix)
 
-        if os.path.isfile(chalearn_path(path, '_public.info')):
-            input.cols.doc = create_with_file(ColumnarDocDefinition, chalearn_path(path, '_public.info'))
+        if os.path.isfile(chalearn_path(path, '_public.info', filename)):
+            input.cols.doc = create_with_file(ColumnarDocDefinition, chalearn_path(path, '_public.info', filename))
 
-        if os.path.isfile(chalearn_path(path, '_feat.type')):
-            input.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_feat.type'))
+        if os.path.isfile(chalearn_path(path, '_feat.type', filename)):
+            input.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_feat.type', filename))
 
-        if os.path.isfile(chalearn_path(path, '_feat.name')):
-            input.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_feat.name'))
+        if os.path.isfile(chalearn_path(path, '_feat.name', filename)):
+            input.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_feat.name', filename))
 
         try:
             cols_type = load_chalearn(path, '_feat.type',
+                                      filename=filename,
                                       clss=ColumnarTypesDefinition,
                                       any_prefix=any_prefix)
             input.cols.types = cols_type
         except FileNotFoundError:
             pass  # It's fine, feat specs are not mandatory.
 
-        target = load_chalearn(path, '.solution', any_prefix=any_prefix)
+        target = load_chalearn(path, '.solution', filename, any_prefix=any_prefix)
 
-        if os.path.isfile(chalearn_path(path, '_label.type')):
-            target.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_label.type'))
+        if os.path.isfile(chalearn_path(path, '_label.type', filename)):
+            target.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_label.type', filename))
 
-        if os.path.isfile(chalearn_path(path, '_label.name')):
-            target.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_label.name'))
+        if os.path.isfile(chalearn_path(path, '_label.name', filename)):
+            target.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_label.name', filename))
 
         input.save()
         target.save()
@@ -638,7 +661,10 @@ def create_with_file(clss, file_path, **kwargs):
     """
     try:
         c = clss(**kwargs)
+        c = clss(**kwargs)
         base_name = os.path.basename(file_path)
+        print("base_name in create_with_file: {}".format(base_name))
+        print("file path in create_with_file: {}".format(file_path))
         # with open(file_path, 'r') as f:
         # `rb` for read bytes. Necessary for azure storage.
         try:
@@ -653,23 +679,55 @@ def create_with_file(clss, file_path, **kwargs):
         raise e
 
 
-def chalearn_path(path, suffix, any_prefix=False):
+# def chalearn_path(path, suffix, any_prefix=False):
+#     if any_prefix:
+#         l = fs.ls(path, '*%s' % suffix, glob=True)
+#
+#         if len(l) != 1:
+#             raise FileNotFoundError("""Expected a match for: %s/*%s, got no/multiple results: %s"""
+#                                     % (path, suffix, l))
+#         print("Any prefix:")
+#         print("path returned in chalearn_path: {}".format(l[0]))
+#         print(path)
+#         return l[0]
+#     else:
+#         name = path.split('/')
+#         for file in os.listdir(path):
+#             if file.endswith(".data") or file.endswith(".solution"):
+#                 nice_file_path = file.split("_")
+#                 print(nice_file_path)
+#                 name = nice_file_path[0]
+#                 break
+#         p = os.path.join(path, '%s%s' % (name, suffix))
+#         print("Not any prefix")
+#         print("path returned in chalearn_path: {}".format(p))
+#         print(name)
+#         return p
+
+def chalearn_path(path, suffix, filename, any_prefix=False):
+    if filename is None:
+        filename = " "
     if any_prefix:
         l = fs.ls(path, '*%s' % suffix, glob=True)
 
         if len(l) != 1:
             raise FileNotFoundError("""Expected a match for: %s/*%s, got no/multiple results: %s"""
                                     % (path, suffix, l))
+        print("Evil l is: {}".format(l[0]))
         return l[0]
     else:
-        name = path.split('/')[-1]
+        # name = path.split('/')[-1]
+        name = filename
+        print("Non evil path is {}".format(path))
         p = os.path.join(path, '%s%s' % (name, suffix))
+        print("Evil p is: {}".format(p))
         return p
 
 
-def load_chalearn(path, suffix, clss=MatrixModel, any_prefix=False, **kwargs):
+def load_chalearn(path, suffix, filename, clss=MatrixModel, any_prefix=False, **kwargs):
+    print("path in load_chalearn is: {}".format(path))
     return create_with_file(clss,
-                            chalearn_path(path, suffix, any_prefix=any_prefix),
+                            chalearn_path(path, suffix, filename, any_prefix=any_prefix),
                             **kwargs)
 
 
@@ -736,7 +794,6 @@ class TaskModel(models.Model):
 
             if round(s,10) != 100:
                 raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
-                raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
         # regarding nested fields. We also do not need to duplicate
@@ -752,22 +809,25 @@ class TaskModel(models.Model):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
 
-    def update_from_chalearn(self, path):
-        loaded = self.load_from_chalearn(path)
+    def update_from_chalearn(self, path, filename):
+        print("Path in update_from_chalearn: {}".format(path))
+        print(self.name)
+        loaded = self.load_from_chalearn(path, filename)
         for k, v in loaded.items():
             setattr(self, k, v)
         self.save()
 
     @classmethod
-    def load_from_chalearn(cls, path):
-        train = load_chalearn(path, '_train.data')
-        train_target = load_chalearn(path, '_train.solution')
+    def load_from_chalearn(cls, path, filename):
+        print("path for load_from_chalearn is: {}".format(path))
+        train = load_chalearn(path, '_train.data', filename)
+        train_target = load_chalearn(path, '_train.solution', filename)
 
-        test = load_chalearn(path, '_test.data')
-        test_target = load_chalearn(path, '_test.solution')
+        test = load_chalearn(path, '_test.data', filename)
+        test_target = load_chalearn(path, '_test.solution', filename)
 
-        valid = load_chalearn(path, '_valid.data')
-        valid_target = load_chalearn(path, '_valid.solution')
+        valid = load_chalearn(path, '_valid.data', filename)
+        valid_target = load_chalearn(path, '_valid.solution', filename)
 
         train_count = train.rows.count
         valid_count = valid.rows.count
@@ -784,11 +844,11 @@ class TaskModel(models.Model):
                     is_ready=True)
 
     @classmethod
-    def from_chalearn(cls, dataset, path, name):
+    def from_chalearn(cls, dataset, path, name, filename):
         return cls.objects.create(
             dataset=dataset,
             owner=None, is_public=True, name=name,
-            **cls.load_from_chalearn(path)
+            **cls.load_from_chalearn(path, filename)
         )
 
     def deep_copy(self):
