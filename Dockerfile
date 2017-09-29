@@ -4,7 +4,7 @@ ENV PYTHONUNBUFFERED 1
 
 RUN mkdir -p /app/ /app/static /app/media /app/datasets
 WORKDIR /app
-CMD ["/usr/local/bin/gunicorn", "chalab.wsgi:application", "-w 2", "-b :8000"]
+CMD ["/usr/local/bin/gunicorn", "chalab.wsgi:application", "-w 2", "--timeout=300", "-b :8000"]
 
 # Install the gunicorn server to serve django
 RUN pip install gunicorn==19.6.0

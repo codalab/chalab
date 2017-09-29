@@ -6,7 +6,7 @@ services:
     extends:
       file: docker-compose.base.yml
       service: web
-    command: /usr/local/bin/gunicorn chalab.wsgi:application -w 2 -b :8000 --reload
+    command: /usr/local/bin/gunicorn chalab.wsgi:application -w 2 --timeout=300 -b :8000 --reload
     environment:
       - "DJANGO_SETTINGS_MODULE=instances.local_docker"
     volumes:
