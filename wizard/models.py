@@ -705,6 +705,7 @@ class TaskModel(models.Model):
 
             if round(s,10) != 100:
                 raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
+                raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
         # regarding nested fields. We also do not need to duplicate

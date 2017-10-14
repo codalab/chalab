@@ -62,13 +62,21 @@ You can check the archive actual content using <code>`unzip -l ./my_archive.zip'
 @login_required
 def home(request):
     u = request.user
+    bundle_list = list()
 
     challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at')
+
+    for challenge in challenges:
+        try:
+            bundle_list.append(BundleTaskModel.objects.get(challenge=challenge))  # This is gross...
+        except ObjectDoesNotExist:
+            print("No bundletask for challenge {}".format(challenge.pk))
 
     profile, created = ProfileModel.objects.get_or_create(user=u)
 
     context = {
         'object_list': challenges,
+        'bundle_list': bundle_list,
         'actual_group': profile.actual_group,
         }
 
