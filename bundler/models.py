@@ -74,6 +74,8 @@ class BundleTaskModel(models.Model):
 
     output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
 
+    current_task_id = models.CharField(null=True, blank=True, max_length=64)
+
     def __str__(self):
         return "<%s: challenge=%s, state=%s>" \
                % (type(self).__name__, self.challenge.title, self.get_state_display())

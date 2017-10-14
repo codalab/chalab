@@ -1,5 +1,7 @@
 from wsgiref.util import FileWrapper
 
+import celery
+from celery.worker.control import revoke
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.http import JsonResponse
@@ -31,7 +33,9 @@ def build(request, pk):
 
     if b is None or b.done:
         b = BundleTaskModel.create(c)
-        bundle.delay(b)
+        result = bundle.delay(b.pk)
+        b.current_task_id = result.task_id
+        b.save()
     else:
         raise errors.HTTP400Exception('wizard/challenge/error.html', 'build is in progress',
                                       """The bundle is already being built.""",
@@ -39,6 +43,20 @@ def build(request, pk):
 
     return redirect(reverse('wizard:challenge:build',
                             kwargs={'pk': pk}))
+
+
+@login_required
+def cancel(request, pk):
+    b = get_object_or_404(BundleTaskModel, pk=pk)
+    try:
+        if b.current_task_id is not None:
+            revoke(task_id=b.current_task_id, state=celery.states.REVOKED, signal='SIGKILL', terminate=True)
+            b.state = BundleTaskModel.CANCELLED
+            b.save()
+    except KeyError:
+        print("No result yet")
+
+    return redirect(reverse('wizard:challenge:build', kwargs={'pk': b.challenge.pk}))
 
 
 @login_required
