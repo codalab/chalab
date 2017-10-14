@@ -64,7 +64,7 @@ class BundleTaskModel(models.Model):
         (FAILED, 'Failed'),
     )
 
-    challenge = models.ForeignKey(ChallengeModel, null=False)
+    challenge = models.ForeignKey(ChallengeModel, null=False, related_name="bundle_tasks")
     state = models.CharField(max_length=10, choices=STATE_CHOICES)
     progress_perc = models.IntegerField(default=0, null=False)
 

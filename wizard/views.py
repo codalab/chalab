@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views.generic import CreateView
@@ -62,23 +62,20 @@ You can check the archive actual content using <code>`unzip -l ./my_archive.zip'
 @login_required
 def home(request):
     u = request.user
-    bundle_list = list()
 
-    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at')
-
-    for challenge in challenges:
-        try:
-            bundle_list.append(BundleTaskModel.objects.get(challenge=challenge))  # This is gross...
-        except ObjectDoesNotExist:
-            print("No bundletask for challenge {}".format(challenge.pk))
+    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at').prefetch_related(
+        Prefetch(
+            'bundle_tasks',
+            BundleTaskModel.objects.order_by('-created'),
+        )
+    )
 
     profile, created = ProfileModel.objects.get_or_create(user=u)
 
     context = {
         'object_list': challenges,
-        'bundle_list': bundle_list,
         'actual_group': profile.actual_group,
-        }
+    }
 
     return render(request, 'wizard/home.html', context=context)
 

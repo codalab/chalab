@@ -55,3 +55,4 @@ gevent==1.2.2
 gevent-eventemitter==2.0
 greenlet==0.4.12
 django-extensions==1.9.0
+whitenoise==3.3.1

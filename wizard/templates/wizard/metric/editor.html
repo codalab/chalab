@@ -4,11 +4,13 @@
 
 {% block module_name %}editor{% endblock %}
 
-{% block flow_content %}
+{% block extra_head %}
+    <script src="/static/chalab/CodeMirror/codemirror.js"></script>
+    <link rel="stylesheet" href="/static/chalab/CodeMirror/codemirror.css">
+    <script src="/static/chalab/CodeMirror/python/python.js"></script>
+{% endblock %}
 
-<script src="{% static 'chalab/CodeMirror/codemirror.js' %}"></script>
-<link rel="stylesheet" href="{% static 'chalab/CodeMirror/codemirror.css' %}">
-<script src="{% static 'chalab/CodeMirror/python/python.js' %}"></script>
+{% block flow_content %}
 
 <div class="pick">
     <div class="public">
