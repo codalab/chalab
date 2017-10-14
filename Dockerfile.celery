@@ -1,7 +1,7 @@
 FROM python:3.5
 
 ENV PYTHONUNBUFFERED 1
-ENV C_FORCE_ROOT true # Allow celery to run as root
+ENV C_FORCE_ROOT True
 
 # Dockerfile based on the official Celery
 # https://github.com/docker-library/celery
