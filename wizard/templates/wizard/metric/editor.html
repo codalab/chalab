@@ -60,7 +60,7 @@
                     while (matches = regex_find_fun_with_comment.exec(code)) {
                         last_res = matches;
                     }
-                    return {'name':last_res[4].trim(), 'comment': last_res[3].trim()};
+                    return {'name':last_res[4], 'comment': last_res[3]};
                 }
             </script>
 
