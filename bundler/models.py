@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.deconstruct import deconstructible
 
 from chalab.tools.storage import *
+from chalab.utils import get_nice_file_size
 from wizard.models import ChallengeModel
 
 storage = DefaultStorage()
@@ -83,6 +84,13 @@ class BundleTaskModel(models.Model):
     @property
     def is_download_ready(self):
         return self.state == self.FINISHED
+
+    @property
+    def get_size_formatted(self):
+        if self.output.file:
+            return get_nice_file_size(self.output.file)
+        else:
+            return None
 
     @classmethod
     def create(cls, challenge):

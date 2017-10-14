@@ -81,7 +81,7 @@
                                    id="do-download"
                                    class="btn btn-success btn-block">
                                     <i class="fa fa-cloud-download" aria-hidden="true"></i>
-                                    Download: {{ challenge.bundle_tasks.first.output.file.size }}
+                                    Download: {{ challenge.bundle_tasks.first.get_size_formatted }}
                                 </a>
                             {% endif %}
                         </div>
