@@ -55,3 +55,4 @@ CONTAINER_DB_SUFFIXED = chalab_db_volume_1_${NOW}
 backupdb:
 		docker commit -p chalab_db_volume_1 "${CONTAINER_DB_SUFFIXED}"
 		docker save -o "./backups/${CONTAINER_DB_SUFFIXED}.tar" "${CONTAINER_DB_SUFFIXED}"
+
