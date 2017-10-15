@@ -57,12 +57,27 @@
 
                 var regex_find_fun_with_comment = /(^|(#(.*))?[\r\n]+)def\s+(\w+)\([^,\)]+,[^,\)]+\)\s*:/g;
 
+                var regex_comment = /#(.*?)\n/
+
                 function get_name_and_comment(code){
                     var last_res;
+                    console.log("please jesus: " + code)
                     while (matches = regex_find_fun_with_comment.exec(code)) {
                         last_res = matches;
                     }
-                    return {'name':last_res[4].trim(), 'comment': last_res[3].trim()};
+                    console.log(last_res)
+
+                    var comment = regex_comment.exec(code)
+                    if(comment.length > 1) {
+                        comment = comment[1]
+                    } else {
+                        comment = ''
+                    }
+
+                    return {
+                        'name': last_res[4],
+                        'comment': comment
+                    };
                 }
             </script>
 
