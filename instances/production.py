@@ -5,6 +5,7 @@ def clearl(xs):
     return [x.strip() for x in xs]
 
 
+DEFAULT_FROM_EMAIL='webmaster@chalab'
 DEBUG = True
 # SECRET_KEY = os.environ['CHALAB_SECRET_KEY'].strip()
 SECRET_KEY = os.environ.get('CHALAB_SECRET_KEY')
