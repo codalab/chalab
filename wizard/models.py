@@ -933,7 +933,7 @@ class DocumentationPageModel(models.Model):
     content = HTMLField()
     rendered = HTMLField(null=True, blank=True)
 
-    documentation = models.ForeignKey(DocumentationModel, on_delete=models.CASCADE)
+    documentation = models.ForeignKey(DocumentationModel, related_name='documentation_pages', on_delete=models.CASCADE)
 
     def __str__(self):
         return "<%s: \"%s\"; pos=%s>" % (type(self).__name__,

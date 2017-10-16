@@ -655,6 +655,9 @@ def documentation(request, pk):
     if doc is None:
         doc = DocumentationModel.create()
         c.documentation = doc
+        for page in doc.documentation_pages.all():
+            mappings = challenge_to_mappings(c)
+            page.render(mappings)
         c.save()
 
     current = 'overview'
@@ -672,6 +675,9 @@ def documentation_page(request, pk, page_id):
     p = get_object_or_404(DocumentationPageModel,
                           documentation=c.documentation, id=page_id)
     doc = c.documentation
+    mappings = challenge_to_mappings(c)
+    p.render(mappings)
+    p.save()
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
                'current': p.name, 'current_page': p,
