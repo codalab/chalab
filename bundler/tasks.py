@@ -160,8 +160,8 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
             load_metadata_files(challenge.dataset, d, name)
 
-            if not os.path.isfile(path.join(d, '%s_public.info' % name)):
-                create_info_file(challenge, d)
+            # if not os.path.isfile(path.join(d, '%s_public.info' % name)):
+            #     create_info_file(challenge, d)
 
             zipdir(bt, output_dir, input_data, d)
             p['input_data'] = input_data + '.zip'
