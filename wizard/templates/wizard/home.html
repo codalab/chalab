@@ -1,3 +1,108 @@
+{#{% extends 'chalab/base.html' %}#}
+{##}
+{#{% block title %}Welcome{% endblock %}#}
+{##}
+{#{% block app_name %}wizard{% endblock %}#}
+{##}
+{#{% block content %}#}
+{#<div class="hero">#}
+{#    <h1>Your challenges:</h1>#}
+{#    <div class="details">#}
+{#        <p>#}
+{#        </p>#}
+{#    </div>#}
+{#</div>#}
+{##}
+{#{% if actual_group %}#}
+{#<div class="text-center">#}
+{#    <a class="create-challenge btn btn-primary"#}
+{#       href="{% url 'wizard:create_from_group' group_id=actual_group.id %}">#}
+{#        <i class="fa fa-plus" aria-hidden="true"></i>#}
+{#        Create a New "{{actual_group.name}}" Challenge#}
+{#    </a>#}
+{#</div>#}
+{#{% else %}#}
+{#<div class="row top10">#}
+{#    <div class="col-md-4 col-md-offset-4">#}
+{#        <a class="create-challenge btn btn-block btn-primary"#}
+{#           href="{% url 'wizard:create' %}">#}
+{#            <i class="fa fa-plus" aria-hidden="true"></i>#}
+{#            Create a New Challenge#}
+{#        </a>#}
+{#    </div>#}
+{#</div>#}
+{#{% endif %}#}
+{##}
+{#<div class="challenges">#}
+{#    {% for challenge in object_list %}#}
+{#    <a href="{% url 'wizard:challenge' pk=challenge.pk %}">#}
+{#        <div class="row top10 challenge">#}
+{##}
+{#            <div class="col-xs-2 logo">#}
+{#                {% if challenge.logo %}#}
+{#                <img class="center-block img-rounded img-responsive"#}
+{#                     src="{{ challenge.logo.url }}">#}
+{#                {% else %}#}
+{#                <div class="fake-logo">{{ challenge.title|first }}</div>#}
+{#                {% endif %}#}
+{#            </div>#}
+{##}
+{#            <div class="col-xs-6 desc">#}
+{#                <h3 class="title">{{ challenge.title }}</h3>#}
+{##}
+{#                {% if challenge.origin_group %}#}
+{#                <p class="org text-muted">From group :#}
+{#                    {{ challenge.origin_group.name }}</p>#}
+{#                {% endif %}#}
+{##}
+{#                <p class="org text-muted">Organized#}
+{#                    by: {{ challenge.organization_name }}</p>#}
+{##}
+{#                <p class="description">#}
+{#                    {{ challenge.description }}#}
+{#                </p>#}
+{#            </div>#}
+{##}
+{#            <div class="col-xs-4 infos">#}
+{##}
+{#                <div style="right:0;position:absolute;top:0;">#}
+{#                    <a href="{% url 'wizard:challenge:delete' pk=challenge.pk %}">#}
+{#                    <button type="button" class="btn btn-danger btn-xs">#}
+{#                        <i class="fa fa-times fa-2x" aria-hidden="true"></i>#}
+{#                    </button>#}
+{#                    </a>#}
+{#                </div>#}
+{##}
+{#                {% if challenge.bundle_tasks.first %}#}
+{#                    {% if challenge.bundle_tasks.first.challenge == challenge %}#}
+{#                        <div style="margin-right: 40px;">#}
+{#                            {% if challenge.bundle_tasks.first.is_download_ready %}#}
+{#                                <a href="{% url 'wizard:challenge:bundler:download' challenge.id %}"#}
+{#                                   id="do-download"#}
+{#                                   class="btn btn-success btn-block">#}
+{#                                    <i class="fa fa-cloud-download" aria-hidden="true"></i>#}
+{#                                    Download: {{ challenge.bundle_tasks.first.get_size_formatted }}#}
+{#                                </a>#}
+{#                            {% endif %}#}
+{#                        </div>#}
+{#                    {% endif %}#}
+{#                {% endif %}#}
+{#                <p>#}
+{#                    Created: {{ challenge.created_at }}#}
+{#                </p>#}
+{#                <p>#}
+{#                    Last change: {{ challenge.updated_at }}#}
+{#                </p>#}
+{#            </div>#}
+{#        </div>#}
+{#    </a>#}
+{#    {% empty %}#}
+{#    <h3>Here you'll see your challenges.</h3>#}
+{#    {% endfor %}#}
+{#</div>#}
+{##}
+{##}
+{#{% endblock %}#}
 {% extends 'chalab/base.html' %}
 
 {% block title %}Welcome{% endblock %}
@@ -5,101 +110,197 @@
 {% block app_name %}wizard{% endblock %}
 
 {% block content %}
-<div class="hero">
-    <h1>Your challenges:</h1>
-    <div class="details">
-        <p>
-        </p>
-    </div>
-</div>
 
-{% if actual_group %}
-<div class="text-center">
-    <a class="create-challenge btn btn-primary"
-       href="{% url 'wizard:create_from_group' group_id=actual_group.id %}">
-        <i class="fa fa-plus" aria-hidden="true"></i>
-        Create a New "{{actual_group.name}}" Challenge
-    </a>
-</div>
-{% else %}
-<div class="row top10">
-    <div class="col-md-4 col-md-offset-4">
-        <a class="create-challenge btn btn-block btn-primary"
-           href="{% url 'wizard:create' %}">
-            <i class="fa fa-plus" aria-hidden="true"></i>
-            Create a New Challenge
-        </a>
-    </div>
-</div>
-{% endif %}
-
-<div class="challenges">
-    {% for challenge in object_list %}
-    <a href="{% url 'wizard:challenge' pk=challenge.pk %}">
-        <div class="row top10 challenge">
-
-            <div class="col-xs-2 logo">
-                {% if challenge.logo %}
-                <img class="center-block img-rounded img-responsive"
-                     src="{{ challenge.logo.url }}">
-                {% else %}
-                <div class="fake-logo">{{ challenge.title|first }}</div>
-                {% endif %}
+    {% if actual_group %}
+        <div align="center" class="row">
+            <div align="center" class="col-md-12">
+                <a class="create-challenge btn btn-warning"
+                   href="{% url 'wizard:create_from_group' group_id=actual_group.id %}">
+                    <i class="fa fa-plus" aria-hidden="true"></i>
+                    Create a New "{{ actual_group.name }}" Challenge
+                </a>
             </div>
-
-            <div class="col-xs-6 desc">
-                <h3 class="title">{{ challenge.title }}</h3>
-
-                {% if challenge.origin_group %}
-                <p class="org text-muted">From group :
-                    {{ challenge.origin_group.name }}</p>
-                {% endif %}
-
-                <p class="org text-muted">Organized
-                    by: {{ challenge.organization_name }}</p>
-
-                <p class="description">
-                    {{ challenge.description }}
-                </p>
+            <div align="center" class="col-md-12 top-margin">
+                <a class="create-challenge btn btn-success"
+                   href="{% url 'wizard:create' %}">
+                    <i class="fa fa-plus" aria-hidden="true"></i>
+                    Create a New Challenge
+                </a>
             </div>
+        </div>
+    {% else %}
+        <div align="center" class="row">
+            <div align="center" class="col-md-12">
+                <a class="create-challenge btn btn-success"
+                   href="{% url 'wizard:create' %}">
+                    <i class="fa fa-plus" aria-hidden="true"></i>
+                    Create a New Challenge
+                </a>
+            </div>
+        </div>
+    {% endif %}
 
-            <div class="col-xs-4 infos">
+    <div align="center" class="hero">
+        <h1 align="center">Your challenges:</h1>
+    </div>
 
-                <div style="right:0;position:absolute;top:0;">
-                    <a href="{% url 'wizard:challenge:delete' pk=challenge.pk %}">
-                    <button type="button" class="btn btn-danger btn-xs">
-                        <i class="fa fa-times fa-2x" aria-hidden="true"></i>
-                    </button>
-                    </a>
-                </div>
+    <hr>
 
-                {% if challenge.bundle_tasks.first %}
-                    {% if challenge.bundle_tasks.first.challenge == challenge %}
-                        <div style="margin-right: 40px;">
+    <div class="table-responsive">
+        <table align="center" class="table table-hover">
+            <thead class="bg-primary">
+            <tr align="center">
+                <th align="center" class="fit">Image</th>
+                <th align="center" class="fit">Title</th>
+                <th align="center" class="fit">Organizer</th>
+                <th align="center" class="fit">Created At:</th>
+                <th align="center" class="fit">Updated At:</th>
+                <th align="center" class="fit">Edit:</th>
+                <th align="center" class="fit">Status:</th>
+                <th align="center" class="fit">Build:</th>
+                <th align="center" class="fit">Download:</th>
+                <th align="center" class="fit">Delete:</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for challenge in object_list %}
+                {% if forloop.counter|divisibleby:2 %}
+                    <tr class="table-row-highlighting" align="center">
+                        {% else %}
+                    <tr align="center">
+                {% endif %}
+                    <td align="center" class="fit">
+                        {% if challenge.logo %}
+                            <img width="30" height="30" class="img-rounded img-responsive"
+                                 src="{{ challenge.logo.url }}">
+                        {% else %}
+                            {#                            <div class="img-responsive fake-logo">{{ challenge.title|first }}</div>#}
+                        {% endif %}
+                    </td>
+                    <td align="center" class="fit">
+                        {{ challenge.title }}
+                    </td>
+                    <td align="center" class="fit">
+                        {{ challenge.organization_name }}
+                    </td>
+                    <td align="center" class="fit">
+                        {{ challenge.created_at }}
+                    </td>
+                    <td align="center" class="fit">
+                        {{ challenge.updated_at }}
+                    </td>
+                    <td align="center" class="fit">
+                        <a href="{% url 'wizard:challenge' pk=challenge.pk %}">
+                            <button type="button" class="btn btn-success btn-xs">
+                                Edit
+                            </button>
+                        </a>
+                    </td>
+                    <td align="center" class="fit">
+                            {% if not challenge.bundle_tasks.first or not challenge.bundle_tasks.first.state %}
+                                <p>not ready</p>
+                            {% else %}
+                                {{ challenge.bundle_tasks.first.state }}
+                            {% endif %}
+                    </td>
+
+                    <td align="center" class="fit">
+                        {% if challenge.is_ready %}
+                            <a href="{% url 'wizard:challenge:bundler:build' challenge.id %}"
+                               id="do-download"
+                               class="btn btn-warning btn-xs">
+                                <i class="fa fa-gears" aria-hidden="true"></i>
+                                Build
+                            </a>
+                        {% endif %}
+                    </td>
+
+                    <td align="center" class="fit">
+                        {% if challenge.bundle_tasks.first %}
                             {% if challenge.bundle_tasks.first.is_download_ready %}
                                 <a href="{% url 'wizard:challenge:bundler:download' challenge.id %}"
                                    id="do-download"
-                                   class="btn btn-success btn-block">
+                                   class="btn btn-success btn-xs">
                                     <i class="fa fa-cloud-download" aria-hidden="true"></i>
                                     Download: {{ challenge.bundle_tasks.first.get_size_formatted }}
                                 </a>
                             {% endif %}
-                        </div>
-                    {% endif %}
-                {% endif %}
-                <p>
-                    Created: {{ challenge.created_at }}
-                </p>
-                <p>
-                    Last change: {{ challenge.updated_at }}
-                </p>
-            </div>
-        </div>
-    </a>
-    {% empty %}
-    <h3>Here you'll see your challenges.</h3>
-    {% endfor %}
-</div>
+                        {% endif %}
+                    </td>
+                    <td align="center" class="fit">
+                        <a href="{% url 'wizard:challenge:delete' pk=challenge.pk %}">
+                            <button type="button" class="btn btn-danger btn-xs">
+                                X
+                            </button>
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <h3>Here you'll see your challenges.</h3>
+            {% endfor %}
+            </tbody>
 
+            {#                <a href="{% url 'wizard:challenge' pk=challenge.pk %}">#}
+            {#                    <div class="row top10 challenge">#}
+            {##}
+            {#                        <div class="col-xs-2 logo">#}
+            {#                            {% if challenge.logo %}#}
+            {#                                <img class="center-block img-rounded img-responsive"#}
+            {#                                     src="{{ challenge.logo.url }}">#}
+            {#                            {% else %}#}
+            {#                                <div class="fake-logo">{{ challenge.title|first }}</div>#}
+            {#                            {% endif %}#}
+            {#                        </div>#}
+            {##}
+            {#                        <div class="col-xs-6 desc">#}
+            {#                            <h3 class="title">{{ challenge.title }}</h3>#}
+            {##}
+            {#                            {% if challenge.origin_group %}#}
+            {#                                <p class="org text-muted">From group :#}
+            {#                                    {{ challenge.origin_group.name }}</p>#}
+            {#                            {% endif %}#}
+            {##}
+            {#                            <p class="org text-muted">Organized#}
+            {#                                by: {{ challenge.organization_name }}</p>#}
+            {##}
+            {#                            <p class="description">#}
+            {#                                {{ challenge.description }}#}
+            {#                            </p>#}
+            {#                        </div>#}
+            {##}
+            {#                        <div class="col-xs-4 infos">#}
+            {##}
+            {#                            <div style="right:0;position:absolute;top:0;">#}
+            {#                                <a href="{% url 'wizard:challenge:delete' pk=challenge.pk %}">#}
+            {#                                    <button type="button" class="btn btn-danger btn-xs">#}
+            {#                                        <i class="fa fa-times fa-2x" aria-hidden="true"></i>#}
+            {#                                    </button>#}
+            {#                                </a>#}
+            {#                            </div>#}
+            {##}
+            {#                            {% if challenge.bundle_tasks.first %}#}
+            {#                                <div style="margin-right: 40px;">#}
+            {#                                    {% if challenge.bundle_tasks.first.is_download_ready %}#}
+            {#                                        <a href="{% url 'wizard:challenge:bundler:download' challenge.id %}"#}
+            {#                                           id="do-download"#}
+            {#                                           class="btn btn-success btn-block">#}
+            {#                                            <i class="fa fa-cloud-download" aria-hidden="true"></i>#}
+            {#                                            Download: {{ challenge.bundle_tasks.first.return_size }}#}
+            {#                                        </a>#}
+            {#                                    {% endif %}#}
+            {#                                </div>#}
+            {#                            {% endif %}#}
+            {#                            <p>#}
+            {#                                Created: {{ challenge.created_at }}#}
+            {#                            </p>#}
+            {#                            <p>#}
+            {#                                Last change: {{ challenge.updated_at }}#}
+            {#                            </p>#}
+            {#                        </div>#}
+            {#                    </div>#}
+            {#                </a>#}
+
+        </table>
+    </div>
 
 {% endblock %}

@@ -244,3 +244,37 @@ footer {
     font-size: 2em;
     float: right;
 }
+
+.top-margin {
+    margin-top: 10px;
+}
+
+.container-padding {
+    padding: 45px;
+}
+
+/* Restyle stuff goes here */
+
+/*.main-background {*/
+    /*background: linear-gradient(to top,*/
+    /*rgba(30, 87, 153, 0.8) 0%,*/
+    /*rgba(125, 185, 232, 0) 100%),*/
+    /*url(images/dark-triangles.png); !* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ *!*/
+    /*filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#007db9e8',GradientType=0 ); !* IE6-9 *!*/
+/*}*/
+
+.main-background {
+    background: linear-gradient(to top,
+    rgba(30, 87, 153, 0.85) 40%,
+    rgba(255, 255, 255, 0.85) 100%),
+    url(images/dark-triangles.png) 1%; /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#007db9e8',GradientType=0 ); /* IE6-9 */
+}
+
+.white-text {
+    color: white;
+}
+
+.table-row-highlighting {
+    background-color: rgba(55, 55, 55, 0.1)
+}
