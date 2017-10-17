@@ -256,19 +256,22 @@ footer {
 /* Restyle stuff goes here */
 
 /*.main-background {*/
-    /*background: linear-gradient(to top,*/
-    /*rgba(30, 87, 153, 0.8) 0%,*/
-    /*rgba(125, 185, 232, 0) 100%),*/
-    /*url(images/dark-triangles.png); !* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ *!*/
-    /*filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#007db9e8',GradientType=0 ); !* IE6-9 *!*/
+/*background: linear-gradient(to top,*/
+/*rgba(30, 87, 153, 0.8) 0%,*/
+/*rgba(125, 185, 232, 0) 100%),*/
+/*url(images/dark-triangles.png); !* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ *!*/
+/*filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#007db9e8',GradientType=0 ); !* IE6-9 *!*/
 /*}*/
 
 .main-background {
+    width: 100%;
+    height: 100%;
     background: linear-gradient(to top,
     rgba(30, 87, 153, 0.85) 40%,
     rgba(255, 255, 255, 0.85) 100%),
-    url(images/dark-triangles.png) 1%; /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#007db9e8',GradientType=0 ); /* IE6-9 */
+    url(images/dark-triangles.png) 1% repeat; /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#1e5799', endColorstr='#007db9e8', GradientType=0); /* IE6-9 */
+    background-size: 100% 150%;
 }
 
 .white-text {
@@ -277,4 +280,8 @@ footer {
 
 .table-row-highlighting {
     background-color: rgba(55, 55, 55, 0.1)
+}
+
+html {
+    height: 100%;
 }
