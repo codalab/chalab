@@ -152,7 +152,7 @@
             <tr align="center">
                 <th align="center" class="fit">Image</th>
                 <th align="center" class="fit">Title:</th>
-                <th align="center" class="fit">Origin Group:</th>
+                <th align="center" class="fit">Group:</th>
                 <th align="center" class="fit">Organizer:</th>
                 <th align="center" class="fit">Created At:</th>
                 <th align="center" class="fit">Updated At:</th>
@@ -189,7 +189,11 @@
                         {% endif %}
                     </td>
                     <td align="center" class="fit">
-                        {{ challenge.organization_name }}
+                        {% if challenge.organization_name %}
+                            {{ challenge.organization_name }}
+                        {% else %}
+                            N/a
+                        {% endif %}
                     </td>
                     <td align="center" class="fit">
                         {{ challenge.created_at }}
