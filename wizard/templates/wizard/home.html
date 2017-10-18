@@ -151,8 +151,9 @@
             <thead class="bg-primary">
             <tr align="center">
                 <th align="center" class="fit">Image</th>
-                <th align="center" class="fit">Title</th>
-                <th align="center" class="fit">Organizer</th>
+                <th align="center" class="fit">Title:</th>
+                <th align="center" class="fit">Origin Group:</th>
+                <th align="center" class="fit">Organizer:</th>
                 <th align="center" class="fit">Created At:</th>
                 <th align="center" class="fit">Updated At:</th>
                 <th align="center" class="fit">Edit:</th>
@@ -181,6 +182,13 @@
                         {{ challenge.title }}
                     </td>
                     <td align="center" class="fit">
+                        {% if challenge.origin_group %}
+                            {{ challenge.origin_group.name }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td align="center" class="fit">
                         {{ challenge.organization_name }}
                     </td>
                     <td align="center" class="fit">
@@ -206,9 +214,11 @@
 
                     <td align="center" class="fit">
                         {% if challenge.is_ready %}
-                            <a href="{% url 'wizard:challenge:bundler:build' challenge.id %}"
-                               id="do-download"
-                               class="btn btn-warning btn-xs">
+                            {% if challenge.bundle_tasks.first and challenge.bundle_tasks.first.state == 'finished' %}
+                                <a href="{% url 'wizard:challenge:bundler:build' challenge.id %}" id="do-download" class="btn btn-success btn-xs">
+                            {% else %}
+                                <a href="{% url 'wizard:challenge:bundler:build' challenge.id %}" id="do-download" class="btn btn-warning btn-xs">
+                            {% endif %}
                                 <i class="fa fa-gears" aria-hidden="true"></i>
                                 Build
                             </a>
