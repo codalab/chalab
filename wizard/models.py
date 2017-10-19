@@ -19,6 +19,7 @@ from tinymce.models import HTMLField
 from chalab.tools import archives, fs
 from chalab.tools.storage import *
 from . import docs
+from .validators import validate_image_file
 
 log = logging.getLogger('wizard/models')
 
@@ -1023,7 +1024,7 @@ class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80, blank=True)
     description = models.TextField(max_length=255, blank=True)
-    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
+    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo, validators=[validate_image_file])
 
     origin_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 
