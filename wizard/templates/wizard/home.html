@@ -220,12 +220,15 @@
                         {% if challenge.is_ready %}
                             {% if challenge.bundle_tasks.first and challenge.bundle_tasks.first.state == 'finished' %}
                                 <a href="{% url 'wizard:challenge:bundler:build' challenge.id %}" id="do-download" class="btn btn-success btn-xs">
+                                    <i class="fa fa-gears" aria-hidden="true"></i>
+                                    Re-Build
+                                </a>
                             {% else %}
                                 <a href="{% url 'wizard:challenge:bundler:build' challenge.id %}" id="do-download" class="btn btn-warning btn-xs">
+                                    <i class="fa fa-gears" aria-hidden="true"></i>
+                                    Build
+                                </a>
                             {% endif %}
-                                <i class="fa fa-gears" aria-hidden="true"></i>
-                                Build
-                            </a>
                         {% endif %}
                     </td>
 
