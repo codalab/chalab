@@ -130,7 +130,8 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
     scoring_program = 'scoring_program_1_2'
 
     ingestion = challenge.ingestion.ingestion_program
-    ingestion_name = os.path.basename(ingestion.path)
+    # ingestion_name = os.path.basename(ingestion.path)
+    ingestion_name = 'ingestion_program_1_2.zip'
     try:
         bt.add_log('Load the challenge ingestion program')
         ingestion.open()
@@ -246,7 +247,8 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
     p['scoring_program'] = scoring_program
 
     ingestion = challenge.ingestion.ingestion_program
-    ingestion_name = os.path.basename(ingestion.path)
+    # ingestion_name = os.path.basename(ingestion.path)
+    ingestion_name = 'ingestion_program_1_2.zip'
     try:
         bt.add_log('Load the challenge ingestion program')
         ingestion.open()
