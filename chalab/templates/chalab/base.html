@@ -25,7 +25,7 @@
 
 </head>
 
-<body>
+<body class="main-background">
 <div class="container">
     {% block body %}
 
@@ -64,7 +64,7 @@
 
     <div id="{% block app_name %}{% endblock %}" class="app">
         <div id="{% block panel_name %}{% endblock %}" class="panel">
-            <div id="{% block module_name %}{% endblock %}" class="module">
+            <div id="{% block module_name %}{% endblock %}" class="module container-padding">
                 {% block content %}
                 {% endblock %}
             </div>
@@ -72,9 +72,9 @@
     </div>
     {% endblock %}
     <footer class="footer">
-        <p>2017, Work In Progress - Version {% VERSION %}</p>
+        <p class="white-text">2017, Work In Progress - Version {% VERSION %}</p>
         <p>
-            <a href="https://github.com/codalab/chalab/issues">
+            <a class="white-text" href="https://github.com/codalab/chalab/issues">
                 <i class="fa fa-github" aria-hidden="true"></i>
                 Join us on Github for contact & Bug Reports.
             </a>
