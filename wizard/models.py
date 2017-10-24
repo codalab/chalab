@@ -1057,7 +1057,7 @@ class IngestionTaskModel(models.Model):
 
     @property
     def is_ready(self):
-        return bool(self.ingestion_program)
+        return True
 
     @property
     def template_mapping(self):
