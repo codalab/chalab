@@ -1,0 +1,29 @@
+{% extends 'wizard/base.html' %}
+{% load bootstrap3 %}
+{% load static %}
+
+{% block flow_content %}
+<div class="update">
+    <div class="into text-muted">
+        <p>
+            Provide a program that reads data and parses the participants' submissions
+        </p>
+    </div>
+
+    <form class='editor' action="#" method="post"
+          enctype="multipart/form-data">
+        {% confirm_form %}
+        {% csrf_token %}
+        {% bootstrap_form form %}
+
+        {% buttons %}
+        <div class="buttons">
+            <button type="submit" class="btn btn-default"
+                    {% if form.disabled %}disabled{% endif %}>
+                <i class="fa fa-save"></i> Update
+            </button>
+        </div>
+        {% endbuttons %}
+    </form>
+</div>
+{% endblock %}

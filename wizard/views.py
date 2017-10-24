@@ -21,7 +21,7 @@ from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, \
     ProtocolModel, \
     DocumentationModel, DocumentationPageModel, BaselineModel, \
-    InvalidAutomlFormatException
+    InvalidAutomlFormatException, IngestionTaskModel
 from .models import challenge_to_mappings, challenge_to_mappings_doc
 
 log = logging.getLogger('wizard.views')
@@ -141,6 +141,14 @@ def challenge_create_from_group(request, group_id):
         task.save()
         template.task = task
 
+    if template.ingestion is not None:
+        from django.core.files import File
+        ingestion = IngestionTaskModel()
+        if bool(template.ingestion.ingestion_program):
+            ingestion.ingestion_program=File(open(template.ingestion.ingestion_program.path, 'rb'))
+        ingestion.save()
+        template.ingestion = ingestion
+
     if template.metric is not None:
         met = template.metric
         met.id = None
@@ -243,6 +251,44 @@ class ChallengeBaselineEdit(FlowOperationMixin, LoginRequiredMixin,
             challenge.save()
 
         return baseline
+
+
+class ChallengeIngestionEdit(FlowOperationMixin, LoginRequiredMixin,
+                             UpdateView):
+    template_name = 'wizard/ingestion.html'
+    model = IngestionTaskModel
+    fields = ['ingestion_program']
+
+    current_flow = flow.IngestionFlowItem
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs['pk']
+        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
+        context['is_ready'] = self.object.is_ready
+        return context
+
+    def get_success_url(self):
+        pk = self.kwargs['pk']
+        return reverse('wizard:challenge:problem', kwargs={'pk': pk})
+
+    def get_object(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        challenge = ChallengeModel.objects.get(id=pk,
+                                               created_by=self.request.user)
+        self._runtime_challenge = challenge
+
+        ingestion = challenge.ingestion
+
+        if ingestion is None:
+            ingestion = IngestionTaskModel.objects.create()
+            challenge.ingestion = ingestion
+            challenge.save()
+
+        return ingestion
 
 
 class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):

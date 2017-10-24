@@ -15,6 +15,8 @@ challenge_wizard = [
 
     url(r'^split/$', views.ChallengeTaskUpdate.as_view(), name='split'),
 
+    url(r'^problem/$', views.ChallengeIngestionEdit.as_view(), name='problem'),
+
     url(r'^metric$', views.metric, name='metric'),
     url(r'^metric/ajax/get_metric/$', views.get_metric, name='get_metric'),
 
