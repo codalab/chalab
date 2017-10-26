@@ -129,6 +129,18 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
     # Scoring program is fixed too
     scoring_program = 'scoring_program_1_2'
 
+    if challenge.ingestion.ingestion_program:
+        ingestion = challenge.ingestion.ingestion_program
+        # ingestion_name = os.path.basename(ingestion.path)
+        ingestion_name = 'ingestion_program_1_2.zip'
+        try:
+            bt.add_log('Load the challenge ingestion program')
+            ingestion.open()
+            copy_file_field(ingestion.file, path.join(output_dir, ingestion_name))
+            p['ingestion_program'] = ingestion_name
+        finally:
+            ingestion.close()
+
     with TemporaryDirectory() as d:
         try:
             task.target_valid.raw_content.open()
@@ -234,6 +246,18 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
 
     p['input_data'] = input_data
     p['scoring_program'] = scoring_program
+
+    if challenge.ingestion.ingestion_program:
+        ingestion = challenge.ingestion.ingestion_program
+        # ingestion_name = os.path.basename(ingestion.path)
+        ingestion_name = 'ingestion_program_1_2.zip'
+        try:
+            bt.add_log('Load the challenge ingestion program')
+            ingestion.open()
+            copy_file_field(ingestion.file, path.join(output_dir, ingestion_name))
+            p['ingestion_program'] = ingestion_name
+        finally:
+            ingestion.close()
 
     with TemporaryDirectory() as d:
         try:

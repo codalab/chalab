@@ -19,6 +19,7 @@ from tinymce.models import HTMLField
 from chalab.tools import archives, fs
 from chalab.tools.storage import *
 from . import docs
+from .validators import validate_image_file
 
 log = logging.getLogger('wizard/models')
 
@@ -1019,11 +1020,59 @@ class BaselineModel(models.Model):
         return {'baseline_submission_url': "URL to download the baseline submission zip."}
 
 
+class IngestionTaskModel(models.Model):
+    ingestion_program = models.FileField(upload_to=save_to_ingestion,
+                                         verbose_name='ingestion program',
+                                         blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # delete old file when replacing by updating the file
+        try:
+            this = BaselineModel.objects.get(id=self.id)
+            if this.ingestion_program != self.ingestion_program:
+                this.ingestion_program.delete(save=False)
+        except:
+            pass  # when new baseline then we do nothing, normal case
+        super(IngestionTaskModel, self).save(*args, **kwargs)
+
+    def delete(self):
+        try:
+            self.ingestion_program.delete(save=False)
+        except:
+            pass
+        super().delete()
+
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
+
+    @property
+    def absolute_uri(self):
+        if self.ingestion_program:
+            url = self.ingestion_program.url
+            url = build_absolute_uri(url)
+        else:
+            url = "UNDEFINED"
+
+        return url
+
+    @property
+    def is_ready(self):
+        return True
+
+    @property
+    def template_mapping(self):
+        return {'ingestion_program_url': self.absolute_uri}
+
+    @property
+    def template_doc(self):
+        return {'ingestion_program_url': "URL to download the ingestion program"}
+
+
 class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80, blank=True)
     description = models.TextField(max_length=255, blank=True)
-    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
+    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo, validators=[validate_image_file])
 
     origin_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 
@@ -1041,6 +1090,8 @@ class ChallengeModel(models.Model):
                                  related_name='challenge', on_delete=models.SET_NULL)
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,
                                     related_name='challenge', on_delete=models.SET_NULL)
+    ingestion = models.OneToOneField(IngestionTaskModel, null=True, blank=True,
+                                     related_name='challenge', on_delete=models.SET_NULL)
     documentation = models.OneToOneField(DocumentationModel, null=True,
                                          blank=True, related_name='challenge', on_delete=models.SET_NULL)
 
@@ -1085,7 +1136,7 @@ class ChallengeModel(models.Model):
     def missings(self):
         missing = []
 
-        required = ['dataset', 'task', 'metric', 'protocol', 'baseline', 'documentation']
+        required = ['dataset', 'task', 'ingestion', 'metric', 'protocol', 'baseline', 'documentation']
         for x in required:
             v = getattr(self, x)
 
@@ -1117,7 +1168,7 @@ class ChallengeModel(models.Model):
         return cls.objects.get(pk=pk)
 
     def delete(self):
-        delete_all([self.task, self.metric, self.protocol,
+        delete_all([self.task, self.ingestion, self.metric, self.protocol,
                     self.baseline, self.documentation])
 
         try:
