@@ -5,7 +5,7 @@ from time import gmtime, strftime
 
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.files.storage import DefaultStorage
 from django.core.validators import validate_slug
 from django.db import models
@@ -30,6 +30,7 @@ def build_absolute_uri(path):
     site = Site.objects.get_current().domain
     url = 'http://{site}{path}'.format(site=site, path=path)
     return url
+
 
 def delete_all(list):
     for obj in list:
@@ -436,6 +437,25 @@ class DatasetModel(models.Model):
     def template_doc(self):
         return {'dataset_name': ''}
 
+    def has_duplicates(self):
+        try:
+            duplicate_datasets = DatasetModel.objects.filter(name=self.name, owner=self.owner)
+            if len(duplicate_datasets) > 1:
+                return True
+            else:
+                return False
+        except ObjectDoesNotExist:
+            print("None found.")
+            return False
+
+    def get_duplicates(self):
+        try:
+            duplicate_datasets = DatasetModel.objects.filter(name=self.name, owner=self.owner)
+        except ObjectDoesNotExist:
+            duplicate_datasets = None
+        finally:
+            return duplicate_datasets
+
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
             try:
@@ -796,6 +816,26 @@ class MetricModel(models.Model):
     def __str__(self):
         return "<%s: \"%s\"; id=%s>" % (type(self).__name__, self.name, self.id)
 
+    @staticmethod
+    def get_duplicates(metric_code, metric_name, metric_owner):
+        """
+        Arguments:
+            metric_code
+            metric_name
+            metric_owner
+
+        Returns: (has_duplicates, duplicates)
+            has_duplicates
+                boolean
+            duplicates
+                Metric Objects or 0
+        """
+        try:
+            duplicates = MetricModel.objects.filter(name=metric_name, owner=metric_owner, code=metric_code)
+            return True, duplicates
+        except ObjectDoesNotExist:
+            return False, 0
+
     @property
     def template_mapping(self):
         return {'metric_name': self.name}
@@ -1037,7 +1077,7 @@ class ChallengeModel(models.Model):
 
     dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL)
     task = models.ForeignKey(TaskModel, null=True, blank=True, on_delete=models.SET_NULL)
-    metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL)
+    metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='challenges')
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
                                  related_name='challenge', on_delete=models.SET_NULL)
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,
