@@ -421,6 +421,8 @@ class DatasetModel(models.Model):
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
 
+    raw_zip = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'dataset'), null=True, blank=True)
+
     def __str__(self):
         return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
 

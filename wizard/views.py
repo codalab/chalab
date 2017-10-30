@@ -283,6 +283,9 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             if not self.disabled and self.request.FILES:
                 u = self.request.FILES.get('automl_upload', None)
 
+                self.object.raw_zip.save(u.name, u)
+                self.object.save()
+
                 try:
                     total, pre_split, useless = self.object.update_from_chalearn(u)
 
