@@ -1,3 +1,4 @@
+import filecmp
 import logging
 import string
 from datetime import datetime
@@ -9,7 +10,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.files.storage import DefaultStorage
 from django.core.validators import validate_slug
 from django.db import models
-from django.db.models import OneToOneField
+from django.db.models import OneToOneField, QuerySet
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
@@ -421,7 +422,7 @@ class DatasetModel(models.Model):
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
 
-    raw_zip = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'dataset'), null=True, blank=True)
+    raw_zip = models.FileField(null=True, blank=True)
 
     def __str__(self):
         return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
@@ -441,22 +442,15 @@ class DatasetModel(models.Model):
 
     def has_duplicates(self):
         try:
-            duplicate_datasets = DatasetModel.objects.filter(name=self.name, owner=self.owner)
-            if len(duplicate_datasets) > 1:
-                return True
+            duplicate_qs = DatasetModel.objects.filter(name=self.name, owner=self.owner).exclude(pk=self.pk)
+            # print("Dupl, same file: {}".format(duplicate_qs))
+            if len(duplicate_qs) > 0:
+                return True, duplicate_qs
             else:
-                return False
+                return False, None
         except ObjectDoesNotExist:
-            print("None found.")
-            return False
-
-    def get_duplicates(self):
-        try:
-            duplicate_datasets = DatasetModel.objects.filter(name=self.name, owner=self.owner)
-        except ObjectDoesNotExist:
-            duplicate_datasets = None
-        finally:
-            return duplicate_datasets
+            # print("None found.")
+            return False, None
 
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
@@ -1077,7 +1071,7 @@ class ChallengeModel(models.Model):
 
     build_at = models.DateTimeField(default=timezone.now)
 
-    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL)
+    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='challenges')
     task = models.ForeignKey(TaskModel, null=True, blank=True, on_delete=models.SET_NULL)
     metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='challenges')
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,

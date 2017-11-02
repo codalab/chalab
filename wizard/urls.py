@@ -13,6 +13,8 @@ challenge_wizard = [
     url(r'^data/pick$', views.data_picker, name='data.pick'),
     url(r'^data/$', views.ChallengeDataEdit.as_view(), name='data'),
 
+    url(r'^data/duplicates$', views.ChallengeDataDuplicates.as_view(), name='data_duplicates'),
+
     url(r'^split/$', views.ChallengeTaskUpdate.as_view(), name='split'),
 
     url(r'^metric$', views.metric, name='metric'),
