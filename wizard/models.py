@@ -481,17 +481,6 @@ class DatasetModel(models.Model):
                             infile.close()
                         outfile.close()
 
-                # Add pre split to database
-                from django.shortcuts import get_object_or_404
-                challenge = get_object_or_404(ChallengeModel, dataset=self.id)
-                task = challenge.task
-                if task is None:
-                    task = TaskModel(owner=self.owner, dataset=self)
-                    task.save()
-                    challenge.task = task
-                    challenge.save()
-                task.update_from_chalearn(root)
-
             input, target, metric, description = self.load_from_automl(root, any_prefix=False)
 
             self.name = name
@@ -504,6 +493,17 @@ class DatasetModel(models.Model):
                 self.default_metric = metric
 
             self.save()
+
+            # Add pre split to database
+            from django.shortcuts import get_object_or_404
+            challenge = get_object_or_404(ChallengeModel, dataset=self.id)
+            task = challenge.task
+            if task is None:
+                task = TaskModel(owner=self.owner, dataset=self)
+                task.save()
+                challenge.task = task
+                challenge.save()
+            task.update_from_chalearn(root)
 
             return (total_dataset, pre_split_dataset,
                     content - necessary_wanted - pre_split_wanted - meta_optional)

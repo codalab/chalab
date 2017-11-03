@@ -68,11 +68,13 @@
                     console.log(last_res)
 
                     var comment = regex_comment.exec(code)
-                    if(comment.length > 1) {
+                    if (comment !== null && comment.length > 1) {
                         comment = comment[1]
                     } else {
                         comment = ''
                     }
+
+                    comment = comment !== null && comment.length > 1 ? comment[1] : ''
 
                     return {
                         'name': last_res[4],
