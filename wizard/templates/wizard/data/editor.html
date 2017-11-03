@@ -62,9 +62,13 @@
         {% confirm_form %}
         {% csrf_token %}
         {% bootstrap_form form %}
-
+        {% if object.raw_zip %}
+            <div class="current-dataset">
+                Current Dataset:<a href="{{ object.raw_zip.path }}">{{ object.raw_zip.path }}</a>
+            </div>
+        {% endif %}
         {% buttons %}
-        <div class="buttons">
+        <div class="margined-buttons">
             <button type="submit"
                     class="btn {% if form.disabled %}btn-disabled{% else %}btn-primary{% endif %}"
                     {% if object.is_public %}
