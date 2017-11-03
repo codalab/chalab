@@ -31,6 +31,7 @@ def build_absolute_uri(path):
     url = 'http://{site}{path}'.format(site=site, path=path)
     return url
 
+
 def delete_all(list):
     for obj in list:
         if obj is not None:
@@ -419,6 +420,8 @@ class DatasetModel(models.Model):
 
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
+
+    raw_zip = models.FileField(null=True, blank=True, upload_to=StorageNameFactory('dataset', 'zip'))
 
     def __str__(self):
         return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
@@ -1083,9 +1086,9 @@ class ChallengeModel(models.Model):
 
     build_at = models.DateTimeField(default=timezone.now)
 
-    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL)
+    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='challenges')
     task = models.ForeignKey(TaskModel, null=True, blank=True, on_delete=models.SET_NULL)
-    metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL)
+    metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='challenges')
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
                                  related_name='challenge', on_delete=models.SET_NULL)
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,

@@ -3,10 +3,12 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import ProtectedError, Prefetch
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.views import View
 from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
@@ -328,6 +330,9 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
             if not self.disabled and self.request.FILES:
                 u = self.request.FILES.get('automl_upload', None)
+
+                self.object.raw_zip.save(u.name, u)
+                self.object.save()
 
                 try:
                     total, pre_split, useless = self.object.update_from_chalearn(u)
