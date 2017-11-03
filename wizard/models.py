@@ -1,4 +1,3 @@
-import filecmp
 import logging
 import string
 from datetime import datetime
@@ -6,11 +5,11 @@ from time import gmtime, strftime
 
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.core.files.storage import DefaultStorage
 from django.core.validators import validate_slug
 from django.db import models
-from django.db.models import OneToOneField, QuerySet
+from django.db.models import OneToOneField
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.deconstruct import deconstructible
@@ -422,7 +421,7 @@ class DatasetModel(models.Model):
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
 
-    raw_zip = models.FileField(null=True, blank=True)
+    raw_zip = models.FileField(null=True, blank=True, upload_to=StorageNameFactory('dataset', 'zip'))
 
     def __str__(self):
         return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
@@ -439,18 +438,6 @@ class DatasetModel(models.Model):
     @property
     def template_doc(self):
         return {'dataset_name': ''}
-
-    def has_duplicates(self):
-        try:
-            duplicate_qs = DatasetModel.objects.filter(name=self.name, owner=self.owner).exclude(pk=self.pk)
-            # print("Dupl, same file: {}".format(duplicate_qs))
-            if len(duplicate_qs) > 0:
-                return True, duplicate_qs
-            else:
-                return False, None
-        except ObjectDoesNotExist:
-            # print("None found.")
-            return False, None
 
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
@@ -811,26 +798,6 @@ class MetricModel(models.Model):
 
     def __str__(self):
         return "<%s: \"%s\"; id=%s>" % (type(self).__name__, self.name, self.id)
-
-    @staticmethod
-    def get_duplicates(metric_code, metric_name, metric_owner):
-        """
-        Arguments:
-            metric_code
-            metric_name
-            metric_owner
-
-        Returns: (has_duplicates, duplicates)
-            has_duplicates
-                boolean
-            duplicates
-                Metric Objects or 0
-        """
-        try:
-            duplicates = MetricModel.objects.filter(name=metric_name, owner=metric_owner, code=metric_code)
-            return True, duplicates
-        except ObjectDoesNotExist:
-            return False, 0
 
     @property
     def template_mapping(self):

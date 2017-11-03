@@ -19,7 +19,7 @@ from group.models import GroupModel
 from user.models import ProfileModel
 from . import models, flow
 from .flow import FlowOperationMixin
-from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm, DuplicateDatasetsForm
+from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, \
     ProtocolModel, \
     DocumentationModel, DocumentationPageModel, BaselineModel, \
@@ -310,22 +310,12 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
                         "Invalid Automl archive",
                         AUTOML_ERROR % (e,))
 
-            # has_duplicates, duplicates = self.object.has_duplicates
-
-            # if has_duplicates:
-            #     # Do something here to handle....
-
             r = super().form_valid(form)
 
             return r
 
     def get_success_url(self):
-        has_duplicates, duplicates = self.object.has_duplicates()
-        print("Has duplicates: {}".format(has_duplicates))
-        if has_duplicates and duplicates:
-            return reverse('wizard:challenge:data_duplicates', kwargs={'pk': self.pk})
-        else:
-            return reverse('wizard:challenge:data', kwargs={'pk': self.pk})
+        return reverse('wizard:challenge:data', kwargs={'pk': self.pk})
 
     def get_context_data(self, **kwargs):
         pk = self.kwargs['pk']
@@ -768,95 +758,3 @@ class DocumentationPageUpdate(FlowOperationMixin, LoginRequiredMixin,
         self._runtime_challenge = challenge
 
         return page
-
-# =================== Duplicate Datasets
-
-
-class ChallengeDataDuplicates(FlowOperationMixin, LoginRequiredMixin, UpdateView):
-    template_name = 'wizard/data/duplicates.html'
-    model = DatasetModel
-    form_class = DuplicateDatasetsForm
-
-    current_flow = flow.DataFlowItem
-
-    def get_form(self, form_class=None):
-        has_duplicates, duplicates_qs = self.object.has_duplicates()
-
-        if has_duplicates:
-            form = DuplicateDatasetsForm(qs=duplicates_qs)
-        else:
-            form = DuplicateDatasetsForm()
-
-        print(form.errors)
-        print(form.non_field_errors())
-        return form
-
-    def post(self, request, *args, **kwargs):
-        pk = self.kwargs['pk']
-        c = ChallengeModel.objects.get(pk=pk, created_by=self.request.user)
-        current_dataset = c.dataset
-        success_flag = False
-
-        overwrite = request.POST.get('overwrite', None)
-        rename = request.POST.get('rename', None)
-        # If we're overwriting other datasets
-        if overwrite and overwrite == 'Overwrite':
-            # Get list of pks
-            selected_duplicates = request.POST.getlist('selected_duplicates', None)
-            if selected_duplicates is not None and len(selected_duplicates) > 0:
-                for dataset_pk in selected_duplicates:
-                    temp_dataset = DatasetModel.objects.get(pk=dataset_pk)
-                    # If linked challenges, update the dataset reference to our dataset.
-                    if temp_dataset.challenges and len(temp_dataset.challenges.all()) > 0:
-                        for challenge in temp_dataset.challenges.all():
-                            challenge.dataset = current_dataset
-                            # If our challenge has a valid associated task, update dataset there too.
-                            if challenge.task and challenge.task.dataset:
-                                challenge.task.dataset = current_dataset
-                                challenge.task.save()
-                            challenge.save()
-                    # Delete overridden dataset.
-                    temp_dataset.delete()
-                    # Make it so we return to data.
-                    success_flag = True
-        # If we're renaming our dataset
-        elif rename and rename == "Rename":
-            new_dataset_name = request.POST.get('new_dataset_name', None)
-            try:
-                current_dataset.name = new_dataset_name
-                # Validate our new name by cleaning all fields. Should really probably just call clean on name.
-                current_dataset.clean_fields()
-                current_dataset.save()
-                success_flag = True
-            except ValidationError:
-                # We do not set success flag, back to this page.
-                print("There was an error")
-        if success_flag:
-            return redirect('wizard:challenge:data', pk=c.pk)
-        # Always return this view if they have errors. Should find a good way to error handle, although it's pretty
-        # fool proof
-        r = super(ChallengeDataDuplicates, self).post(request, *args, **kwargs)
-        return r
-
-    def get_context_data(self, **kwargs):
-        pk = self.kwargs['pk']
-        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
-        has_duplicates, duplicates = self.object.has_duplicates()
-        context = super().get_context_data(challenge=c, **kwargs)
-        context['challenge'] = c
-        context['is_ready'] = self.object.is_ready
-        context['duplicates'] = duplicates
-        return context
-
-    def get_object(self, **kwargs):
-        pk = self.kwargs['pk']
-        self.pk = pk
-        challenge = ChallengeModel.objects.get(id=pk,
-                                               created_by=self.request.user)
-        return challenge.dataset
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.get_object(**kwargs) is None:
-            return redirect('wizard:challenge:data.pick', pk=kwargs['pk'])
-        else:
-            return super().dispatch(request, *args, **kwargs)

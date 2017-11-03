@@ -1,5 +1,4 @@
-from django.forms import ModelForm, FileField, DateTimeInput, Textarea, Form, CheckboxSelectMultiple, CharField\
-    , ModelMultipleChoiceField
+from django.forms import ModelForm, FileField, DateTimeInput, Textarea
 
 from .models import ProtocolModel, DatasetModel, TaskModel
 
@@ -7,15 +6,6 @@ from .models import ProtocolModel, DatasetModel, TaskModel
 def naive_suffix(x):
     x.label = "%s*" % (x.label,)
     return x
-
-
-class DuplicateDatasetsForm(Form):
-    new_dataset_name = CharField(max_length=256, required=False)
-
-    def __init__(self, qs=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if qs:
-            self.fields['selected_duplicates'] = ModelMultipleChoiceField(queryset=qs, widget=CheckboxSelectMultiple())
 
 
 class TaskModelForm(ModelForm):
