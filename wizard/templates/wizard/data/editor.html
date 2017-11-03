@@ -64,7 +64,7 @@
         {% bootstrap_form form %}
         {% if object.raw_zip %}
             <div class="current-dataset">
-                Current Dataset:<a href="{{ object.raw_zip.path }}">{{ object.raw_zip.path }}</a>
+                Current Dataset:<a href="{{ object.raw_zip.url}}">{{ object.raw_zip.url }}</a>
             </div>
         {% endif %}
         {% buttons %}
