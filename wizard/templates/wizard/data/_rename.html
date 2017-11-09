@@ -1,15 +1,24 @@
 <form action="{% url "wizard:challenge:data_duplicates" pk=challenge.pk %}" method="post">
-    <h3>Rename Current Dataset</h3>
     {% csrf_token %}
-    <div class="panel panel-warning">
-        <h4 class="alert-danger">Rename Currrent Dataset:</h4>
-        <div class="panel-body">
-            {{ form.new_dataset_name.label }}
-            {{ form.new_dataset_name }}
+
+    <div class="panel-primary">
+        <div class="panel-heading">
+            <h4>Rename Currrent Dataset:</h4>
         </div>
+        <div class="panel-body">
+            <div align="center" class="well">
+                <strong>Dataset(s) with the same name and owner have been found. Please provide a new name.</strong>
+                <i>If a dataset is `used` that means a competition currently uses it.</i>
+                <br>
+                {{ form.new_dataset_name.label }}:
+                <br>
+                {{ form.new_dataset_name }}
+                <div style="padding-top: 5%" class="buttons">
+                    <input id="rename" name="rename" type="submit" value="Rename"/>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div style="padding-top: 5%" class="buttons">
-        <input id="rename" name="rename" type="submit" value="Rename"/>
-    </div>
 </form>

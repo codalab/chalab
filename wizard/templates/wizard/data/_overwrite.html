@@ -1,33 +1,39 @@
 <form action="{% url "wizard:challenge:data_duplicates" pk=challenge.pk %}" method="post">
-    <h3>Overwrite Un-Used Duplicates or Rename Current?</h3>
     {% csrf_token %}
-    <div class="panel panel-warning">
-        <h4 class="alert-danger">Delete Non-Used Duplicates:</h4>
+    <div class="panel-primary">
+        <div class="panel-heading">
+            <h4>Non-Used Datasets:</h4>
+        </div>
         <div class="panel-body">
-            <table class="table table-responsive">
-                <thead>
-                <th>Name:</th>
-                <th>Zip File:</th>
-                <th>Owner:</th>
-                <th>PK:</th>
-                </thead>
-                <tbody>
-                <!-- Grab inputs from Boundfield `selected_duplicates` -->
-                {% for duplicate in duplicates %}
-                    <tr>
-                        <td>{{ duplicate.name }}</td>
-                        <td>{{ duplicate.raw_zip }}</td>
-                        <td>{{ duplicate.owner }}</td>
-                        <td>{{ duplicate.pk }}</td>
+            <div class="well">
+                <h4>Dataset(s) with the same name and owner have been found. Confirm delete un-used duplicates?</h4>
+                <i>If a dataset is `used` that means a competition currently uses it.</i>
+                <table class="table table-responsive table-bordered">
+                    <thead>
+                    <tr class="bg-danger">
+                        <th>Name:</th>
+                        <th>Zip File:</th>
+                        <th>Owner:</th>
+                        <th>PK:</th>
+                    </thead>
+                    <tbody>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    <!-- Grab inputs from Boundfield `selected_duplicates` -->
+                    {% for duplicate in duplicates %}
+                        <tr>
+                            <td>{{ duplicate.name }}</td>
+                            <td>{{ duplicate.raw_zip }}</td>
+                            <td>{{ duplicate.owner }}</td>
+                            <td>{{ duplicate.pk }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div style="padding-top: 5%" class="buttons">
         <input id="overwrite" name="overwrite" type="submit" value="Overwrite"/>
-        <input id="rename" name="rename" type="submit" value="Rename"/>
     </div>
 </form>

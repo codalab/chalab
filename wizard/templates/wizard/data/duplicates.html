@@ -7,12 +7,14 @@
 
 {% block flow_content %}
     <div align="center" class="update">
-        <div class="desc panel">
-                <h3 class="alert-success">Current Dataset:</h3>
+        <div class="desc panel-primary">
+            <div class="panel-heading">
+                <h3 class="">Current Dataset:</h3>
+            </div>
             <div class="panel-body">
-                <table class="table table-responsive">
+                <table class="table table-responsive well">
                 <thead>
-                <tr>
+                <tr class="bg-success">
                     <th>Name:</th>
                     <th>Zip File</th>
                     <th>Owner</th>
@@ -31,7 +33,6 @@
             </div>
         </div>
     <hr>
-    {{ operation }}
     {% if operation == "mixed" %}
         {% include 'wizard/data/_mixed.html' %}
     {% elif operation == 'overwrite' %}
