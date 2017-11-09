@@ -320,8 +320,10 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             return r
 
     def get_success_url(self):
-        has_duplicates, duplicates = self.object.has_duplicates()
-        print("Has duplicates: {}".format(has_duplicates))
+        duplicate_data = self.object.has_duplicates()
+        has_duplicates = duplicate_data['has_duplicates']
+        duplicates = duplicate_data['duplicates']
+        # print("Has duplicates: {}".format(has_duplicates))
         if has_duplicates and duplicates:
             return reverse('wizard:challenge:data_duplicates', kwargs={'pk': self.pk})
         else:
@@ -780,15 +782,20 @@ class ChallengeDataDuplicates(FlowOperationMixin, LoginRequiredMixin, UpdateView
     current_flow = flow.DataFlowItem
 
     def get_form(self, form_class=None):
-        has_duplicates, duplicates_qs = self.object.has_duplicates()
+        form = DuplicateDatasetsForm()
+        duplicate_data = self.object.has_duplicates()
+
+        has_duplicates = duplicate_data['has_duplicates']
+        duplicates_qs = duplicate_data['duplicates']
+        operation = duplicate_data['operation']
+
+        print("Has duplicates: {}".format(has_duplicates))
+        print("Duplicates: {}".format(duplicates_qs))
+        print("Operation: {}".format(operation))
 
         if has_duplicates:
             form = DuplicateDatasetsForm(qs=duplicates_qs)
-        else:
-            form = DuplicateDatasetsForm()
 
-        print(form.errors)
-        print(form.non_field_errors())
         return form
 
     def post(self, request, *args, **kwargs):
@@ -796,55 +803,80 @@ class ChallengeDataDuplicates(FlowOperationMixin, LoginRequiredMixin, UpdateView
         c = ChallengeModel.objects.get(pk=pk, created_by=self.request.user)
         current_dataset = c.dataset
         success_flag = False
+        duplicate_data = current_dataset.has_duplicates()
+        duplicates = duplicate_data['duplicates']
+        operation = duplicate_data['operation']
 
-        overwrite = request.POST.get('overwrite', None)
-        rename = request.POST.get('rename', None)
         # If we're overwriting other datasets
-        if overwrite and overwrite == 'Overwrite':
-            # Get list of pks
-            selected_duplicates = request.POST.getlist('selected_duplicates', None)
-            if selected_duplicates is not None and len(selected_duplicates) > 0:
-                for dataset_pk in selected_duplicates:
-                    temp_dataset = DatasetModel.objects.get(pk=dataset_pk)
-                    # If linked challenges, update the dataset reference to our dataset.
-                    if temp_dataset.challenges and len(temp_dataset.challenges.all()) > 0:
-                        for challenge in temp_dataset.challenges.all():
-                            challenge.dataset = current_dataset
-                            # If our challenge has a valid associated task, update dataset there too.
-                            if challenge.task and challenge.task.dataset:
-                                challenge.task.dataset = current_dataset
-                                challenge.task.save()
-                            challenge.save()
-                    # Delete overridden dataset.
-                    temp_dataset.delete()
-                    # Make it so we return to data.
-                    success_flag = True
+        if operation == 'overwrite':
+            for dataset in duplicates:
+                dataset.delete()
+            success_flag = True
         # If we're renaming our dataset
-        elif rename and rename == "Rename":
+        elif operation == "rename":
             new_dataset_name = request.POST.get('new_dataset_name', None)
             try:
                 current_dataset.name = new_dataset_name
                 # Validate our new name by cleaning all fields. Should really probably just call clean on name.
                 current_dataset.clean_fields()
                 current_dataset.save()
+                for task in current_dataset.tasks.all():
+                    task.name = current_dataset.name
+                    task.save()
                 success_flag = True
             except ValidationError:
                 # We do not set success flag, back to this page.
                 print("There was an error")
+        # Case for dealing with duplicate queryset that contains linked datasets.
+        elif operation == "mixed":
+            # Grab the post button values
+            overwrite = request.POST.get('overwrite', None)
+            rename = request.POST.get('rename', None)
+            if overwrite and overwrite == "Overwrite":
+                # Overwrite
+                for dataset in duplicates:
+                    dataset.delete()
+                success_flag = True
+            elif rename and rename == "Rename":
+                # Rename
+                new_dataset_name = request.POST.get('new_dataset_name', None)
+                try:
+                    current_dataset.name = new_dataset_name
+                    # Validate our new name by cleaning all fields. Should really probably just call clean on name.
+                    current_dataset.clean_fields()
+                    current_dataset.save()
+                    for task in current_dataset.tasks.all():
+                        task.name = current_dataset.name
+                        task.save()
+                    success_flag = True
+                except ValidationError:
+                    # We do not set success flag, back to this page.
+                    print("There was an error")
         if success_flag:
             return redirect('wizard:challenge:data', pk=c.pk)
-        # Always return this view if they have errors. Should find a good way to error handle, although it's pretty
-        # fool proof
         r = super(ChallengeDataDuplicates, self).post(request, *args, **kwargs)
         return r
 
     def get_context_data(self, **kwargs):
+        duplicate_dict = dict()
+
         pk = self.kwargs['pk']
         c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
-        has_duplicates, duplicates = self.object.has_duplicates()
+        duplicate_data = self.object.has_duplicates()
+        has_duplicates = duplicate_data['has_duplicates']
+        duplicates = duplicate_data['duplicates']
+        operation = duplicate_data['operation']
+
         context = super().get_context_data(challenge=c, **kwargs)
         context['challenge'] = c
         context['is_ready'] = self.object.is_ready
+
+        if operation == "mixed":
+            for duplicate in duplicates:
+                duplicate_dict[duplicate.pk] = duplicate
+            context['duplicate_dict'] = duplicate_dict
+
+        context['operation'] = duplicate_data['operation']
         context['duplicates'] = duplicates
         return context
 

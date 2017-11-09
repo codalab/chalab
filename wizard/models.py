@@ -441,16 +441,40 @@ class DatasetModel(models.Model):
         return {'dataset_name': ''}
 
     def has_duplicates(self):
-        try:
-            duplicate_qs = DatasetModel.objects.filter(name=self.name, owner=self.owner).exclude(pk=self.pk)
-            # print("Dupl, same file: {}".format(duplicate_qs))
-            if len(duplicate_qs) > 0:
-                return True, duplicate_qs
+        # Initial Variables.
+        has_duplicates = False
+        recommended_operation = None
+        datasets_with_links = list()
+        datasets_without_links = list()
+
+        duplicate_qs = DatasetModel.objects.filter(name=self.name, owner=self.owner).exclude(pk=self.pk)
+
+        if len(duplicate_qs) > 0:
+            has_duplicates = True
+            for duplicate in duplicate_qs:
+                if len(duplicate.challenges.all()) != 0:
+                    datasets_with_links.append(duplicate)
+                else:
+                    datasets_without_links.append(duplicate)
+            if len(duplicate_qs) == len(datasets_with_links):
+                print("All datasets have links. Rename mode.")
+                recommended_operation = 'rename'
+            elif len(duplicate_qs) == len(datasets_without_links):
+                print("All datasets do not have links. Overwrite Mode ")
+                recommended_operation = 'overwrite'
             else:
-                return False, None
-        except ObjectDoesNotExist:
-            # print("None found.")
-            return False, None
+                print("Mixed linked, and non-linked datasets. "
+                      "Please choose to either over-write non-linked datasets, or rename your current.")
+                recommended_operation = 'mixed'
+
+                # Take our previous query, exclude ones with challenges
+                duplicate_qs = duplicate_qs.exclude(challenges__isnull=False)
+        data_dict = {
+            'has_duplicates': has_duplicates,
+            'operation': recommended_operation,
+            'duplicates': duplicate_qs,
+        }
+        return data_dict
 
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
@@ -664,7 +688,7 @@ class TaskModel(models.Model):
     is_public = models.BooleanField(default=False, null=False)
     is_ready = models.BooleanField(default=False, null=False)
     name = models.CharField(max_length=256, null=False)
-    dataset = models.ForeignKey(DatasetModel, null=True, on_delete=models.CASCADE)
+    dataset = models.ForeignKey(DatasetModel, null=True, on_delete=models.CASCADE, related_name="tasks")
 
     updated_at = models.DateTimeField(auto_now=True)
 

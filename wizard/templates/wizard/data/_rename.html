@@ -1,0 +1,15 @@
+<form action="{% url "wizard:challenge:data_duplicates" pk=challenge.pk %}" method="post">
+    <h3>Rename Current Dataset</h3>
+    {% csrf_token %}
+    <div class="panel panel-warning">
+        <h4 class="alert-danger">Rename Currrent Dataset:</h4>
+        <div class="panel-body">
+            {{ form.new_dataset_name.label }}
+            {{ form.new_dataset_name }}
+        </div>
+    </div>
+
+    <div style="padding-top: 5%" class="buttons">
+        <input id="rename" name="rename" type="submit" value="Rename"/>
+    </div>
+</form>

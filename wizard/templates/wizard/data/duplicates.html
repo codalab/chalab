@@ -1,45 +1,43 @@
 {% extends 'wizard/base.html' %}
 {% load static %}
+{#{% load duplicate_dataset_filters %}#}
 {% load bootstrap3 %}
 
 {% block module_name %}editor{% endblock %}
 
 {% block flow_content %}
-<div class="update">
-    {{ form.errors }} {{ form.non_field_errors }}
-    <h3>Current Dataset:</h3>
-    <div class="desc">
-        <table class="table">
-            <thead>
+    <div align="center" class="update">
+        <div class="desc panel">
+                <h3 class="alert-success">Current Dataset:</h3>
+            <div class="panel-body">
+                <table class="table table-responsive">
+                <thead>
                 <tr>
                     <th>Name:</th>
-                    <th>Input:</th>
-                    <th>Target:</th>
                     <th>Zip File</th>
                     <th>Owner</th>
-                    <th>PK</th>
+                    <th>ID</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 <tr>
                     <td>{{ object.name }}</td>
-                    <td>{{ object.input }}</td>
-                    <td>{{ object.target }}</td>
                     <td>{{ object.raw_zip }}</td>
                     <td>{{ object.owner }}</td>
                     <td>{{ object.pk }}</td>
                 </tr>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    <hr>
+    {{ operation }}
+    {% if operation == "mixed" %}
+        {% include 'wizard/data/_mixed.html' %}
+    {% elif operation == 'overwrite' %}
+        {% include 'wizard/data/_overwrite.html' %}
+    {% elif operation == 'rename' %}
+        {% include 'wizard/data/_rename.html' %}
+    {% endif %}
     </div>
-
-    <h3>Solve Duplicate Entries:</h3>
-    <form action="{% url "wizard:challenge:data_duplicates" pk=challenge.pk %}" method="post">
-        {% csrf_token %}
-        {{ form }}
-        <input id="overwrite" name="overwrite" type="submit" value="Overwrite" />
-        <input id="rename" name="rename" type="submit" value="Rename" />
-{#        <input type="submit" value="Submit">#}
-    </form>
-</div>
 {% endblock %}
