@@ -12,6 +12,7 @@ from django.core.files import File
 from django.utils import timezone
 
 from chalab.tools import fs
+from .models import BundleTaskModel
 from wizard import resources
 from wizard.models import challenge_to_mappings
 
@@ -128,6 +129,18 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
     # Scoring program is fixed too
     scoring_program = 'scoring_program_1_2'
 
+    if challenge.ingestion.ingestion_program:
+        ingestion = challenge.ingestion.ingestion_program
+        # ingestion_name = os.path.basename(ingestion.path)
+        ingestion_name = 'ingestion_program_1_2.zip'
+        try:
+            bt.add_log('Load the challenge ingestion program')
+            ingestion.open()
+            copy_file_field(ingestion.file, path.join(output_dir, ingestion_name))
+            p['ingestion_program'] = ingestion_name
+        finally:
+            ingestion.close()
+
     with TemporaryDirectory() as d:
         try:
             task.target_valid.raw_content.open()
@@ -159,8 +172,8 @@ def gen_dev_phase(bt, output_dir, challenge, task, protocol, metric):
 
             load_metadata_files(challenge.dataset, d, name)
 
-            if not os.path.isfile(path.join(d, '%s_public.info' % name)):
-                create_info_file(challenge, d)
+            # if not os.path.isfile(path.join(d, '%s_public.info' % name)):
+            #     create_info_file(challenge, d)
 
             zipdir(bt, output_dir, input_data, d)
             p['input_data'] = input_data + '.zip'
@@ -233,6 +246,18 @@ def gen_final_phase(bt, output_dir, challenge, task, protocol, metric):
 
     p['input_data'] = input_data
     p['scoring_program'] = scoring_program
+
+    if challenge.ingestion.ingestion_program:
+        ingestion = challenge.ingestion.ingestion_program
+        # ingestion_name = os.path.basename(ingestion.path)
+        ingestion_name = 'ingestion_program_1_2.zip'
+        try:
+            bt.add_log('Load the challenge ingestion program')
+            ingestion.open()
+            copy_file_field(ingestion.file, path.join(output_dir, ingestion_name))
+            p['ingestion_program'] = ingestion_name
+        finally:
+            ingestion.close()
 
     with TemporaryDirectory() as d:
         try:
@@ -415,7 +440,8 @@ def generate_task_data(bundle_task, challenge):
 
 
 @shared_task
-def bundle(bundle_task):
+def bundle(bundle_task_pk):
+    bundle_task = BundleTaskModel.objects.get(pk=bundle_task_pk)
     try:
         challenge = bundle_task.challenge
 

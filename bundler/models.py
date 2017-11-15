@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.deconstruct import deconstructible
 
 from chalab.tools.storage import *
+from chalab.utils import get_nice_file_size
 from wizard.models import ChallengeModel
 
 storage = DefaultStorage()
@@ -64,7 +65,7 @@ class BundleTaskModel(models.Model):
         (FAILED, 'Failed'),
     )
 
-    challenge = models.ForeignKey(ChallengeModel, null=False)
+    challenge = models.ForeignKey(ChallengeModel, null=False, related_name="bundle_tasks")
     state = models.CharField(max_length=10, choices=STATE_CHOICES)
     progress_perc = models.IntegerField(default=0, null=False)
 
@@ -72,6 +73,8 @@ class BundleTaskModel(models.Model):
     closed = models.DateTimeField(null=True)
 
     output = models.FileField(null=True, storage=OverwriteStorage(), upload_to=save_to_bundle)
+
+    current_task_id = models.CharField(null=True, blank=True, max_length=64)
 
     def __str__(self):
         return "<%s: challenge=%s, state=%s>" \
@@ -83,6 +86,13 @@ class BundleTaskModel(models.Model):
     @property
     def is_download_ready(self):
         return self.state == self.FINISHED
+
+    @property
+    def get_size_formatted(self):
+        if self.output.file:
+            return get_nice_file_size(self.output.file)
+        else:
+            return None
 
     @classmethod
     def create(cls, challenge):

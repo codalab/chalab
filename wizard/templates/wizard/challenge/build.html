@@ -57,20 +57,25 @@
     </div>
     <div class="col-sm-4">
         {% if bundler and not bundler.done %}
-        <script type="text/javascript">
-                        window.BUILT_BTN = ""
-                                + "<a href=\"{% url 'wizard:challenge:build' pk=challenge.pk %}\""
-                                + "class=\"btn btn-block btn-success\">"
-                                + "<i class=\"fa fa-refresh\"></i>"
-                                + "Build Completed! Refresh the page</a>";
+            <script type="text/javascript">
+                window.BUILT_BTN = ""
+                    + "<a href=\"{% url 'wizard:challenge:build' pk=challenge.pk %}\""
+                    + "class=\"btn btn-block btn-success\">"
+                    + "<i class=\"fa fa-refresh\"></i>"
+                    + "Build Completed! Refresh the page</a>";
 
-        </script>
-        <span id="building-btn">
-                            <button class="btn disabled btn-block">
-                                <i class="fa fa-cog fa-spin fa-fx" aria-hidden="true"></i>
-                                Building...
-                            </button>
-                    </span>
+            </script>
+            <span id="building-btn">
+                <button class="btn disabled btn-block">
+                    <i class="fa fa-cog fa-spin fa-fx" aria-hidden="true"></i>
+                    Building...
+                </button>
+            </span>
+            <div align="center" style="margin-top: 10%;" id="cancel-btn">
+                <a class="btn btn-lg btn-danger" href="{% url 'wizard:challenge:bundler:cancel' bundler.id %}">
+                    <i class="fa fa-cog fa-spin fa-fx" aria-hidden="true"></i>
+                    Cancel</a>
+            </div>
         {% else %}
         <form action="{% url 'wizard:challenge:bundler:build' challenge.id %}">
             {% csrf_token %}
@@ -152,7 +157,7 @@
            id="do-download"
            class="btn btn-success btn-block">
             <i class="fa fa-cloud-download" aria-hidden="true"></i>
-            Download
+            Download: {{ bundler.get_size_formatted }}
         </a>
         {% else %}
         <button type="submit" class="btn btn-block disabled">

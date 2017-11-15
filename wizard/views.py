@@ -3,10 +3,12 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import ProtectedError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import ProtectedError, Prefetch
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.views import View
 from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
@@ -21,7 +23,7 @@ from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, \
     ProtocolModel, \
     DocumentationModel, DocumentationPageModel, BaselineModel, \
-    InvalidAutomlFormatException
+    InvalidAutomlFormatException, IngestionTaskModel
 from .models import challenge_to_mappings, challenge_to_mappings_doc
 
 log = logging.getLogger('wizard.views')
@@ -63,14 +65,19 @@ You can check the archive actual content using <code>`unzip -l ./my_archive.zip'
 def home(request):
     u = request.user
 
-    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at')
+    challenges = ChallengeModel.objects.filter(created_by=u).order_by('-created_at').prefetch_related(
+        Prefetch(
+            'bundle_tasks',
+            BundleTaskModel.objects.order_by('-created'),
+        )
+    )
 
     profile, created = ProfileModel.objects.get_or_create(user=u)
 
     context = {
         'object_list': challenges,
         'actual_group': profile.actual_group,
-        }
+    }
 
     return render(request, 'wizard/home.html', context=context)
 
@@ -135,6 +142,14 @@ def challenge_create_from_group(request, group_id):
         task.dataset = data
         task.save()
         template.task = task
+
+    if template.ingestion is not None:
+        from django.core.files import File
+        ingestion = IngestionTaskModel()
+        if bool(template.ingestion.ingestion_program):
+            ingestion.ingestion_program=File(open(template.ingestion.ingestion_program.path, 'rb'))
+        ingestion.save()
+        template.ingestion = ingestion
 
     if template.metric is not None:
         met = template.metric
@@ -240,6 +255,44 @@ class ChallengeBaselineEdit(FlowOperationMixin, LoginRequiredMixin,
         return baseline
 
 
+class ChallengeIngestionEdit(FlowOperationMixin, LoginRequiredMixin,
+                             UpdateView):
+    template_name = 'wizard/ingestion.html'
+    model = IngestionTaskModel
+    fields = ['ingestion_program']
+
+    current_flow = flow.IngestionFlowItem
+
+    def get_context_data(self, **kwargs):
+        pk = self.kwargs['pk']
+        c = ChallengeModel.objects.get(id=pk, created_by=self.request.user)
+
+        context = super().get_context_data(challenge=c, **kwargs)
+        context['challenge'] = c
+        context['is_ready'] = self.object.is_ready
+        return context
+
+    def get_success_url(self):
+        pk = self.kwargs['pk']
+        return reverse('wizard:challenge:problem', kwargs={'pk': pk})
+
+    def get_object(self, **kwargs):
+        pk = self.kwargs['pk']
+
+        challenge = ChallengeModel.objects.get(id=pk,
+                                               created_by=self.request.user)
+        self._runtime_challenge = challenge
+
+        ingestion = challenge.ingestion
+
+        if ingestion is None:
+            ingestion = IngestionTaskModel.objects.create()
+            challenge.ingestion = ingestion
+            challenge.save()
+
+        return ingestion
+
+
 class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     template_name = 'wizard/data/editor.html'
     model = DatasetModel
@@ -277,6 +330,9 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
 
             if not self.disabled and self.request.FILES:
                 u = self.request.FILES.get('automl_upload', None)
+
+                self.object.raw_zip.save(u.name, u)
+                self.object.save()
 
                 try:
                     total, pre_split, useless = self.object.update_from_chalearn(u)
@@ -650,6 +706,9 @@ def documentation(request, pk):
     if doc is None:
         doc = DocumentationModel.create()
         c.documentation = doc
+        for page in doc.documentation_pages.all():
+            mappings = challenge_to_mappings(c)
+            page.render(mappings)
         c.save()
 
     current = 'overview'
@@ -667,6 +726,9 @@ def documentation_page(request, pk, page_id):
     p = get_object_or_404(DocumentationPageModel,
                           documentation=c.documentation, id=page_id)
     doc = c.documentation
+    mappings = challenge_to_mappings(c)
+    p.render(mappings)
+    p.save()
 
     context = {'challenge': c, 'doc': doc, 'pages': doc.pages,
                'current': p.name, 'current_page': p,

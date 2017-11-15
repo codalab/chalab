@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'tinymce',
     'bootstrap3',
     'debug_toolbar',
+    'django_extensions',
 
     'landing',
     'user',
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -108,7 +110,8 @@ DATABASES = {
         'PORT': 5432
     }
 }
-db_from_env = dj_database_url.config(conn_max_age=500)
+# db_from_env = dj_database_url.config(conn_max_age=500)
+db_from_env = dj_database_url.config()
 DATABASES['default'].update(db_from_env)
 
 # Celery
@@ -175,6 +178,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'chalab', 'static')
 ]
 
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
 # Uploads / Media files
 # =====================
 
@@ -199,13 +204,13 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_LOGOUT_ON_GET = True
 DEFAULT_FROM_EMAIL = "Chalab <donotreply@chalab.com>"
 
-if not DEBUG:
-    ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-else:
+if DEBUG:
     ACCOUNT_EMAIL_VERIFICATION = 'optional'
-
+else:
+    ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 LOGIN_REDIRECT_URL = '/wizard/'

@@ -4,11 +4,13 @@
 
 {% block module_name %}editor{% endblock %}
 
-{% block flow_content %}
+{% block extra_head %}
+    <script src="/static/chalab/CodeMirror/codemirror.js"></script>
+    <link rel="stylesheet" href="/static/chalab/CodeMirror/codemirror.css">
+    <script src="/static/chalab/CodeMirror/python/python.js"></script>
+{% endblock %}
 
-<script src="{% static 'chalab/CodeMirror/codemirror.js' %}"></script>
-<link rel="stylesheet" href="{% static 'chalab/CodeMirror/codemirror.css' %}">
-<script src="{% static 'chalab/CodeMirror/python/python.js' %}"></script>
+{% block flow_content %}
 
 <div class="pick">
     <div class="public">
@@ -55,12 +57,29 @@
 
                 var regex_find_fun_with_comment = /(^|(#(.*))?[\r\n]+)def\s+(\w+)\([^,\)]+,[^,\)]+\)\s*:/g;
 
+                var regex_comment = /#(.*?)\n/
+
                 function get_name_and_comment(code){
                     var last_res;
+                    console.log("please jesus: " + code)
                     while (matches = regex_find_fun_with_comment.exec(code)) {
                         last_res = matches;
                     }
-                    return {'name':last_res[4].trim(), 'comment': last_res[3].trim()};
+                    console.log(last_res)
+
+                    var comment = regex_comment.exec(code)
+                    if (comment !== null && comment.length > 1) {
+                        comment = comment[1]
+                    } else {
+                        comment = ''
+                    }
+
+                    comment = comment !== null && comment.length > 1 ? comment[1] : ''
+
+                    return {
+                        'name': last_res[4],
+                        'comment': comment
+                    };
                 }
             </script>
 

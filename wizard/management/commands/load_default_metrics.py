@@ -13,7 +13,7 @@ METRICS = {
 
 def example(solution, prediction):
     mse = np.mean((solution-prediction)**2)
-    return np.mean(mss)""",
+    return np.mean(mse)""",
         'is_default': True
     },
     'bac_binary': {

@@ -51,9 +51,9 @@ class Command(BaseCommand):
         else:
             for (path, name) in list_folders(PATH_CHALEARN_DATASET):
                 self._success('loading: %s' % path)
-                dataset = models.DatasetModel.create_from_chalearn(path, 'Chalearn - ' + name)
+                dataset = models.DatasetModel.create_from_chalearn(path, name)
                 self._success('Successfully loaded dataset: %s' % path)
-                models.TaskModel.from_chalearn(dataset, path, 'Chalearn - %s - Base Task' % name)
+                models.TaskModel.from_chalearn(dataset, path, '%s - Base Task' % name)
                 self._success('Successfully loaded task: %s' % path)
 
         self._success('Successfully loaded the tasks and datasets')

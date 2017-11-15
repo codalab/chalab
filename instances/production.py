@@ -5,8 +5,10 @@ def clearl(xs):
     return [x.strip() for x in xs]
 
 
-DEBUG = False
-SECRET_KEY = os.environ['CHALAB_SECRET_KEY'].strip()
+DEFAULT_FROM_EMAIL='webmaster@chalab'
+DEBUG = True
+# SECRET_KEY = os.environ['CHALAB_SECRET_KEY'].strip()
+SECRET_KEY = os.environ.get('CHALAB_SECRET_KEY')
 ALLOWED_HOSTS = clearl(os.environ['CHALAB_ALLOWED_HOSTS'].split(','))
 
 LOGGING = {

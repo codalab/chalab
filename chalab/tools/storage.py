@@ -38,5 +38,9 @@ def save_to_baseline(instance, filename):
     return "".join(["data/baseline/", str(instance.id), "/", filename])
 
 
+def save_to_ingestion(instance, filename):
+    return "".join(["data/ingestion/", str(instance.id), "/", filename])
+
+
 def save_to_bundle(instance, filename):
     return "".join(["data/bundles/", str(instance.challenge.id), "/", filename])

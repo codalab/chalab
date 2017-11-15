@@ -52,6 +52,13 @@ class SplitFlowItem(FlowItem):
         return c.task.is_ready
 
 
+class IngestionFlowItem(FlowItem):
+    name = 'Problem'
+
+    def _is_ready(self, c):
+        return c.ingestion.is_ready
+
+
 class MetricFlowItem(FlowItem):
     name = 'Metric'
 
@@ -81,7 +88,7 @@ class DocumentationFlowItem(FlowItem):
 
 
 class Flow(object):
-    FLOW = [DataFlowItem, SplitFlowItem, MetricFlowItem, ProtocolFlowItem,
+    FLOW = [DataFlowItem, SplitFlowItem, IngestionFlowItem, MetricFlowItem, ProtocolFlowItem,
             BaselineFlowItem, DocumentationFlowItem]
 
     def __init__(self, current_clss, challenge):

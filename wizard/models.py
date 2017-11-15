@@ -19,6 +19,7 @@ from tinymce.models import HTMLField
 from chalab.tools import archives, fs
 from chalab.tools.storage import *
 from . import docs
+from .validators import validate_image_file
 
 log = logging.getLogger('wizard/models')
 
@@ -29,6 +30,7 @@ def build_absolute_uri(path):
     site = Site.objects.get_current().domain
     url = 'http://{site}{path}'.format(site=site, path=path)
     return url
+
 
 def delete_all(list):
     for obj in list:
@@ -419,6 +421,8 @@ class DatasetModel(models.Model):
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
 
+    raw_zip = models.FileField(null=True, blank=True, upload_to=StorageNameFactory('dataset', 'zip'))
+
     def __str__(self):
         return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
 
@@ -480,17 +484,6 @@ class DatasetModel(models.Model):
                             infile.close()
                         outfile.close()
 
-                # Add pre split to database
-                from django.shortcuts import get_object_or_404
-                challenge = get_object_or_404(ChallengeModel, dataset=self.id)
-                task = challenge.task
-                if task is None:
-                    task = TaskModel(owner=self.owner, dataset=self)
-                    task.save()
-                    challenge.task = task
-                    challenge.save()
-                task.update_from_chalearn(root)
-
             input, target, metric, description = self.load_from_automl(root, any_prefix=False)
 
             self.name = name
@@ -503,6 +496,17 @@ class DatasetModel(models.Model):
                 self.default_metric = metric
 
             self.save()
+
+            # Add pre split to database
+            from django.shortcuts import get_object_or_404
+            challenge = get_object_or_404(ChallengeModel, dataset=self.id)
+            task = challenge.task
+            if task is None:
+                task = TaskModel(owner=self.owner, dataset=self)
+                task.save()
+                challenge.task = task
+                challenge.save()
+            task.update_from_chalearn(root)
 
             return (total_dataset, pre_split_dataset,
                     content - necessary_wanted - pre_split_wanted - meta_optional)
@@ -704,6 +708,7 @@ class TaskModel(models.Model):
             s = self.test_ratio + self.train_ratio + self.valid_ratio
 
             if round(s,10) != 100:
+                raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
                 raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
@@ -932,7 +937,7 @@ class DocumentationPageModel(models.Model):
     content = HTMLField()
     rendered = HTMLField(null=True, blank=True)
 
-    documentation = models.ForeignKey(DocumentationModel, on_delete=models.CASCADE)
+    documentation = models.ForeignKey(DocumentationModel, related_name='documentation_pages', on_delete=models.CASCADE)
 
     def __str__(self):
         return "<%s: \"%s\"; pos=%s>" % (type(self).__name__,
@@ -1018,11 +1023,59 @@ class BaselineModel(models.Model):
         return {'baseline_submission_url': "URL to download the baseline submission zip."}
 
 
+class IngestionTaskModel(models.Model):
+    ingestion_program = models.FileField(upload_to=save_to_ingestion,
+                                         verbose_name='ingestion program',
+                                         blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # delete old file when replacing by updating the file
+        try:
+            this = BaselineModel.objects.get(id=self.id)
+            if this.ingestion_program != self.ingestion_program:
+                this.ingestion_program.delete(save=False)
+        except:
+            pass  # when new baseline then we do nothing, normal case
+        super(IngestionTaskModel, self).save(*args, **kwargs)
+
+    def delete(self):
+        try:
+            self.ingestion_program.delete(save=False)
+        except:
+            pass
+        super().delete()
+
+    def __str__(self):
+        return "<%s: id=%s>" % (type(self).__name__, self.id)
+
+    @property
+    def absolute_uri(self):
+        if self.ingestion_program:
+            url = self.ingestion_program.url
+            url = build_absolute_uri(url)
+        else:
+            url = "UNDEFINED"
+
+        return url
+
+    @property
+    def is_ready(self):
+        return True
+
+    @property
+    def template_mapping(self):
+        return {'ingestion_program_url': self.absolute_uri}
+
+    @property
+    def template_doc(self):
+        return {'ingestion_program_url': "URL to download the ingestion program"}
+
+
 class ChallengeModel(models.Model):
     title = models.CharField(max_length=60)
     organization_name = models.CharField(max_length=80, blank=True)
     description = models.TextField(max_length=255, blank=True)
-    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo)
+    logo = models.ImageField(null=True, blank=True, upload_to=save_to_logo, validators=[validate_image_file])
 
     origin_group = models.ForeignKey('group.GroupModel', null=True, blank=True, on_delete=models.SET_NULL)
 
@@ -1033,13 +1086,15 @@ class ChallengeModel(models.Model):
 
     build_at = models.DateTimeField(default=timezone.now)
 
-    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL)
+    dataset = models.ForeignKey(DatasetModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='challenges')
     task = models.ForeignKey(TaskModel, null=True, blank=True, on_delete=models.SET_NULL)
-    metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL)
+    metric = models.ForeignKey(MetricModel, null=True, blank=True, on_delete=models.SET_NULL, related_name='challenges')
     protocol = models.ForeignKey(ProtocolModel, null=True, blank=True,
                                  related_name='challenge', on_delete=models.SET_NULL)
     baseline = models.OneToOneField(BaselineModel, null=True, blank=True,
                                     related_name='challenge', on_delete=models.SET_NULL)
+    ingestion = models.OneToOneField(IngestionTaskModel, null=True, blank=True,
+                                     related_name='challenge', on_delete=models.SET_NULL)
     documentation = models.OneToOneField(DocumentationModel, null=True,
                                          blank=True, related_name='challenge', on_delete=models.SET_NULL)
 
@@ -1084,7 +1139,7 @@ class ChallengeModel(models.Model):
     def missings(self):
         missing = []
 
-        required = ['dataset', 'task', 'metric', 'protocol', 'baseline', 'documentation']
+        required = ['dataset', 'task', 'ingestion', 'metric', 'protocol', 'baseline', 'documentation']
         for x in required:
             v = getattr(self, x)
 
@@ -1116,7 +1171,7 @@ class ChallengeModel(models.Model):
         return cls.objects.get(pk=pk)
 
     def delete(self):
-        delete_all([self.task, self.metric, self.protocol,
+        delete_all([self.task, self.ingestion, self.metric, self.protocol,
                     self.baseline, self.documentation])
 
         try:
