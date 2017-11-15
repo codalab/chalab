@@ -12,3 +12,4 @@ def get_nice_file_size(input_file):
             num /= 1024.0
     except FileNotFoundError:
         print("Could not find file!")
+        return 0
