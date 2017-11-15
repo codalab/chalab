@@ -15,7 +15,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'IAMTHEDEVSECRETKEY'
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = []
 
 # Application definition
@@ -205,6 +205,12 @@ ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_LOGOUT_ON_GET = True
+DEFAULT_FROM_EMAIL = "Chalab <donotreply@chalab.com>"
 
+if DEBUG:
+    ACCOUNT_EMAIL_VERIFICATION = 'optional'
+else:
+    ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 LOGIN_REDIRECT_URL = '/wizard/'
