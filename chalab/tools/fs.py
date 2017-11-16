@@ -19,11 +19,8 @@ def sole_path(path):
 
     if len(l) != 1:
         print("Found multiple directories/files inside temp path.")
-        for file_or_dir in l:
-            print("File or directory found in temp directory from zip: {}".format(file_or_dir))
         return path, True
     else:
-        print("L in sole_path is {}".format(l))
         return os.path.join(path, l[0]), False
 
 

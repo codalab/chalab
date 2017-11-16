@@ -491,10 +491,6 @@ class DatasetModel(models.Model):
                             infile.close()
                         outfile.close()
 
-            # # Past this point root needs to contain a reference to name.
-            # if loose_dataset_flag:
-            #     root = os.path.join(root,name)
-
             input, target, metric, description = self.load_from_automl(root, name, any_prefix=False)
 
             self.name = name
