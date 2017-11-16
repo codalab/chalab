@@ -192,6 +192,7 @@ class AxisDescriptionModel(models.Model):
 
         self.count = self.count or c1 or c2
 
+        # It looks like these just check if there's more meta than associated dataset files?
         if not (c1 == self.count or c1 is None):
             print("Self count is: {0}; Expected: {1}".format(self.count, c1))
             # raise ValidationError("the size of the 'types' data "
@@ -444,18 +445,12 @@ class DatasetModel(models.Model):
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
             try:
-                print("FP_ZIP in update_from_chalearn: {}".format(fp_zip))
-                print("D in update_from_chalearn: {}".format(d))
-
                 root, loose_dataset_flag = fs.sole_path(d)
 
                 if loose_dataset_flag:
                     name = fp_zip.name.split(".")[0]
                 else:
                     name = os.path.basename(root)
-
-                print("ROOT in update_from_chalearn: {}".format(root))
-                print("NAME in update_from_chalearn: {}".format(name))
 
                 content = set(x for x in os.listdir(root))
 
@@ -645,7 +640,6 @@ def create_with_file(clss, file_path, **kwargs):
 def chalearn_path(path, suffix, name=None, any_prefix=False):
     if any_prefix:
         l = fs.ls(path, '*%s' % suffix, glob=True)
-        print("L in chalearn_path fs.ls is {}".format(l))
 
         if len(l) != 1:
             raise FileNotFoundError("""Expected a match for: %s/*%s, got no/multiple results: %s"""
@@ -657,8 +651,6 @@ def chalearn_path(path, suffix, name=None, any_prefix=False):
         else:
             name = path.split('/')[-1]
             p = os.path.join(path, '%s%s' % (name, suffix))
-
-        print("P in chalearn_path os.path is {}".format(p))
         return p
 
 
