@@ -1,6 +1,8 @@
-from django.forms import ModelForm, FileField, DateTimeInput, Textarea
+from django.forms import ModelForm, FileField, DateTimeInput, Textarea, TextInput, BooleanField
 
 from .models import ProtocolModel, DatasetModel, TaskModel
+
+from django.utils import timezone
 
 
 def naive_suffix(x):
@@ -52,7 +54,20 @@ class ProtocolForm(ModelForm):
 class DataUpdateForm(ModelForm):
     class Meta:
         model = DatasetModel
-        fields = ['name']
+        # fields = ['display_name', 'name', 'raw_zip_name', 'description', 'show_date_on_display']
+        fields = ['description']
+        labels = {
+            'description': 'Description or Label ( Leave blank for date last modified )',
+            # 'show_date_on_display': 'Use Date Last Modified For Description?'
+        }
+        widgets = {
+            'description': TextInput(
+                attrs={
+                    'placeholder': timezone.now().date(),
+                    'maxlength': '20',
+                       }
+            ),
+        }
 
 
 class DataUpdateAndUploadForm(DataUpdateForm):

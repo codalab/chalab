@@ -120,6 +120,8 @@ class ColumnarFileModel(models.Model):
     name = None
 
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'columns'))
+    raw_content_original_name = models.CharField(max_length=100, null=True, blank=True, default="")
+
     count = models.IntegerField()
 
     def __str__(self):
@@ -138,6 +140,8 @@ class ColumnarFileModel(models.Model):
 
         new_self = type(self)(raw_content=File(
             open(self.raw_content.path, 'rb')))
+
+        new_self.raw_content_original_name = self.raw_content_original_name
 
         new_self.name = self.name
         new_self.count = self.count
@@ -297,6 +301,7 @@ class MatrixModel(models.Model):
     name = 'matrix'
 
     raw_content = models.FileField(upload_to=StorageNameFactory('data', 'raw', 'matrix'))
+    raw_content_original_name = models.CharField(max_length=100, null=True, blank=True, default="")
     is_sparse = models.BooleanField(default=False, null=False)
 
     cols = OneToOneField(AxisDescriptionModel, null=True, related_name='matrix_cols')
@@ -345,6 +350,8 @@ class MatrixModel(models.Model):
         new_self = MatrixModel(raw_content=File(
             open(self.raw_content.path, 'rb')))
 
+        new_self.raw_content_original_name = self.raw_content_original_name
+
         new_self.name = self.name
         new_self.is_sparse = self.is_sparse
 
@@ -364,6 +371,7 @@ class MatrixModel(models.Model):
             pass
 
         super().delete()
+
 
 class InvalidAutomlFormatException(Exception):
     def __init__(self, cause):
@@ -409,7 +417,7 @@ class DatasetModel(models.Model):
     keywords = models.CharField(max_length=256, default="", blank=True)
     authors = models.CharField(max_length=256, default="", blank=True)
 
-    resource_created = models.DateField(null=True, blank=True, default=None)
+    resource_created = models.DateField(null=True, blank=True, default=timezone.now())
     resource_url = models.URLField(null=True, blank=True, default=None)
     contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
     contact_url = models.URLField(max_length=256, null=True, blank=True, default=None)
@@ -422,6 +430,10 @@ class DatasetModel(models.Model):
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
 
     raw_zip = models.FileField(null=True, blank=True, upload_to=StorageNameFactory('dataset', 'zip'))
+    display_name = models.CharField(max_length=256, null=False, default="")
+    raw_zip_name = models.CharField(max_length=100, null=True, blank=True, default="")
+    resource_updated = models.DateField(null=True, blank=True, default=timezone.now())
+
 
     def __str__(self):
         return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)
@@ -442,6 +454,10 @@ class DatasetModel(models.Model):
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
             try:
+                # print(type(fp_zip))
+                # print(fp_zip)
+                # print(dir(fp_zip))
+                # # display_name = fp_zip.name.split(".")[0]
                 root = fs.sole_path(d)
                 name = os.path.basename(root)
 
@@ -489,7 +505,10 @@ class DatasetModel(models.Model):
             self.name = name
             self.input = input
             self.target = target
-            self.description = description
+
+            if description and description != "":
+                self.description = description
+
             self.fixed_split = pre_split_dataset
 
             if metric:
@@ -599,6 +618,15 @@ class DatasetModel(models.Model):
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
+        self.resource_updated = timezone.now()
+
+        if not self.raw_zip_name and self.raw_zip_name == "" and self.raw_zip:
+            self.raw_zip_name = os.path.basename(self.raw_zip.name)
+        if not self.description or self.description == "":
+            self.description = self.resource_updated.date()
+
+        self.display_name = "{0}: {1}-{2}".format(self.pk, self.name, self.description)
+
         super().save(*args, **kwargs)
 
     def delete(self):
@@ -618,8 +646,12 @@ def create_with_file(clss, file_path, **kwargs):
         c = clss(**kwargs)
         base_name = os.path.basename(file_path)
         with open(file_path, 'r') as f:
+            print(base_name)
+            c.raw_content_original_name = base_name
             c.raw_content.save(base_name, f)
             c.save()
+            print(c.raw_content_original_name)
+            print(c.pk)
         return c
     except Exception as e:
         log.error("Problem creating from file: clss=%r, path=%s\n%e", clss, file_path, e)

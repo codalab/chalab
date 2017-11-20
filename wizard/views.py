@@ -316,8 +316,15 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             form.fields[f].disabled = self.disabled
         form.disabled = self.disabled
 
-        if 'name' in form.fields:
-            form.fields['name'].disabled = True
+        # form.fields['display_name'].required = False
+        # form.fields['raw_zip_name'].required = False
+        #
+        # if 'name' in form.fields:
+        #     form.fields['name'].disabled = True
+        # if 'display_name' in form.fields:
+        #     form.fields['display_name'].disabled = True
+        # if 'raw_zip_name' in form.fields:
+        #     form.fields['raw_zip_name'].disabled = True
 
         return form
 
@@ -332,6 +339,7 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
                 u = self.request.FILES.get('automl_upload', None)
 
                 self.object.raw_zip.save(u.name, u)
+                self.object.raw_zip_name = u.name
                 self.object.save()
 
                 try:
@@ -370,6 +378,8 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
         context = super().get_context_data(challenge=c, **kwargs)
         context['challenge'] = c
         context['is_ready'] = self.object.is_ready
+        context['input'] = self.object.input
+        context['target'] = self.object.target
         return context
 
     def get_object(self, **kwargs):
@@ -513,7 +523,7 @@ def data_picker(request, pk):
             if request.POST['button'] == 'delete':
 
                 try:
-                    models.DatasetModel.objects.filter(
+                    models.DatasetModel.objects.get(
                         is_public=False, owner=request.user.id, id=ds
                     ).delete()
                 except ProtectedError:
@@ -545,8 +555,8 @@ def data_picker(request, pk):
         else:
             pubds = models.DatasetModel.objects.all().filter(is_public=True)
             
-        prids = models.DatasetModel.objects.all().filter(
-            is_public=False, owner=request.user.id).exclude(input=None)
+        prids = models.DatasetModel.objects.filter(
+            is_public=False, owner=request.user.id).exclude(input=None).order_by('pk')
 
         context = {'public_datasets': pubds,
                    'private_datasets': prids,
