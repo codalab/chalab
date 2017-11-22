@@ -417,7 +417,7 @@ class DatasetModel(models.Model):
     keywords = models.CharField(max_length=256, default="", blank=True)
     authors = models.CharField(max_length=256, default="", blank=True)
 
-    resource_created = models.DateField(null=True, blank=True, default=timezone.now())
+    resource_created = models.DateField(null=True, blank=True, default=timezone.now)
     resource_url = models.URLField(null=True, blank=True, default=None)
     contact_name = models.CharField(max_length=256, null=True, blank=True, default=None)
     contact_url = models.URLField(max_length=256, null=True, blank=True, default=None)
@@ -432,8 +432,7 @@ class DatasetModel(models.Model):
     raw_zip = models.FileField(null=True, blank=True, upload_to=StorageNameFactory('dataset', 'zip'))
     display_name = models.CharField(max_length=256, null=False, default="")
     raw_zip_name = models.CharField(max_length=100, null=True, blank=True, default="")
-    resource_updated = models.DateField(null=True, blank=True, default=timezone.now())
-
+    resource_updated = models.DateField(null=True, blank=True, default=timezone.now)
 
     def __str__(self):
         return "<%s: \"%s\"; id=%s; ready=%s>" % (type(self).__name__, self.name, self.id, self.is_ready)

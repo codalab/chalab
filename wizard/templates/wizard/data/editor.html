@@ -11,10 +11,10 @@
             <table class="table">
                 <thead>
                 <tr class="bg-success">
-                    <th>Dataset Name</th>
-                    <th>Dataset Display Name:</th>
-                    <th>Dataset Zip File Name:</th>
-                    <th>Uploaded/Created:</th>
+                    <th>Name</th>
+                    <th>Display Name:</th>
+                    <th>Zip File:</th>
+                    <th>Created:</th>
                     <th>Last Updated:</th>
                     <th>Pre-Split Dataset?:</th>
                 </tr>
@@ -32,19 +32,13 @@
             </table>
 
             <h3>Matrix info:</h3>
-            <table class="table table-bordered">
+            <table class="table">
                 <thead>
                 <tr class="bg-warning">
                     <th></th>
                     <th>Rows</th>
                     <th>Columns</th>
                     <th>Data/Solution File</th>
-                    <th>Row Type File</th>
-                    <th>Row Name File</th>
-                    <th>Row Doc File</th>
-                    <th>Col Type File</th>
-                    <th>Col Name File</th>
-                    <th>Col Doc File</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -53,54 +47,16 @@
                     <td>{{ input.rows.count }}</td>
                     <td>{{ input.cols.count }}</td>
                     <td>{{ input.raw_content_original_name }}</td>
-                    <td>{{ input.rows.types.raw_content_original_name }}</td>
-                    <td>{{ input.rows.names.raw_content_original_name }}</td>
-                    <td>{{ input.rows.docs.raw_content_original_name }}</td>
-                    <td>{{ input.cols.types.raw_content_original_name }}</td>
-                    <td>{{ input.cols.names.raw_content_original_name }}</td>
-                    <td>{{ input.cols.docs.raw_content_original_name }}</td>
                 </tr>
                 <tr>
                     <td>Target</td>
                     <td>{{ target.rows.count }}</td>
                     <td>{{ target.cols.count }}</td>
                     <td>{{ target.raw_content_original_name}}</td>
-                    <td>{{ target.rows.types.raw_content_original_name }}</td>
-                    <td>{{ target.rows.names.raw_content_original_name }}</td>
-                    <td>{{ target.rows.docs.raw_content_original_name }}</td>
-                    <td>{{ target.cols.types.raw_content_original_name }}</td>
-                    <td>{{ target.cols.names.raw_content_original_name }}</td>
-                    <td>{{ target.cols.docs.raw_content_original_name }}</td>
                 </tr>
                 </tbody>
             </table>
         </div>
-
-        {% comment %}
-    {% if not object.is_public %}
-    <h3>Dataset Format:</h3>
-    <p>
-        Use the <code>Choose File</code> button to upload a dataset
-        archive.
-    </p>
-
-    <p>
-        Only <code>AutoML</code> archives are currently supported.
-        They are defined as a zip file containing at least:
-    <pre>DataName/
-    DataName.data
-    DataName.solution</pre>
-
-        Or, if data are already splitted, the zip file must contain :
-    <pre>DataName/
-    DataName_train.data
-    DataName_train.solution
-    DataName_valid.data
-    DataName_valid.solution
-    DataName_test.data
-    DataName_test.solution</pre>
-    {% endif %}
-    {% endcomment %}
 
         <h3>Dataset Form</h3>
         <form class='editor' action="#" method="post" enctype="multipart/form-data">
