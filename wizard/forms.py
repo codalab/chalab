@@ -54,11 +54,9 @@ class ProtocolForm(ModelForm):
 class DataUpdateForm(ModelForm):
     class Meta:
         model = DatasetModel
-        # fields = ['display_name', 'name', 'raw_zip_name', 'description', 'show_date_on_display']
         fields = ['description']
         labels = {
             'description': 'Description or Label ( Leave blank for date last modified )',
-            # 'show_date_on_display': 'Use Date Last Modified For Description?'
         }
         widgets = {
             'description': TextInput(

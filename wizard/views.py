@@ -316,16 +316,6 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             form.fields[f].disabled = self.disabled
         form.disabled = self.disabled
 
-        # form.fields['display_name'].required = False
-        # form.fields['raw_zip_name'].required = False
-        #
-        # if 'name' in form.fields:
-        #     form.fields['name'].disabled = True
-        # if 'display_name' in form.fields:
-        #     form.fields['display_name'].disabled = True
-        # if 'raw_zip_name' in form.fields:
-        #     form.fields['raw_zip_name'].disabled = True
-
         return form
 
     def form_valid(self, form):

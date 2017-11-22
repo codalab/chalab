@@ -453,10 +453,6 @@ class DatasetModel(models.Model):
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
             try:
-                # print(type(fp_zip))
-                # print(fp_zip)
-                # print(dir(fp_zip))
-                # # display_name = fp_zip.name.split(".")[0]
                 root = fs.sole_path(d)
                 name = os.path.basename(root)
 
@@ -645,12 +641,9 @@ def create_with_file(clss, file_path, **kwargs):
         c = clss(**kwargs)
         base_name = os.path.basename(file_path)
         with open(file_path, 'r') as f:
-            print(base_name)
             c.raw_content_original_name = base_name
             c.raw_content.save(base_name, f)
             c.save()
-            print(c.raw_content_original_name)
-            print(c.pk)
         return c
     except Exception as e:
         log.error("Problem creating from file: clss=%r, path=%s\n%e", clss, file_path, e)
