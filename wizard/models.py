@@ -192,12 +192,15 @@ class AxisDescriptionModel(models.Model):
 
         self.count = self.count or c1 or c2
 
+        # It looks like these just check if there's more meta than associated dataset files?
         if not (c1 == self.count or c1 is None):
-            raise ValidationError("the size of the 'types' data "
-                                  "doesn't match the others definitions.")
+            print("Self count is: {0}; Expected: {1}".format(self.count, c1))
+            # raise ValidationError("the size of the 'types' data "
+            #                       "doesn't match the others definitions.")
         if not (c2 == self.count or c2 is None):
-            raise ValidationError("the size of the 'names' data "
-                                  "doesn't match the others definitions.")
+            print("Self count is: {0}; Expected: {1}".format(self.count, c2))
+            # raise ValidationError("the size of the 'names' data "
+            #                       "doesn't match the others definitions.")
 
     def save(self, *args, **kwargs):
         self.clean()  # Force clean on save.
@@ -442,8 +445,12 @@ class DatasetModel(models.Model):
     def update_from_chalearn(self, fp_zip):
         with archives.unzip_fp(fp_zip) as d:
             try:
-                root = fs.sole_path(d)
-                name = os.path.basename(root)
+                root, loose_dataset_flag = fs.sole_path(d)
+
+                if loose_dataset_flag:
+                    name = fp_zip.name.split(".")[0]
+                else:
+                    name = os.path.basename(root)
 
                 content = set(x for x in os.listdir(root))
 
@@ -484,7 +491,7 @@ class DatasetModel(models.Model):
                             infile.close()
                         outfile.close()
 
-            input, target, metric, description = self.load_from_automl(root, any_prefix=False)
+            input, target, metric, description = self.load_from_automl(root, name, any_prefix=False)
 
             self.name = name
             self.input = input
@@ -506,23 +513,23 @@ class DatasetModel(models.Model):
                 task.save()
                 challenge.task = task
                 challenge.save()
-            task.update_from_chalearn(root)
+            task.update_from_chalearn(root, name)
 
             return (total_dataset, pre_split_dataset,
                     content - necessary_wanted - pre_split_wanted - meta_optional)
 
     @classmethod
     def create_from_chalearn(cls, path, name, owner=None, is_public=True):
-        input, target, metric, description = cls.load_from_automl(path, any_prefix=False)
+        input, target, metric, description = cls.load_from_automl(path, name=name, any_prefix=False)
         return cls.create(owner=owner,
                           is_public=is_public,
                           name=name, description=description, fixed_split=True,
                           default_metric=metric, input=input, target=target)
 
     @classmethod
-    def load_from_automl(cls, path, any_prefix=False):
+    def load_from_automl(cls, path, name=None, any_prefix=False):
         try:
-            i = load_info_file(chalearn_path(path, '_public.info'))
+            i = load_info_file(chalearn_path(path, '_public.info', name,))
             is_sparse = i.getboolean('is_sparse')
             task, metric = i.get('task'), i.get('metric')
             metric = default_metric(metric, task)
@@ -535,33 +542,33 @@ class DatasetModel(models.Model):
         except:
             description = None
 
-        input = load_chalearn(path, '.data',
+        input = load_chalearn(path, '.data', name,
                               is_sparse=is_sparse, any_prefix=any_prefix)
 
-        if os.path.isfile(chalearn_path(path, '_public.info')):
-            input.cols.doc = create_with_file(ColumnarDocDefinition, chalearn_path(path, '_public.info'))
+        if os.path.isfile(chalearn_path(path, '_public.info', name)):
+            input.cols.doc = create_with_file(ColumnarDocDefinition, chalearn_path(path, '_public.info', name))
 
-        if os.path.isfile(chalearn_path(path, '_feat.type')):
-            input.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_feat.type'))
+        if os.path.isfile(chalearn_path(path, '_feat.type', name)):
+            input.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_feat.type', name))
 
-        if os.path.isfile(chalearn_path(path, '_feat.name')):
-            input.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_feat.name'))
+        if os.path.isfile(chalearn_path(path, '_feat.name', name)):
+            input.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_feat.name', name))
 
         try:
-            cols_type = load_chalearn(path, '_feat.type',
+            cols_type = load_chalearn(path, '_feat.type', name,
                                       clss=ColumnarTypesDefinition,
                                       any_prefix=any_prefix)
             input.cols.types = cols_type
         except FileNotFoundError:
             pass  # It's fine, feat specs are not mandatory.
 
-        target = load_chalearn(path, '.solution', any_prefix=any_prefix)
+        target = load_chalearn(path, '.solution', name, any_prefix=any_prefix)
 
-        if os.path.isfile(chalearn_path(path, '_label.type')):
-            target.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_label.type'))
+        if os.path.isfile(chalearn_path(path, '_label.type', name)):
+            target.cols.types = create_with_file(ColumnarTypesDefinition, chalearn_path(path, '_label.type', name))
 
-        if os.path.isfile(chalearn_path(path, '_label.name')):
-            target.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_label.name'))
+        if os.path.isfile(chalearn_path(path, '_label.name', name)):
+            target.cols.names = create_with_file(ColumnarNamesDefinition, chalearn_path(path, '_label.name', name))
 
         input.save()
         target.save()
@@ -626,7 +633,7 @@ def create_with_file(clss, file_path, **kwargs):
         raise e
 
 
-def chalearn_path(path, suffix, any_prefix=False):
+def chalearn_path(path, suffix, name=None, any_prefix=False):
     if any_prefix:
         l = fs.ls(path, '*%s' % suffix, glob=True)
 
@@ -635,14 +642,17 @@ def chalearn_path(path, suffix, any_prefix=False):
                                     % (path, suffix, l))
         return l[0]
     else:
-        name = path.split('/')[-1]
-        p = os.path.join(path, '%s%s' % (name, suffix))
+        if name:
+            p = os.path.join(path, '%s%s' % (name, suffix))
+        else:
+            name = path.split('/')[-1]
+            p = os.path.join(path, '%s%s' % (name, suffix))
         return p
 
 
-def load_chalearn(path, suffix, clss=MatrixModel, any_prefix=False, **kwargs):
+def load_chalearn(path, suffix, name=None, clss=MatrixModel, any_prefix=False, **kwargs):
     return create_with_file(clss,
-                            chalearn_path(path, suffix, any_prefix=any_prefix),
+                            chalearn_path(path, suffix, name, any_prefix=any_prefix),
                             **kwargs)
 
 
@@ -709,7 +719,6 @@ class TaskModel(models.Model):
 
             if round(s,10) != 100:
                 raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
-                raise ValidationError('invalid ratios: sum is not 100%%: %s' % s)
 
         # TODO(laurent): there are some subtleties on the validation
         # regarding nested fields. We also do not need to duplicate
@@ -725,22 +734,22 @@ class TaskModel(models.Model):
         self.clean()  # Force clean on save.
         super().save(*args, **kwargs)
 
-    def update_from_chalearn(self, path):
-        loaded = self.load_from_chalearn(path)
+    def update_from_chalearn(self, path, name=None):
+        loaded = self.load_from_chalearn(path, name)
         for k, v in loaded.items():
             setattr(self, k, v)
         self.save()
 
     @classmethod
-    def load_from_chalearn(cls, path):
-        train = load_chalearn(path, '_train.data')
-        train_target = load_chalearn(path, '_train.solution')
+    def load_from_chalearn(cls, path, name=None):
+        train = load_chalearn(path, '_train.data', name)
+        train_target = load_chalearn(path, '_train.solution', name)
 
-        test = load_chalearn(path, '_test.data')
-        test_target = load_chalearn(path, '_test.solution')
+        test = load_chalearn(path, '_test.data', name)
+        test_target = load_chalearn(path, '_test.solution', name)
 
-        valid = load_chalearn(path, '_valid.data')
-        valid_target = load_chalearn(path, '_valid.solution')
+        valid = load_chalearn(path, '_valid.data', name)
+        valid_target = load_chalearn(path, '_valid.solution', name)
 
         train_count = train.rows.count
         valid_count = valid.rows.count

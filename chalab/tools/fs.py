@@ -11,14 +11,17 @@ class InvalidDirectoryException(Exception):
 
 
 def sole_path(path):
+    """
+    :param path: Directory to check
+    :return tuple: First value is the path housing the dataset files, Second value is boolean flag for loose dataset.
+    """
     l = ls(path)
 
     if len(l) != 1:
-        raise InvalidDirectoryException(
-            "Expected a single file/folder in path, got multiple: %s" % l
-        )
-
-    return os.path.join(path, l[0])
+        print("Found multiple directories/files inside temp path.")
+        return path, True
+    else:
+        return os.path.join(path, l[0]), False
 
 
 def ls(*paths, glob=False):
