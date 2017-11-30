@@ -54,9 +54,9 @@ class ProtocolForm(ModelForm):
 class DataUpdateForm(ModelForm):
     class Meta:
         model = DatasetModel
-        fields = ['description']
+        fields = ['description', 'raw_zip']
         labels = {
-            'description': 'Description or Label ( Leave blank for date last modified )',
+            'description': 'Description or Label ( Optional )',
         }
         widgets = {
             'description': TextInput(
@@ -66,15 +66,3 @@ class DataUpdateForm(ModelForm):
                        }
             ),
         }
-
-
-class DataUpdateAndUploadForm(DataUpdateForm):
-    automl_upload = FileField(required=False)
-
-    class Meta(DataUpdateForm.Meta):
-        fields = DataUpdateForm.Meta.fields + [
-            'automl_upload'
-        ]
-
-    def do_hide(self):
-        self.fields['automl_upload'] = HiddenField()

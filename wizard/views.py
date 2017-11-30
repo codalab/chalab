@@ -19,7 +19,7 @@ from group.models import GroupModel
 from user.models import ProfileModel
 from . import models, flow
 from .flow import FlowOperationMixin
-from .forms import ProtocolForm, DataUpdateAndUploadForm, DataUpdateForm
+from .forms import ProtocolForm, DataUpdateForm
 from .models import ChallengeModel, DatasetModel, TaskModel, MetricModel, \
     ProtocolModel, \
     DocumentationModel, DocumentationPageModel, BaselineModel, \
@@ -296,7 +296,7 @@ class ChallengeIngestionEdit(FlowOperationMixin, LoginRequiredMixin,
 class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
     template_name = 'wizard/data/editor.html'
     model = DatasetModel
-    form_class = DataUpdateAndUploadForm
+    form_class = DataUpdateForm
 
     current_flow = flow.DataFlowItem
 
@@ -307,10 +307,9 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
             self.object.is_ready and dataset_users > 1)
 
     def get_form(self, form_class=None):
-        if self.object.is_public:
-            form = super().get_form(form_class=DataUpdateForm)
-        else:
-            form = super().get_form(form_class=form_class)
+        form = super().get_form()
+        if not self.object.is_public:
+            form.fields['raw_zip'].disabled = True
 
         for f in form.fields.keys():
             form.fields[f].disabled = self.disabled
@@ -325,15 +324,15 @@ class ChallengeDataEdit(FlowOperationMixin, LoginRequiredMixin, UpdateView):
                                           """You can't edit a dataset that you do not own.""")
         else:
 
-            if not self.disabled and self.request.FILES:
-                u = self.request.FILES.get('automl_upload', None)
+            if not self.disabled and form.cleaned_data['raw_zip']:
+                raw_zip = form.cleaned_data['raw_zip']
 
-                self.object.raw_zip.save(u.name, u)
-                self.object.raw_zip_name = u.name
+                self.object.raw_zip.save(raw_zip.name, raw_zip)
+                self.object.raw_zip_name = raw_zip.name
                 self.object.save()
 
                 try:
-                    total, pre_split, useless = self.object.update_from_chalearn(u)
+                    total, pre_split, useless = self.object.update_from_chalearn(raw_zip)
 
                     if pre_split:
                         text = 'Already split dataset'
