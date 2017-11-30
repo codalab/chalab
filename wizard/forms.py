@@ -1,4 +1,4 @@
-from django.forms import ModelForm, FileField, DateTimeInput, Textarea, TextInput, BooleanField
+from django.forms import ModelForm, DateTimeInput, Textarea, TextInput
 
 from .models import ProtocolModel, DatasetModel, TaskModel
 
