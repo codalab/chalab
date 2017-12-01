@@ -5,91 +5,86 @@
 {% block module_name %}editor{% endblock %}
 
 {% block flow_content %}
-<div class="update">
-    <h3>Current Dataset:</h3>
-    <div class="desc">
-        <table class="table">
-            <thead>
-            <tr>
-                <th></th>
-                <th>Rows</th>
-                <th>Columns</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Input</td>
-                <td>{{ object.input.rows.count }}</td>
-                <td>{{ object.input.cols.count }}</td>
-            </tr>
-            <tr>
-                <td>Target</td>
-                <td>{{ object.target.rows.count }}</td>
-                <td>{{ object.target.cols.count }}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    <div class="update">
+        <div class="desc">
+            <table class="table">
+                <thead>
+                <tr class="bg-success">
+                    <th>Name</th>
+                    <th>Display Name:</th>
+                    <th>Zip File:</th>
+                    <th>Created:</th>
+                    <th>Last Updated:</th>
+                    <th>Pre-Split Dataset?:</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ object.name }}</td>
+                    <td>{{ object.display_name }}</td>
+                    <td>{{ object.raw_zip_name }}</td>
+                    <td>{{ object.resource_created }}</td>
+                    <td>{{ object.resource_updated }}</td>
+                    <td>{{ object.fixed_split }}</td>
+                </tr>
+                </tbody>
+            </table>
 
-    {% comment %}
-    {% if not object.is_public %}
-    <h3>Dataset Format:</h3>
-    <p>
-        Use the <code>Choose File</code> button to upload a dataset
-        archive.
-    </p>
-
-    <p>
-        Only <code>AutoML</code> archives are currently supported.
-        They are defined as a zip file containing at least:
-    <pre>DataName/
-    DataName.data
-    DataName.solution</pre>
-
-        Or, if data are already splitted, the zip file must contain :
-    <pre>DataName/
-    DataName_train.data
-    DataName_train.solution
-    DataName_valid.data
-    DataName_valid.solution
-    DataName_test.data
-    DataName_test.solution</pre>
-    {% endif %}
-    {% endcomment %}
-
-    <h3>Dataset submission:</h3>
-    <form class='editor' action="#" method="post" enctype="multipart/form-data">
-        {% confirm_form %}
-        {% csrf_token %}
-        {% bootstrap_form form %}
-        {% if object.raw_zip %}
-            <div class="current-dataset">
-                Current Dataset:<a href="{{ object.raw_zip.url}}">{{ object.raw_zip.url }}</a>
-            </div>
-        {% endif %}
-        {% buttons %}
-        <div class="margined-buttons">
-            <button type="submit"
-                    class="btn {% if form.disabled %}btn-disabled{% else %}btn-primary{% endif %}"
-                    {% if object.is_public %}
-                    data-placement="top" data-toggle="tooltip"
-                    data-title="You can't edit public datasets"
-                    disabled
-                    {% elif form.disabled %}
-                    data-placement="top" data-toggle="tooltip"
-                    data-title="An other chalenge use this dataset. Impossible to update it"
-                    disabled
-                    {% endif %}>
-                <i class="fa fa-save"></i> Update
-            </button>
-
-            <a href="{% url 'wizard:challenge:data.pick' pk=challenge.pk %}"
-               class="btn btn-default picker">
-                <i class="fa fa-times"></i>
-                Pick another dataset
-            </a>
+            <h3>Matrix info:</h3>
+            <table class="table">
+                <thead>
+                <tr class="bg-warning">
+                    <th></th>
+                    <th>Rows</th>
+                    <th>Columns</th>
+                    <th>Data/Solution File</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Input</td>
+                    <td>{{ input.rows.count }}</td>
+                    <td>{{ input.cols.count }}</td>
+                    <td>{{ input.raw_content_original_name }}</td>
+                </tr>
+                <tr>
+                    <td>Target</td>
+                    <td>{{ target.rows.count }}</td>
+                    <td>{{ target.cols.count }}</td>
+                    <td>{{ target.raw_content_original_name}}</td>
+                </tr>
+                </tbody>
+            </table>
         </div>
-        {% endbuttons %}
-    </form>
-</div>
+
+        <h3>Dataset Form</h3>
+        <form class='editor' action="#" method="post" enctype="multipart/form-data">
+            {% confirm_form %}
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                <div class="margined-buttons">
+                    <button type="submit"
+                            class="btn {% if form.disabled %}btn-disabled{% else %}btn-primary{% endif %}"
+                            {% if object.is_public %}
+                            data-placement="top" data-toggle="tooltip"
+                            data-title="You can't edit public datasets"
+                            disabled
+                            {% elif form.disabled %}
+                            data-placement="top" data-toggle="tooltip"
+                            data-title="An other chalenge use this dataset. Impossible to update it"
+                            disabled
+                            {% endif %}>
+                        <i class="fa fa-save"></i> Update
+                    </button>
+
+                    <a href="{% url 'wizard:challenge:data.pick' pk=challenge.pk %}"
+                       class="btn btn-default picker">
+                        <i class="fa fa-times"></i>
+                        Pick another dataset
+                    </a>
+                </div>
+            {% endbuttons %}
+        </form>
+    </div>
 {% endblock %}

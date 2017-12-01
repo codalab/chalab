@@ -1,6 +1,8 @@
-from django.forms import ModelForm, FileField, DateTimeInput, Textarea
+from django.forms import ModelForm, DateTimeInput, Textarea, TextInput
 
 from .models import ProtocolModel, DatasetModel, TaskModel
+
+from django.utils import timezone
 
 
 def naive_suffix(x):
@@ -52,16 +54,15 @@ class ProtocolForm(ModelForm):
 class DataUpdateForm(ModelForm):
     class Meta:
         model = DatasetModel
-        fields = ['name']
-
-
-class DataUpdateAndUploadForm(DataUpdateForm):
-    automl_upload = FileField(required=False)
-
-    class Meta(DataUpdateForm.Meta):
-        fields = DataUpdateForm.Meta.fields + [
-            'automl_upload'
-        ]
-
-    def do_hide(self):
-        self.fields['automl_upload'] = HiddenField()
+        fields = ['description', 'raw_zip']
+        labels = {
+            'description': 'Description or Label ( Optional )',
+        }
+        widgets = {
+            'description': TextInput(
+                attrs={
+                    'placeholder': timezone.now().date(),
+                    'maxlength': '20',
+                       }
+            ),
+        }

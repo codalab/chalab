@@ -64,7 +64,7 @@
                     <label for="datasetPublicPicker">Dataset</label>
                     <select name="dataset" id="datasetPrivatePicker">
                         {% for dataset in private_datasets %}
-                        <option value="{{ dataset.pk }}">{{ dataset.name }}</option>
+                        <option value="{{ dataset.pk }}">{{ dataset.display_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
