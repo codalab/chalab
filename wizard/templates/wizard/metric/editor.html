@@ -85,8 +85,11 @@
 
             <h4>Description:</h4>
 
-            <input name="description" id="description" type="text" class="form-control" value="
-{% if metric %}{{ metric.description }}{% endif %}">
+            <input name="description" id="description" type="text" class="form-control" value="{% if metric %}{{ metric.description }}{% endif %}">
+
+            <h4>Label ( Optional ):</h4>
+
+            <input maxlength="20" name="label" id="label" type="text" class="form-control" value="{% if metric %}{{ metric.label }}{% endif %}">
 
             <h4>Code:</h4>
 
@@ -137,6 +140,7 @@
                                     success: function(data) {
                                         $('#name').val(data.name);
                                         $('#description').val(data.description);
+                                        $('#label').val(data.label);
                                         CodeMirrorPython.setValue(data.code);
                                         verif_name();
                                     }
@@ -185,7 +189,8 @@
                             <label>Metric: </label>
                             <select name="metricPrivate" class="form-control" id="metricPrivatePicker">
                                 {% for metric in private_metric %}
-                                <option value="{{ metric.pk }}">{{ metric.name }} : {{ metric.description }}</option>
+                                    <option value="{{ metric.pk }}">{{ metric.display_name }}</option>
+                                    {{ metric.pk }}
                                 {% endfor %}
                             </select>
                         </div>
