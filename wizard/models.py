@@ -830,7 +830,8 @@ class MetricModel(models.Model):
     regression = models.BooleanField(default=False, null=False)
 
     display_name = models.CharField(max_length=256, null=False, default="")
-    label = models.CharField(max_length=256, null=False, default="")
+    resource_updated = models.DateField(null=True, blank=True, default=timezone.now)
+    label = models.CharField(max_length=20, null=False, default="")
 
     def __str__(self):
         return "<%s: \"%s\"; id=%s>" % (type(self).__name__, self.name, self.id)
@@ -848,12 +849,12 @@ class MetricModel(models.Model):
             super().delete()
 
     def save(self):
-        print("save :D")
-        print(self.display_name)
-        if not self.label or self.label == "":
-            self.label = timezone.now().date()
+        if self.label == "" or not self.label:
+            if self.resource_updated:
+                self.label = self.resource_updated
+            else:
+                self.label = timezone.now()
         self.display_name = "{0}: {1}-{2}".format(self.pk, self.name, self.label)
-        print(self.display_name)
         super().save()
 
 

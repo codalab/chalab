@@ -566,6 +566,7 @@ def metric(request, pk):
         assert k == 'public'
 
         if request.POST['button'] == 'save':
+
             new_metric = MetricModel()
 
             # If it's here first metric or a default one, we create a new one
@@ -576,10 +577,12 @@ def metric(request, pk):
 
             new_metric.name = request.POST['name']
             new_metric.description = request.POST['description']
-            if len(request.POST['label']) > 20:
+            if request.POST['label'] and request.POST['label'] != "":
                 new_metric.label = request.POST['label']
             else:
-                new_metric.label = request.POST['label'][0:20]
+                # Have to use stftime to keep the format the same between datasets and metrics.
+                new_metric.label = new_metric.resource_updated.strftime('%Y-%m-%d')
+
             new_metric.code = request.POST['code']
 
             # TODO Verify if the code is ok (static analyse) before validate it
@@ -592,7 +595,6 @@ def metric(request, pk):
                                "(static analyse)")
 
             new_metric.save()
-
             c.metric = new_metric
             c.save()
 
