@@ -850,6 +850,7 @@ class MetricModel(models.Model):
 
     def save(self):
         if self.label == "" or not self.label:
+            # In case resource updated isn't set?
             if self.resource_updated:
                 self.label = self.resource_updated
             else:
