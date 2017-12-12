@@ -19,7 +19,7 @@ from tinymce.models import HTMLField
 from chalab.tools import archives, fs
 from chalab.tools.storage import *
 from . import docs
-from .validators import validate_image_file
+from .validators import validate_image_file, validate_zip_file
 
 log = logging.getLogger('wizard/models')
 
@@ -432,7 +432,7 @@ class DatasetModel(models.Model):
     input = OneToOneField(MatrixModel, null=True, related_name='dataset_input')
     target = OneToOneField(MatrixModel, null=True, related_name='dataset_target')
 
-    raw_zip = models.FileField(null=True, blank=True, upload_to=StorageNameFactory('dataset', 'zip'))
+    raw_zip = models.FileField(null=True, blank=True, validators=[validate_zip_file], upload_to=StorageNameFactory('dataset', 'zip'))
     display_name = models.CharField(max_length=256, null=False, default="")
     raw_zip_name = models.CharField(max_length=100, null=True, blank=True, default="")
     resource_updated = models.DateField(null=True, blank=True, default=timezone.now)
@@ -1011,6 +1011,7 @@ class DocumentationPageModel(models.Model):
 class BaselineModel(models.Model):
     submission = models.FileField(upload_to=save_to_baseline,
                                   verbose_name='baseline submission',
+                                  validators=[validate_zip_file],
                                   blank=True, null=True)
 
     def save(self, *args, **kwargs):
@@ -1059,6 +1060,7 @@ class BaselineModel(models.Model):
 class IngestionTaskModel(models.Model):
     ingestion_program = models.FileField(upload_to=save_to_ingestion,
                                          verbose_name='ingestion program',
+                                         validators=[validate_zip_file],
                                          blank=True, null=True)
 
     def save(self, *args, **kwargs):
