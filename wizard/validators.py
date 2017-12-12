@@ -8,10 +8,6 @@ def validate_file(ext_list, temp_file):
         raise ValidationError('Expected one of these file types {0}; Received {1} instead.'.format(ext_list, file_ext))
 
 
-def validate_py_file(temp_file):
-    validate_file(['.py'], temp_file)
-
-
 def validate_zip_file(temp_file):
     validate_file(['.zip'], temp_file)
 
