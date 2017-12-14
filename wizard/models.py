@@ -829,6 +829,10 @@ class MetricModel(models.Model):
     classification = models.BooleanField(default=False, null=False)
     regression = models.BooleanField(default=False, null=False)
 
+    display_name = models.CharField(max_length=256, null=False, default="")
+    resource_updated = models.DateField(null=True, blank=True, default=timezone.now)
+    label = models.CharField(max_length=20, null=False, default="")
+
     def __str__(self):
         return "<%s: \"%s\"; id=%s>" % (type(self).__name__, self.name, self.id)
 
@@ -843,6 +847,16 @@ class MetricModel(models.Model):
     def delete(self):
         if not self.is_default and not self.is_public:
             super().delete()
+
+    def save(self):
+        if self.label == "" or not self.label:
+            # In case resource updated isn't set?
+            if self.resource_updated:
+                self.label = self.resource_updated
+            else:
+                self.label = timezone.now()
+        self.display_name = "{0}: {1}-{2}".format(self.pk, self.name, self.label)
+        super().save()
 
 
 DEV_PHASE_DESC = """Development phase: create models and submit them or directly submit results on validation and/or test data; feed-back are provided on the validation set only."""

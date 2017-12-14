@@ -13,6 +13,8 @@ from django.views.generic import CreateView
 from django.views.generic import DetailView
 from django.views.generic import UpdateView
 
+from django.utils import timezone
+
 from bundler.models import BundleTaskModel
 from chalab import errors
 from group.models import GroupModel
@@ -564,6 +566,7 @@ def metric(request, pk):
         assert k == 'public'
 
         if request.POST['button'] == 'save':
+
             new_metric = MetricModel()
 
             # If it's here first metric or a default one, we create a new one
@@ -574,6 +577,12 @@ def metric(request, pk):
 
             new_metric.name = request.POST['name']
             new_metric.description = request.POST['description']
+            if request.POST['label'] and request.POST['label'] != "":
+                new_metric.label = request.POST['label']
+            else:
+                # Have to use stftime to keep the format the same between datasets and metrics.
+                new_metric.label = new_metric.resource_updated.strftime('%Y-%m-%d')
+
             new_metric.code = request.POST['code']
 
             # TODO Verify if the code is ok (static analyse) before validate it
@@ -586,7 +595,6 @@ def metric(request, pk):
                                "(static analyse)")
 
             new_metric.save()
-
             c.metric = new_metric
             c.save()
 
@@ -612,14 +620,14 @@ def metric(request, pk):
         public_metrics = MetricModel.objects.all().filter(is_public=True,
                                                       is_ready=True)
 
-    private_metric = MetricModel.objects.all().filter(owner=request.user)
+    private_metric = MetricModel.objects.filter(owner=request.user)
 
     if c.metric is not None:
         private_metric = private_metric.exclude(id=c.metric.id)
 
     context = {'challenge': c, 'public_metrics': public_metrics,
                'flow': flow.Flow(flow.MetricFlowItem, c),
-               'metric': c.metric, 'private_metric': private_metric}
+               'metric': c.metric, 'private_metric': private_metric, 'today': timezone.now().date()}
 
     # Load a default metric if necessary
     if c.metric is None:
@@ -642,7 +650,8 @@ def get_metric(request, pk):
     data = {
         'name': metric.name,
         'description': metric.description,
-        'code': metric.code
+        'code': metric.code,
+        'label': metric.label
     }
 
     return JsonResponse(data)
