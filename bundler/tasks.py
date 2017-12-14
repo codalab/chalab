@@ -348,7 +348,7 @@ def create_bundle(bt, output_dir, challenge):
         'enable_per_submission_metadata': False,
         'enable_forum': True,
         'end_date': None,
-        'admin_names': 'guyon,lsenta'  # temporary default admins.
+        'admin_names': 'guyon,tthomas63'  # temporary default admins.
     }
 
     if challenge.logo:
